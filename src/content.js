@@ -10,7 +10,7 @@ export const copy = {
     lab: '交互原型',
     toc: '学习地图',
     chapters: [
-      { id: 'mdp', number: '01', kicker: '经典基础', title: 'MDP 与课程世界', subtitle: '从一次交互认清 RL 的五个接口' },
+      { id: 'mdp', number: '01', kicker: '经典基础', title: '网格世界与交互基础', subtitle: '从具体场景逐步建立完整决策模型' },
       { id: 'returns', number: '02', kicker: '长期回报', title: 'Return 与 State Value', subtitle: '从一条未来到所有未来的平均' },
       { id: 'bellman', number: '03', kicker: '价值基础', title: 'Bellman 方程', subtitle: '从一步更新理解长期价值' },
       { id: 'optimality', number: '04', kicker: '最优控制', title: 'Bellman 最优方程', subtitle: '让五个动作在同一状态竞争' },
@@ -36,7 +36,7 @@ export const copy = {
       intro: '在语言模型中，状态成为 prompt 与已生成 token 的前缀，动作成为下一个 token，轨迹成为完整 response。下面两个视图共享同一组 rollout：切换视角不会换一套示例数据。',
     },
     common: {
-      gamma: '折扣因子 γ', noise: '动作随机性（扩展）', policy: '策略', fixed: '课件固定策略', greedy: '贪心策略',
+      gamma: '折扣因子 γ', noise: '动作随机性（扩展）', policy: '策略', fixed: '示例固定策略', greedy: '贪心策略',
       previous: '上一步', step: '单步更新', play: '连续播放', pause: '暂停', reset: '重置',
       grid: '网格世界', value: '状态价值 V(s)', update: '本步更新', controls: '参数与操作',
       currentState: '当前状态', action: '选择动作', reward: '即时奖励', nextState: '下一状态', target: '目标值',
@@ -54,7 +54,7 @@ export const copy = {
     lab: 'Interactive prototype',
     toc: 'Learning map',
     chapters: [
-      { id: 'mdp', number: '01', kicker: 'Classical foundation', title: 'MDP & Course World', subtitle: 'Five RL interfaces in one interaction' },
+      { id: 'mdp', number: '01', kicker: 'Classical foundation', title: 'Grid World & Interaction Basics', subtitle: 'Build a complete decision model from one concrete scene' },
       { id: 'returns', number: '02', kicker: 'Long-term return', title: 'Return & State Value', subtitle: 'One future versus the mean of all futures' },
       { id: 'bellman', number: '03', kicker: 'Value foundation', title: 'Bellman Equation', subtitle: 'Long-term value from one-step updates' },
       { id: 'optimality', number: '04', kicker: 'Optimal control', title: 'Bellman Optimality', subtitle: 'Let five actions compete in one state' },
@@ -80,7 +80,7 @@ export const copy = {
       intro: 'For language models, a state is the prompt plus generated prefix, an action is the next token, and a trajectory is a complete response. Both views below share the same rollout batch; switching views never swaps the evidence.',
     },
     common: {
-      gamma: 'Discount γ', noise: 'Action randomness (extension)', policy: 'Policy', fixed: 'Course fixed policy', greedy: 'Greedy policy',
+      gamma: 'Discount γ', noise: 'Action randomness (extension)', policy: 'Policy', fixed: 'Example fixed policy', greedy: 'Greedy policy',
       previous: 'Undo', step: 'Single update', play: 'Play', pause: 'Pause', reset: 'Reset',
       grid: 'Grid world', value: 'State value V(s)', update: 'Current update', controls: 'Parameters & actions',
       currentState: 'Current state', action: 'Selected action', reward: 'Immediate reward', nextState: 'Next state', target: 'Target',

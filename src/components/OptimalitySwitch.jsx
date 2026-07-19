@@ -3,6 +3,7 @@ import { ACTIONS, COURSE_REWARDS, allStates, fixedPolicyAction, indexOf, isForbi
 import { comparePolicyAndOptimal, inspectActionCompetition } from '../engine/optimality'
 import { optimalityPresetConfigs } from '../content/optimality'
 import { useStepMicroscope } from '../interaction/stepMicroscope'
+import MathFormula from './MathFormula'
 
 function stateLabel(state) {
   return `s${indexOf(state) + 1}`
@@ -103,14 +104,14 @@ export default function OptimalitySwitch({ content }) {
               return <button type="button" key={keyOf(state)} className={`${isForbidden(state) ? 'forbidden' : ''}${isGoal(state) ? ' goal' : ''}${isSame(state, selected) ? ' selected' : ''}`} onClick={() => microscope.select(state, { focusTerm: 'state', phase: 'select' })}><span>{stateLabel(state)}</span><strong>{format(values[index])}</strong><b>{ACTIONS[mapActions[index]].arrow}</b></button>
             })}
           </div>
-          <p>{text.courseWorld} · γ={gamma.toFixed(2)} · r<sub>forbidden</sub>={forbiddenReward}</p>
+              <p>{text.courseWorld} · <MathFormula latex={String.raw`\gamma=${gamma.toFixed(2)}`} /> · <MathFormula latex={String.raw`r_{\mathrm{forbidden}}=${forbiddenReward}`} /></p>
         </section>
 
         <section className="action-competition-panel">
           <header><div><span>{text.actionCompetition}</span><small>{text.sameSnapshot}</small></div><em>{stateLabel(selected)}</em></header>
           <div className="operator-formula">
             <span>{operator === 'policy' ? text.expectationFormula : text.maxFormula}</span>
-            <strong>{operator === 'policy' ? 'Σₐ π(a|s) q(s,a)' : 'maxₐ q(s,a)'}</strong>
+                <MathFormula block latex={operator === 'policy' ? String.raw`\sum_a\pi(a\mid s)q(s,a)` : String.raw`\max_a q(s,a)`} />
             <b>= {format(chosenTarget)}</b>
           </div>
           <div className="action-target-list">

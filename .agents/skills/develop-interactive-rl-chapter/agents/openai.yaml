@@ -1,0 +1,4 @@
+interface:
+  display_name: "开发交互式强化学习章节"
+  short_description: "Build and validate interactive RL learning chapters"
+  default_prompt: "Use $develop-interactive-rl-chapter to develop or refine an interactive reinforcement-learning chapter."

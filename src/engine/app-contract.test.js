@@ -35,7 +35,7 @@ test('Chinese and English expose the same seven product chapter nodes', async ()
 
 test('all five MVP capability slices are wired into the reading shell', () => {
   const app = read('App.jsx')
-  ;['CourseWorldExplorer', 'ReturnObservatory', 'BellmanLab', 'OptimalitySwitch', 'PlanningLab', 'PpoLab', 'SystemLab', 'RightRail'].forEach((name) => {
+  ;['ChapterShell', 'CourseWorldExplorer', 'ReturnObservatory', 'BellmanLab', 'OptimalitySwitch', 'PlanningLab', 'PpoLab', 'SystemLab', 'RightRail'].forEach((name) => {
     assert.match(app, new RegExp(name))
   })
 })
@@ -46,4 +46,26 @@ test('Optimality is the second real consumer of the shared Step Microscope contr
   assert.match(source, /microscope\.commit/)
   assert.match(source, /microscope\.undo/)
   assert.match(source, /microscope\.reset/)
+})
+
+test('the chapter shell keeps prose on one reading column and experiments on one wider frame', () => {
+  const shell = read('components/ChapterShell.jsx')
+  const app = read('App.jsx')
+  const styles = read('styles.css')
+  assert.match(shell, /className="chapter-shell"/)
+  assert.match(app, /<ChapterShell>/)
+  assert.match(styles, /--chapter-frame:\s*1240px/)
+  assert.match(styles, /--reading-column:\s*780px/)
+  assert.match(styles, /\.chapter-shell\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
+  ;['derivation-sequence', 'mdp-narrative', 'clickable-derivation', 'chapter-section-grid', 'chapter-summary', 'chapter-sources', 'source-note'].forEach((className) => {
+    assert.match(styles, new RegExp(`\\.${className}\\s*\\{[^}]*max-width:\\s*var\\(--reading-column\\)`), className)
+  })
+  assert.match(styles, /\.world-explorer\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
+})
+
+test('ordinary MDP sections use article headings instead of numbered timeline cards', () => {
+  const source = read('components/MdpNarrative.jsx')
+  assert.match(source, /narrative-section/)
+  assert.match(source, /narrative-heading/)
+  assert.doesNotMatch(source, /narrative-index|padStart\(/)
 })

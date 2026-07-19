@@ -31,22 +31,88 @@ const sources = [
 
 const explorer = {
   zh: {
-    modeTrajectory: '回报分解', modeValue: '价值估计', gamma: '折扣因子 γ', noise: '动作随机性', sampleCount: '轨迹样本数', exact: '精确 Vπ(s)', estimate: '样本均值', error: '估计误差', selectedRun: '当前样本', seed: 'seed', contribution: '折扣贡献', immediateReward: '即时奖励', discountWeight: '折扣权重', runningReturn: '累计 G₀', remainingBound: '截断尾项上界', visibleSteps: '显示前 14 步；完整数值计算 120 步', stateValue: '状态价值', return: '单条回报', trajectoryTape: 'Episode Tape', valueLens: 'Value Lens', chooseState: '点击状态改变起点', fixedPolicy: '课件固定策略 π', courseBaseline: '课件基线', websiteExtension: '网站扩展', deterministic: '确定性：一条轨迹就是全部可能', stochastic: '随机性：一次 return 只是一个样本', sampleAxis: '样本编号', valueAxis: 'return / value', runningMean: '运行均值', exactLine: '精确期望', clickSample: '点击样本点查看它对应的轨迹', noRewardYet: '这一段还没有奖励，但它仍会推迟未来奖励的折扣权重。', preset: '观察预设', startState: '起始状态', targetContinuing: '目标状态继续产生 +1，不是 terminal', reset: '恢复课件基线', statePrefix: 's', rewardPrefix: 'r', probability: '分支概率', tailNote: '尾项没有被偷偷忽略：右侧明确显示最坏情况下的剩余上界。', presetItems: {
-      'course-baseline': { title: '课件基线', note: '确定性策略下，单条 return 与精确 value 重合。' },
+    modeTrajectory: '回报分解', modeValue: '价值估计', gamma: '折扣因子 γ', noise: '动作随机性', sampleCount: '轨迹样本数', exact: '精确 Vπ(s)', estimate: '样本均值', error: '估计误差', selectedRun: '当前样本', seed: 'seed', contribution: '折扣贡献', immediateReward: '即时奖励', discountWeight: '折扣权重', runningReturn: '累计 G₀', remainingBound: '截断尾项上界', visibleSteps: '显示前 14 步；完整数值计算 120 步', stateValue: '状态价值', return: '单条回报', trajectoryTape: 'Episode Tape', valueLens: 'Value Lens', chooseState: '点击状态改变起点', fixedPolicy: '示例固定策略 π', courseBaseline: '确定性基线', websiteExtension: '随机扩展', deterministic: '确定性：一条轨迹就是全部可能', stochastic: '随机性：一次 return 只是一个样本', sampleAxis: '样本编号', valueAxis: 'return / value', runningMean: '运行均值', exactLine: '精确期望', clickSample: '点击样本点查看它对应的轨迹', noRewardYet: '这一段还没有奖励，但它仍会推迟未来奖励的折扣权重。', preset: '观察预设', startState: '起始状态', targetContinuing: '目标状态继续产生 +1，不是 terminal', reset: '恢复确定性基线', statePrefix: 's', rewardPrefix: 'r', probability: '分支概率', tailNote: '尾项没有被偷偷忽略：右侧明确显示最坏情况下的剩余上界。', presetItems: {
+      'course-baseline': { title: '确定性基线', note: '确定性策略下，单条 return 与精确 value 重合。' },
       'near-sighted': { title: '短视折扣', note: 'γ 变小后，远处的 +1 对起点影响迅速衰减。' },
       'stochastic-value': { title: '从样本到期望', note: '同一起点产生不同 return，运行均值逐步靠近 Vπ(s)。' },
       'continuing-target': { title: '持续型目标', note: '从目标出发仍会继续交互，得到 1 + γ + γ² + …。' },
     },
   },
   en: {
-    modeTrajectory: 'Return decomposition', modeValue: 'Value estimate', gamma: 'Discount γ', noise: 'Action randomness', sampleCount: 'Trajectory samples', exact: 'Exact Vπ(s)', estimate: 'Sample mean', error: 'Estimation error', selectedRun: 'Selected sample', seed: 'seed', contribution: 'Discounted contribution', immediateReward: 'Immediate reward', discountWeight: 'Discount weight', runningReturn: 'Cumulative G₀', remainingBound: 'Truncated-tail bound', visibleSteps: 'First 14 steps shown; numbers use 120 steps', stateValue: 'State value', return: 'Single return', trajectoryTape: 'Episode Tape', valueLens: 'Value Lens', chooseState: 'Click a state to change the start', fixedPolicy: 'Course fixed policy π', courseBaseline: 'Course baseline', websiteExtension: 'Site extension', deterministic: 'Deterministic: one trajectory is the full possibility set', stochastic: 'Stochastic: one return is only one sample', sampleAxis: 'Sample index', valueAxis: 'return / value', runningMean: 'Running mean', exactLine: 'Exact expectation', clickSample: 'Click a sample point to inspect its trajectory', noRewardYet: 'This segment has no reward yet, but it still delays and discounts future rewards.', preset: 'Observation presets', startState: 'Start state', targetContinuing: 'The target keeps producing +1 and is not terminal', reset: 'Restore course baseline', statePrefix: 's', rewardPrefix: 'r', probability: 'Branch probability', tailNote: 'The tail is not silently discarded: the worst-case remaining bound is shown explicitly.', presetItems: {
-      'course-baseline': { title: 'Course baseline', note: 'Under a deterministic policy, one return equals the exact value.' },
+    modeTrajectory: 'Return decomposition', modeValue: 'Value estimate', gamma: 'Discount γ', noise: 'Action randomness', sampleCount: 'Trajectory samples', exact: 'Exact Vπ(s)', estimate: 'Sample mean', error: 'Estimation error', selectedRun: 'Selected sample', seed: 'seed', contribution: 'Discounted contribution', immediateReward: 'Immediate reward', discountWeight: 'Discount weight', runningReturn: 'Cumulative G₀', remainingBound: 'Truncated-tail bound', visibleSteps: 'First 14 steps shown; numbers use 120 steps', stateValue: 'State value', return: 'Single return', trajectoryTape: 'Episode Tape', valueLens: 'Value Lens', chooseState: 'Click a state to change the start', fixedPolicy: 'Example fixed policy π', courseBaseline: 'Deterministic baseline', websiteExtension: 'Stochastic extension', deterministic: 'Deterministic: one trajectory is the full possibility set', stochastic: 'Stochastic: one return is only one sample', sampleAxis: 'Sample index', valueAxis: 'return / value', runningMean: 'Running mean', exactLine: 'Exact expectation', clickSample: 'Click a sample point to inspect its trajectory', noRewardYet: 'This segment has no reward yet, but it still delays and discounts future rewards.', preset: 'Observation presets', startState: 'Start state', targetContinuing: 'The target keeps producing +1 and is not terminal', reset: 'Restore deterministic baseline', statePrefix: 's', rewardPrefix: 'r', probability: 'Branch probability', tailNote: 'The tail is not silently discarded: the worst-case remaining bound is shown explicitly.', presetItems: {
+      'course-baseline': { title: 'Deterministic baseline', note: 'Under a deterministic policy, one return equals the exact value.' },
       'near-sighted': { title: 'Short horizon', note: 'With smaller γ, the distant +1 quickly loses influence at the start.' },
       'stochastic-value': { title: 'Samples to expectation', note: 'The same start yields different returns; the running mean approaches Vπ(s).' },
       'continuing-target': { title: 'Continuing target', note: 'Starting at the target still continues: 1 + γ + γ² + ….' },
     },
   },
 }
+
+const returnDerivationZh = [
+  {
+    id: 'timeline',
+    rule: '固定时间下标',
+    latex: String.raw`S_t \xrightarrow{A_t} \bigl(R_{t+1},S_{t+1}\bigr)`,
+    short: '动作发生在时刻 t，环境响应记在 t+1。',
+    detail: '智能体先观察状态 S_t，再选择动作 A_t；环境随后产生奖励 R_{t+1} 与后继状态 S_{t+1}。因此，从时刻 t 开始统计未来时，第一个奖励必然是 R_{t+1}。',
+    assumptions: [],
+    symbols: [[String.raw`S_t`, '时刻 t 的状态'], [String.raw`A_t`, '时刻 t 选择的动作'], [String.raw`R_{t+1}`, '动作执行后收到的奖励']],
+  },
+  {
+    id: 'finite-return',
+    rule: '定义有限时域回报',
+    latex: String.raw`G_t^{(T)} \coloneqq R_{t+1}+R_{t+2}+\cdots+R_T`,
+    short: '把时刻 t 之后、终止时刻 T 之前的奖励相加。',
+    detail: '有限 episode 有明确终点 T，因此可以直接累加动作 A_t 之后的所有奖励。上标 (T) 用来强调这个量依赖有限终点，尚未处理持续型任务。',
+    assumptions: [String.raw`t<T<\infty`],
+    symbols: [[String.raw`G_t^{(T)}`, '有限终点 T 下，从时刻 t 开始的回报']],
+  },
+  {
+    id: 'discounted-return',
+    rule: '引入折扣并扩展到无限时域',
+    latex: String.raw`G_t \coloneqq R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots = \sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`,
+    short: '第 k 个未来奖励乘以权重 γ^k。',
+    detail: '持续型任务没有有限终点，直接相加可能发散。折扣因子让更远奖励的权重按几何速度衰减；在奖励有界且 0≤γ<1 时，无限和保持有限。',
+    assumptions: [String.raw`0\le\gamma<1`, String.raw`|R_t|\le R_{\max}<\infty`],
+    symbols: [[String.raw`\gamma`, '折扣因子'], [String.raw`k`, '奖励距离当前时刻的步数']],
+  },
+  {
+    id: 'split-first-term',
+    rule: '从无限和中拆出第一项',
+    latex: String.raw`G_t = R_{t+1}+\gamma\bigl(R_{t+2}+\gamma R_{t+3}+\gamma^2R_{t+4}+\cdots\bigr)`,
+    short: '把眼前奖励与剩余未来分开。',
+    detail: '求和式中 k=0 的项是 R_{t+1}。其余每一项都至少含一个 γ，因此可提出 γ；括号内从 R_{t+2} 开始，正好是从下一时刻观察到的同一种回报结构。',
+    assumptions: ['只使用代数重排'],
+    symbols: [[String.raw`R_{t+1}`, '下一步即时奖励']],
+  },
+  {
+    id: 'return-recursion',
+    rule: '识别下一时刻的回报',
+    latex: String.raw`G_t = R_{t+1}+\gamma G_{t+1}`,
+    short: '括号中的剩余无限和就是 G_{t+1}。',
+    detail: '根据同一个折扣回报定义，从时刻 t+1 向后看得到 G_{t+1}=R_{t+2}+γR_{t+3}+⋯。代回上一行后，长期未来被折叠成“一个即时奖励 + 一个后继回报”。',
+    assumptions: ['未来仍使用同一个折扣因子'],
+    symbols: [[String.raw`G_{t+1}`, '从下一时刻开始的回报']],
+  },
+  {
+    id: 'state-value',
+    rule: '对所有可能未来取条件期望',
+    latex: String.raw`V^{\pi}(s) \coloneqq \mathbb{E}_{\pi,p}\!\left[G_t\mid S_t=s\right]`,
+    short: '状态价值是 G_t 的条件期望，不是某一次观测值。',
+    detail: '从同一个状态 s 出发，策略 π 可能采样到不同动作，环境 p 也可能产生不同奖励与后继状态，所以 G_t 是随机变量。V^π(s) 对这些可能轨迹的回报按其概率加权平均。',
+    assumptions: ['后续动作遵循策略 π', '转移与奖励由环境模型 p 产生'],
+    symbols: [[String.raw`V^{\pi}(s)`, '策略 π 下状态 s 的价值'], [String.raw`\mathbb{E}_{\pi,p}`, '对策略和环境诱导的随机性取期望']],
+  },
+]
+
+const returnDerivationEn = [
+  { id: 'timeline', rule: 'Fix the time indices', latex: String.raw`S_t \xrightarrow{A_t} \bigl(R_{t+1},S_{t+1}\bigr)`, short: 'The action occurs at t; the environment response is indexed t+1.', detail: 'The agent first observes S_t and selects A_t. The environment then produces R_{t+1} and S_{t+1}, so the first future reward viewed from t is R_{t+1}.', assumptions: [], symbols: [[String.raw`S_t`, 'state at time t'], [String.raw`A_t`, 'action selected at time t'], [String.raw`R_{t+1}`, 'reward returned after the action']] },
+  { id: 'finite-return', rule: 'Define finite-horizon return', latex: String.raw`G_t^{(T)} \coloneqq R_{t+1}+R_{t+2}+\cdots+R_T`, short: 'Add rewards after time t until terminal time T.', detail: 'A finite episode has an explicit endpoint T, so the rewards after A_t can be summed directly. The superscript (T) keeps that endpoint visible.', assumptions: [String.raw`t<T<\infty`], symbols: [[String.raw`G_t^{(T)}`, 'return from t with finite endpoint T']] },
+  { id: 'discounted-return', rule: 'Introduce discount for an infinite horizon', latex: String.raw`G_t \coloneqq R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots = \sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`, short: 'A reward k steps away receives weight γ^k.', detail: 'A continuing task has no finite endpoint, and a plain sum may diverge. Geometric discount keeps the sum bounded when rewards are bounded and 0≤γ<1.', assumptions: [String.raw`0\le\gamma<1`, String.raw`|R_t|\le R_{\max}<\infty`], symbols: [[String.raw`\gamma`, 'discount factor'], [String.raw`k`, 'number of steps into the future']] },
+  { id: 'split-first-term', rule: 'Separate the first term', latex: String.raw`G_t = R_{t+1}+\gamma\bigl(R_{t+2}+\gamma R_{t+3}+\gamma^2R_{t+4}+\cdots\bigr)`, short: 'Separate the next reward from the remaining future.', detail: 'The k=0 term is R_{t+1}. Every remaining term contains at least one γ, so factor it out. The parenthesized series has the same form viewed from the next time step.', assumptions: ['Algebraic rearrangement only'], symbols: [[String.raw`R_{t+1}`, 'next immediate reward']] },
+  { id: 'return-recursion', rule: 'Recognize the next return', latex: String.raw`G_t = R_{t+1}+\gamma G_{t+1}`, short: 'The parenthesized infinite sum is G_{t+1}.', detail: 'By the same definition, G_{t+1}=R_{t+2}+γR_{t+3}+⋯. Substitution folds the long future into one reward and one successor return.', assumptions: ['Future rewards use the same discount factor'], symbols: [[String.raw`G_{t+1}`, 'return beginning at the next time step']] },
+  { id: 'state-value', rule: 'Average all possible futures conditionally', latex: String.raw`V^{\pi}(s) \coloneqq \mathbb{E}_{\pi,p}\!\left[G_t\mid S_t=s\right]`, short: 'State value is the conditional expectation of G_t, not one observation.', detail: 'From the same state, policy π may sample different actions and environment p may produce different rewards and successors. V^π(s) averages the resulting random returns.', assumptions: ['Future actions follow π', 'Transitions and rewards follow p'], symbols: [[String.raw`V^{\pi}(s)`, 'value of state s under π'], [String.raw`\mathbb{E}_{\pi,p}`, 'expectation over policy and environment randomness']] },
+]
 
 export const returnChapter = assertFoundationChapterDefinition({
   id: 'returns',
@@ -57,18 +123,19 @@ export const returnChapter = assertFoundationChapterDefinition({
     eyebrow: '第 2 章 · Return、折扣与 State Value',
     title: '为什么一次即时奖励不能说明一个状态的长期好坏？',
     intro: '奖励只描述一次转移，return 才把一条轨迹上的未来奖励合在一起；当策略或环境带有随机性，同一起点会产生许多不同 return，它们的条件期望才是状态价值 Vπ(s)。',
-    bridge: '下面继续使用第 01 章的 5×5 课程世界与固定策略。先把一条轨迹的每个奖励乘上 γ 的时间权重，再切换到 Value Lens，观察样本均值如何逼近同一环境模型计算出的精确期望。',
+    bridge: '下面继续使用第 01 章的 5×5 网格世界与固定策略。先把一条轨迹的每个奖励乘上 γ 的时间权重，再切换到 Value Lens，观察样本均值如何逼近同一环境模型计算出的精确期望。',
     figure: '交互图 2.1 · Return Observatory',
     instruction: '改变 γ、随机性和样本数；先看一条轨迹，再看多条未来的平均',
     question: '同一个起始状态，为什么会同时对应许多 return，却只有一个 Vπ(s)？',
+    derivation: returnDerivationZh,
     prelude: [
-      { id: 'reward-to-return', kicker: '沿时间累加', title: '即时奖励只回答“刚才发生了什么”', paragraphs: ['一条策略可能先绕行、受罚，随后长期得到正奖励。只看第一步 rₜ₊₁ 无法比较这两种未来。', 'Return Gₜ 把从当前时刻之后的奖励放在同一条时间轴上；γᵏ 是第 k 步奖励抵达当前时刻时的权重。'], formulas: ['Gₜ = Rₜ₊₁ + γRₜ₊₂ + γ²Rₜ₊₃ + ⋯'] },
-      { id: 'return-to-value', kicker: '从样本到期望', title: '一条 return 是结果，state value 是分布的均值', paragraphs: ['当 π(a|s) 或环境转移带有随机性，从同一状态出发会得到不同轨迹与不同 Gₜ。', 'Vπ(s) 对这些可能回报取条件期望。确定性世界里只有一条未来，因此 return 与 value 才会数值相同。'], formulas: ['Vπ(s) = Eπ,p[Gₜ | Sₜ = s]'] },
+      { id: 'reward-to-return', kicker: '沿时间累加', title: '即时奖励只回答“刚才发生了什么”', paragraphs: ['一条策略可能先绕行、受罚，随后长期得到正奖励。只看第一步 rₜ₊₁ 无法比较这两种未来。', 'Return Gₜ 把从当前时刻之后的奖励放在同一条时间轴上；γᵏ 是第 k 步奖励抵达当前时刻时的权重。'], formulas: [String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`] },
+      { id: 'return-to-value', kicker: '从样本到期望', title: '一条 return 是结果，state value 是分布的均值', paragraphs: ['当 π(a|s) 或环境转移带有随机性，从同一状态出发会得到不同轨迹与不同 Gₜ。', 'Vπ(s) 对这些可能回报取条件期望。确定性世界里只有一条未来，因此 return 与 value 才会数值相同。'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
     ],
     sections: [
-      { id: 'discount-boundary', kicker: '边界案例', title: 'γ 既让无穷和有限，也定义时间尺度', paragraphs: ['在持续型目标上，如果不折扣，1 + 1 + 1 + … 会发散。只要 0 < γ < 1，几何级数就有限。', 'γ 接近 0 时只有近处奖励可见；γ 接近 1 时远期奖励保留更多权重，但截断和估计也更困难。'], formula: '1 + γ + γ² + ⋯ = 1 / (1 − γ)' },
-      { id: 'sample-expectation', kicker: '常见误解', title: '单条高回报轨迹不等于高价值', paragraphs: ['随机环境中，一次幸运轨迹可能高于精确 value，一次倒霉轨迹也可能低于它。', '只有在明确的 seed 与样本协议下观察运行均值，才能把“这次发生了什么”与“平均会发生什么”分开。'], formula: 'V̂ₙ(s) = (1/n) Σᵢ Gₜ⁽ⁱ⁾' },
-      { id: 'continuing-transfer', kicker: '迁移到下一章', title: 'Bellman 方程将无限未来折叠成一步', paragraphs: ['直接枚举全部未来可以定义 value，却不是高效的求解方法。', '下一章利用 Gₜ = Rₜ₊₁ + γGₜ₊₁，把长期回报拆成即时奖励与后继状态的价值。'], formula: 'Gₜ = Rₜ₊₁ + γGₜ₊₁' },
+      { id: 'discount-boundary', kicker: '边界案例', title: 'γ 既让无穷和有限，也定义时间尺度', paragraphs: ['在持续型目标上，如果不折扣，1 + 1 + 1 + … 会发散。只要 0 < γ < 1，几何级数就有限。', 'γ 接近 0 时只有近处奖励可见；γ 接近 1 时远期奖励保留更多权重，但截断和估计也更困难。'], formula: String.raw`1+\gamma+\gamma^2+\cdots=\frac{1}{1-\gamma}` },
+      { id: 'sample-expectation', kicker: '常见误解', title: '单条高回报轨迹不等于高价值', paragraphs: ['随机环境中，一次幸运轨迹可能高于精确 value，一次倒霉轨迹也可能低于它。', '只有在明确的 seed 与样本协议下观察运行均值，才能把“这次发生了什么”与“平均会发生什么”分开。'], formula: String.raw`\widehat{V}_n(s)=\frac{1}{n}\sum_{i=1}^{n}G_t^{(i)}` },
+      { id: 'continuing-transfer', kicker: '迁移到下一章', title: 'Bellman 方程将无限未来折叠成一步', paragraphs: ['直接枚举全部未来可以定义 value，却不是高效的求解方法。', '下一章利用 Gₜ = Rₜ₊₁ + γGₜ₊₁，把长期回报拆成即时奖励与后继状态的价值。'], formula: String.raw`G_t=R_{t+1}+\gamma G_{t+1}` },
     ],
     summary: ['Return 是单条轨迹上未来奖励的折扣和。', 'State value 是给定起始状态并遵循策略时，所有可能 return 的条件期望。', '折扣既控制持续型任务的有限性，也决定当前决策看多远。'],
     explorer: explorer.zh,
@@ -79,18 +146,19 @@ export const returnChapter = assertFoundationChapterDefinition({
     eyebrow: 'Chapter 2 · Return, discounting, and state value',
     title: 'Why can one immediate reward not describe the long-term quality of a state?',
     intro: 'A reward describes one transition. Return combines the future rewards along one trajectory. When the policy or environment is stochastic, one start can produce many returns; their conditional expectation is the state value Vπ(s).',
-    bridge: 'The observatory reuses the 5×5 course world and fixed policy from Chapter 1. First weight every reward on one trajectory by its temporal power of γ. Then switch to the Value Lens and watch the sample mean approach the exact expectation computed from the same environment model.',
+    bridge: 'The observatory reuses the 5×5 grid world and fixed policy from Chapter 1. First weight every reward on one trajectory by its temporal power of γ. Then switch to the Value Lens and watch the sample mean approach the exact expectation computed from the same environment model.',
     figure: 'Interactive figure 2.1 · Return Observatory',
     instruction: 'Change γ, randomness, and sample count; inspect one trajectory before averaging many futures',
     question: 'Why can one start state have many returns but only one Vπ(s)?',
+    derivation: returnDerivationEn,
     prelude: [
-      { id: 'reward-to-return', kicker: 'Accumulate through time', title: 'Immediate reward only answers what just happened', paragraphs: ['A policy may detour or suffer a penalty before receiving positive rewards for a long time. The first rₜ₊₁ cannot compare those futures.', 'Return Gₜ puts future rewards on one timeline; γᵏ is the weight with which the reward k steps away reaches the present.'], formulas: ['Gₜ = Rₜ₊₁ + γRₜ₊₂ + γ²Rₜ₊₃ + ⋯'] },
-      { id: 'return-to-value', kicker: 'Samples to expectation', title: 'A return is an outcome; state value is the mean of a distribution', paragraphs: ['When π(a|s) or the transition is stochastic, the same state produces different trajectories and different Gₜ values.', 'Vπ(s) takes the conditional expectation over those possible returns. Return equals value only in a deterministic world with one possible future.'], formulas: ['Vπ(s) = Eπ,p[Gₜ | Sₜ = s]'] },
+      { id: 'reward-to-return', kicker: 'Accumulate through time', title: 'Immediate reward only answers what just happened', paragraphs: ['A policy may detour or suffer a penalty before receiving positive rewards for a long time. The first rₜ₊₁ cannot compare those futures.', 'Return Gₜ puts future rewards on one timeline; γᵏ is the weight with which the reward k steps away reaches the present.'], formulas: [String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`] },
+      { id: 'return-to-value', kicker: 'Samples to expectation', title: 'A return is an outcome; state value is the mean of a distribution', paragraphs: ['When π(a|s) or the transition is stochastic, the same state produces different trajectories and different Gₜ values.', 'Vπ(s) takes the conditional expectation over those possible returns. Return equals value only in a deterministic world with one possible future.'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
     ],
     sections: [
-      { id: 'discount-boundary', kicker: 'Boundary case', title: 'γ makes an infinite sum finite and defines a time scale', paragraphs: ['At the continuing target, the undiscounted 1 + 1 + 1 + … diverges. For 0 < γ < 1, the geometric series is finite.', 'Near zero, only nearby rewards remain visible. Near one, distant rewards retain weight, but truncation and estimation become harder.'], formula: '1 + γ + γ² + ⋯ = 1 / (1 − γ)' },
-      { id: 'sample-expectation', kicker: 'Common misconception', title: 'One high-return trajectory does not imply high value', paragraphs: ['In a stochastic environment, a lucky trajectory can lie above exact value and an unlucky one below it.', 'A visible seed and sample protocol is needed to separate what happened once from what happens on average.'], formula: 'V̂ₙ(s) = (1/n) Σᵢ Gₜ⁽ⁱ⁾' },
-      { id: 'continuing-transfer', kicker: 'Transfer to the next chapter', title: 'The Bellman equation folds an infinite future into one step', paragraphs: ['Enumerating all futures defines value but is not an efficient way to solve it.', 'The next chapter uses Gₜ = Rₜ₊₁ + γGₜ₊₁ to split long-term return into immediate reward and successor value.'], formula: 'Gₜ = Rₜ₊₁ + γGₜ₊₁' },
+      { id: 'discount-boundary', kicker: 'Boundary case', title: 'γ makes an infinite sum finite and defines a time scale', paragraphs: ['At the continuing target, the undiscounted 1 + 1 + 1 + … diverges. For 0 < γ < 1, the geometric series is finite.', 'Near zero, only nearby rewards remain visible. Near one, distant rewards retain weight, but truncation and estimation become harder.'], formula: String.raw`1+\gamma+\gamma^2+\cdots=\frac{1}{1-\gamma}` },
+      { id: 'sample-expectation', kicker: 'Common misconception', title: 'One high-return trajectory does not imply high value', paragraphs: ['In a stochastic environment, a lucky trajectory can lie above exact value and an unlucky one below it.', 'A visible seed and sample protocol is needed to separate what happened once from what happens on average.'], formula: String.raw`\widehat{V}_n(s)=\frac{1}{n}\sum_{i=1}^{n}G_t^{(i)}` },
+      { id: 'continuing-transfer', kicker: 'Transfer to the next chapter', title: 'The Bellman equation folds an infinite future into one step', paragraphs: ['Enumerating all futures defines value but is not an efficient way to solve it.', 'The next chapter uses Gₜ = Rₜ₊₁ + γGₜ₊₁ to split long-term return into immediate reward and successor value.'], formula: String.raw`G_t=R_{t+1}+\gamma G_{t+1}` },
     ],
     summary: ['Return is the discounted sum of future rewards along one trajectory.', 'State value is the conditional expectation over every possible return from a state under a policy.', 'Discounting controls both finiteness in continuing tasks and the effective planning horizon.'],
     explorer: explorer.en,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
+import MathFormula from './MathFormula'
 
 function SamplePlane({ samples, clip, selectedId, onSelect, lang }) {
   const width = 640
@@ -47,12 +48,12 @@ export default function PpoLab({ lang, text }) {
   return (
     <section className="ppo-lab">
       <div className="ac-bridge" aria-label="Actor Critic loop">
-        <div className="ac-node actor"><small>Actor</small><strong>πθ(a|s)</strong><span>{lang === 'zh' ? '产生动作概率' : 'action probabilities'}</span></div>
-        <div className="ac-arrow"><span>aₜ</span>→</div>
-        <div className="ac-node environment"><small>{lang === 'zh' ? '环境' : 'Environment'}</small><strong>sₜ → sₜ₊₁</strong><span>rₜ₊₁</span></div>
+        <div className="ac-node actor"><small>Actor</small><strong><MathFormula latex={String.raw`\pi_\theta(a\mid s)`} /></strong><span>{lang === 'zh' ? '产生动作概率' : 'action probabilities'}</span></div>
+        <div className="ac-arrow"><MathFormula latex={String.raw`a_t`} />→</div>
+        <div className="ac-node environment"><small>{lang === 'zh' ? '环境' : 'Environment'}</small><strong><MathFormula latex={String.raw`s_t\rightarrow s_{t+1}`} /></strong><MathFormula latex={String.raw`r_{t+1}`} /></div>
         <div className="ac-arrow return-arrow"><span>TD error</span>↙</div>
-        <div className="ac-node critic"><small>Critic</small><strong>Vφ(s)</strong><span>{lang === 'zh' ? '估计 baseline' : 'estimates baseline'}</span></div>
-        <div className="advantage-chip"><small>Advantage</small><strong>Âₜ = Q̂ₜ − Vφ(sₜ)</strong></div>
+        <div className="ac-node critic"><small>Critic</small><strong><MathFormula latex={String.raw`V_\phi(s)`} /></strong><span>{lang === 'zh' ? '估计 baseline' : 'estimates baseline'}</span></div>
+        <div className="advantage-chip"><small>Advantage</small><strong><MathFormula latex={String.raw`\widehat{A}_t=\widehat{Q}_t-V_\phi(s_t)`} /></strong></div>
       </div>
       <p className="bridge-copy">{text.ppo.acBridge}</p>
 
@@ -72,11 +73,10 @@ export default function PpoLab({ lang, text }) {
           <dl>
             <div><dt>{c.advantage}</dt><dd>{selected.advantage.toFixed(2)}</dd></div>
             <div><dt>{c.ratio}</dt><dd>{selected.ratio.toFixed(3)}</dd></div>
-            <div><dt>clip(rₜ)</dt><dd>{selected.clippedRatio.toFixed(3)}</dd></div>
+            <div><dt><MathFormula latex={String.raw`\operatorname{clip}(r_t)`} /></dt><dd>{selected.clippedRatio.toFixed(3)}</dd></div>
           </dl>
           <div className="ppo-formula">
-            <div>L<sup>CLIP</sup><sub>t</sub> = min(</div>
-            <p><span className="ratio-term">rₜ</span> Âₜ, <span className="clip-term">clip(rₜ, 1−ε, 1+ε)</span> Âₜ )</p>
+            <MathFormula block latex={String.raw`L_t^{\mathrm{CLIP}}=\min\!\left(r_t\widehat{A}_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat{A}_t\right)`} />
             <strong>= {selected.surrogate.toFixed(3)}</strong>
           </div>
           <p>{selected.clipped

@@ -68,6 +68,18 @@ function validateLocale(locale, content, errors) {
       if (!line.id || !line.number || !line.label) errors.push(`${locale} microscope pseudocode line is incomplete`)
     })
   }
+
+  if (content.derivation) {
+    if (!Array.isArray(content.derivation) || content.derivation.length < 2) {
+      errors.push(`${locale}.derivation must contain at least two steps`)
+    } else {
+      content.derivation.forEach((step) => {
+        if (!step.id || !step.rule || !step.latex || !step.short || !step.detail || !Array.isArray(step.assumptions) || !Array.isArray(step.symbols)) {
+          errors.push(`${locale} derivation step ${step.id || '[missing id]'} is incomplete`)
+        }
+      })
+    }
+  }
 }
 
 export function validateChapterDefinition(chapter) {
@@ -86,6 +98,9 @@ export function validateChapterDefinition(chapter) {
   if (!sameIds(chapter.zh.sections, chapter.en.sections)) errors.push('section ids must match across locales')
   if (!sameIds(chapter.zh.presets, chapter.en.presets)) errors.push('preset ids must match across locales')
   if (!sameIds(chapter.zh.microscope?.pseudocode || [], chapter.en.microscope?.pseudocode || [])) errors.push('microscope pseudocode ids must match across locales')
+  if (chapter.zh.derivation || chapter.en.derivation) {
+    if (!chapter.zh.derivation || !chapter.en.derivation || !sameIds(chapter.zh.derivation, chapter.en.derivation)) errors.push('derivation ids must match across locales')
+  }
 
   chapter.termIds.forEach((termId) => {
     if (!glossaryIds.includes(termId)) errors.push(`unknown glossary term: ${termId}`)
@@ -144,10 +159,38 @@ export function validateFoundationChapterDefinition(chapter) {
     if (!content.explorer || typeof content.explorer !== 'object') {
       errors.push(`${locale}.explorer must be an object`)
     }
+    if (content.learningPath) {
+      if (!Array.isArray(content.learningPath) || content.learningPath.length < 2) {
+        errors.push(`${locale}.learningPath must contain at least two steps`)
+      } else {
+        content.learningPath.forEach((step) => {
+          if (!step.id || !step.kicker || !step.title || !Array.isArray(step.paragraphs) || !Array.isArray(step.formulas)) {
+            errors.push(`${locale} learning step ${step.id || '[missing id]'} is incomplete`)
+          }
+        })
+      }
+    }
+    if (content.derivation) {
+      if (!Array.isArray(content.derivation) || content.derivation.length < 2) {
+        errors.push(`${locale}.derivation must contain at least two steps`)
+      } else {
+        content.derivation.forEach((step) => {
+          if (!step.id || !step.rule || !step.latex || !step.short || !step.detail || !Array.isArray(step.assumptions) || !Array.isArray(step.symbols)) {
+            errors.push(`${locale} derivation step ${step.id || '[missing id]'} is incomplete`)
+          }
+        })
+      }
+    }
   }
 
   if (!sameIds(chapter.zh.prelude, chapter.en.prelude)) errors.push('prelude ids must match across locales')
   if (!sameIds(chapter.zh.sections, chapter.en.sections)) errors.push('section ids must match across locales')
+  if (chapter.zh.learningPath || chapter.en.learningPath) {
+    if (!chapter.zh.learningPath || !chapter.en.learningPath || !sameIds(chapter.zh.learningPath, chapter.en.learningPath)) errors.push('learningPath ids must match across locales')
+  }
+  if (chapter.zh.derivation || chapter.en.derivation) {
+    if (!chapter.zh.derivation || !chapter.en.derivation || !sameIds(chapter.zh.derivation, chapter.en.derivation)) errors.push('derivation ids must match across locales')
+  }
 
   chapter.sources.forEach((source) => {
     if (!source.id || !source.label || !source.pages || !source.href) errors.push(`source ${source.id || '[missing id]'} is incomplete`)
