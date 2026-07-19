@@ -1,0 +1,96 @@
+import { bellmanChapter } from './content/bellman.js'
+import { mdpChapter } from './content/mdp.js'
+import { returnChapter } from './content/returns.js'
+import { optimalityChapter } from './content/optimality.js'
+import { planningChapter } from './content/planning.js'
+
+export const copy = {
+  zh: {
+    brand: '强化学习数学基础',
+    lab: '交互原型',
+    toc: '学习地图',
+    chapters: [
+      { id: 'mdp', number: '01', kicker: '经典基础', title: 'MDP 与课程世界', subtitle: '从一次交互认清 RL 的五个接口' },
+      { id: 'returns', number: '02', kicker: '长期回报', title: 'Return 与 State Value', subtitle: '从一条未来到所有未来的平均' },
+      { id: 'bellman', number: '03', kicker: '价值基础', title: 'Bellman 方程', subtitle: '从一步更新理解长期价值' },
+      { id: 'optimality', number: '04', kicker: '最优控制', title: 'Bellman 最优方程', subtitle: '让五个动作在同一状态竞争' },
+      { id: 'planning', number: '05', kicker: '规划与学习', title: '更新顺序与收敛', subtitle: '在同一世界公平比较算法' },
+      { id: 'ppo', number: '13', kicker: '现代策略优化', title: 'Actor–Critic 与 PPO', subtitle: '从 advantage 到稳定更新' },
+      { id: 'rlhf', number: '14', kicker: '语言模型后训练', title: 'PPO 系统视图', subtitle: '让算法与工程共享同一批 rollout' },
+    ],
+    prerequisites: '前置：状态、动作、奖励与回报',
+    mdp: { ...mdpChapter.zh, sources: mdpChapter.sources },
+    returns: { ...returnChapter.zh, sources: returnChapter.sources },
+    bellman: { ...bellmanChapter.zh, sources: bellmanChapter.sources },
+    optimality: { ...optimalityChapter.zh, sources: optimalityChapter.sources },
+    planning: { ...planningChapter.zh, sources: planningChapter.sources },
+    ppo: {
+      eyebrow: '第 10 章之后 · 从 Actor–Critic 到 PPO',
+      title: '怎样重复利用 rollout，又不让策略一步走得太远？',
+      intro: 'Actor 用 advantage 决定提高或降低动作概率，Critic 估计价值并提供更低方差的学习信号。PPO 进一步约束新旧策略概率比，让同一批样本能够进行多轮小步更新。',
+      acBridge: 'Actor–Critic 的核心接口没有消失：Critic 仍然估计 V(s)，advantage 仍然决定策略更新方向；PPO 只是在这个更新接口外增加“近端”约束。',
+    },
+    rlhf: {
+      eyebrow: '现代扩展 · 语言模型后训练',
+      title: 'PPO 算法怎样嵌入语言模型训练系统？',
+      intro: '在语言模型中，状态成为 prompt 与已生成 token 的前缀，动作成为下一个 token，轨迹成为完整 response。下面两个视图共享同一组 rollout：切换视角不会换一套示例数据。',
+    },
+    common: {
+      gamma: '折扣因子 γ', noise: '动作随机性（扩展）', policy: '策略', fixed: '课件固定策略', greedy: '贪心策略',
+      previous: '上一步', step: '单步更新', play: '连续播放', pause: '暂停', reset: '重置',
+      grid: '网格世界', value: '状态价值 V(s)', update: '本步更新', controls: '参数与操作',
+      currentState: '当前状态', action: '选择动作', reward: '即时奖励', nextState: '下一状态', target: '目标值',
+      before: '更新前', after: '更新后', residual: 'Bellman 残差', iterations: '更新步数', sweeps: '完整 sweep',
+      synchronous: '同步值迭代', inplace: '原地值迭代', sameConditions: '比较条件已锁定', backups: 'backup 次数', converged: '收敛轮数',
+      clip: '裁剪范围 ε', strength: '更新强度', klBeta: 'KL 惩罚 β', algorithm: '算法视图', system: '系统视图',
+      ratio: '新旧策略比 rₜ', advantage: '优势 Aₜ', clipped: '已裁剪', free: '未裁剪', samples: '同一批 rollout 样本',
+      selectSample: '选择一个样本查看它如何穿过整条链路', adjustedReward: 'KL 后奖励', objective: '代理目标', meanKl: '近似 KL',
+      prompt: 'Prompt', rollout: 'Rollout workers', policyModel: 'Policy model', reference: 'Reference model', rewardModel: 'Reward model', valueModel: 'Value model', gae: 'GAE / advantages', updateModel: 'PPO minibatch update',
+      depthObserve: '观察', depthMechanism: '机制', depthDeep: '深入',
+    },
+  },
+  en: {
+    brand: 'Mathematical Foundations of RL',
+    lab: 'Interactive prototype',
+    toc: 'Learning map',
+    chapters: [
+      { id: 'mdp', number: '01', kicker: 'Classical foundation', title: 'MDP & Course World', subtitle: 'Five RL interfaces in one interaction' },
+      { id: 'returns', number: '02', kicker: 'Long-term return', title: 'Return & State Value', subtitle: 'One future versus the mean of all futures' },
+      { id: 'bellman', number: '03', kicker: 'Value foundation', title: 'Bellman Equation', subtitle: 'Long-term value from one-step updates' },
+      { id: 'optimality', number: '04', kicker: 'Optimal control', title: 'Bellman Optimality', subtitle: 'Let five actions compete in one state' },
+      { id: 'planning', number: '05', kicker: 'Planning & learning', title: 'Update Order & Convergence', subtitle: 'Compare algorithms in one world' },
+      { id: 'ppo', number: '13', kicker: 'Modern policy optimization', title: 'Actor–Critic & PPO', subtitle: 'From advantage to stable updates' },
+      { id: 'rlhf', number: '14', kicker: 'Language-model post-training', title: 'PPO System View', subtitle: 'One rollout batch across algorithm and engineering' },
+    ],
+    prerequisites: 'Prerequisites: states, actions, rewards, and returns',
+    mdp: { ...mdpChapter.en, sources: mdpChapter.sources },
+    returns: { ...returnChapter.en, sources: returnChapter.sources },
+    bellman: { ...bellmanChapter.en, sources: bellmanChapter.sources },
+    optimality: { ...optimalityChapter.en, sources: optimalityChapter.sources },
+    planning: { ...planningChapter.en, sources: planningChapter.sources },
+    ppo: {
+      eyebrow: 'Beyond Chapter 10 · From Actor–Critic to PPO',
+      title: 'How can we reuse a rollout without moving the policy too far?',
+      intro: 'The actor raises or lowers action probabilities using advantage, while the critic estimates value to reduce variance. PPO adds a constraint on the new-to-old probability ratio, enabling several small updates on one batch.',
+      acBridge: 'The Actor–Critic interface remains: the critic estimates V(s), advantage sets the update direction, and PPO wraps that interface in a proximal constraint.',
+    },
+    rlhf: {
+      eyebrow: 'Modern extension · Language-model post-training',
+      title: 'How does PPO fit into a language-model training system?',
+      intro: 'For language models, a state is the prompt plus generated prefix, an action is the next token, and a trajectory is a complete response. Both views below share the same rollout batch; switching views never swaps the evidence.',
+    },
+    common: {
+      gamma: 'Discount γ', noise: 'Action randomness (extension)', policy: 'Policy', fixed: 'Course fixed policy', greedy: 'Greedy policy',
+      previous: 'Undo', step: 'Single update', play: 'Play', pause: 'Pause', reset: 'Reset',
+      grid: 'Grid world', value: 'State value V(s)', update: 'Current update', controls: 'Parameters & actions',
+      currentState: 'Current state', action: 'Selected action', reward: 'Immediate reward', nextState: 'Next state', target: 'Target',
+      before: 'Before', after: 'After', residual: 'Bellman residual', iterations: 'Updates', sweeps: 'Full sweeps',
+      synchronous: 'Synchronous VI', inplace: 'In-place VI', sameConditions: 'Comparison conditions locked', backups: 'Backups', converged: 'Sweeps to converge',
+      clip: 'Clip range ε', strength: 'Update strength', klBeta: 'KL penalty β', algorithm: 'Algorithm view', system: 'System view',
+      ratio: 'Policy ratio rₜ', advantage: 'Advantage Aₜ', clipped: 'Clipped', free: 'Unclipped', samples: 'One shared rollout batch',
+      selectSample: 'Select one sample and follow it through the entire pipeline', adjustedReward: 'Reward after KL', objective: 'Surrogate objective', meanKl: 'Approx. KL',
+      prompt: 'Prompt', rollout: 'Rollout workers', policyModel: 'Policy model', reference: 'Reference model', rewardModel: 'Reward model', valueModel: 'Value model', gae: 'GAE / advantages', updateModel: 'PPO minibatch update',
+      depthObserve: 'Observe', depthMechanism: 'Mechanism', depthDeep: 'Deep dive',
+    },
+  },
+}
