@@ -13,6 +13,7 @@ import {
   keyOf,
   transitionsFor,
 } from '../engine/gridworld'
+import MathFormula from './MathFormula'
 
 const actionCopy = {
   zh: { up: '上', right: '右', down: '下', left: '左', stay: '停留' },
@@ -75,9 +76,9 @@ export default function CourseWorldExplorer({ lang, content }) {
       <div className="mdp-interface-strip" aria-label={text.tupleTitle}>
         <div><span>S</span><strong>{text.stateSpace}</strong><small>{labelState(current, text.statePrefix)}</small></div>
         <div><span>A</span><strong>{text.actionSpace}</strong><small>{ACTIONS[action].arrow} {actionCopy[lang][action]}</small></div>
-        <div><span>P</span><strong>p(s′|s,a)</strong><small>{branches.length} {text.possible}</small></div>
-        <div><span>R</span><strong>p(r|s,a)</strong><small>E[r] = {expectedReward.toFixed(2)}</small></div>
-        <div><span>π</span><strong>{text.policyProbability}</strong><small>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]} · 1.00</small></div>
+        <div><span>P</span><strong><MathFormula latex={String.raw`p(s'\mid s,a)`} /></strong><small>{branches.length} {text.possible}</small></div>
+        <div><span>R</span><strong><MathFormula latex={String.raw`p(r\mid s,a)`} /></strong><small><MathFormula latex={String.raw`\mathbb E[r]=${expectedReward.toFixed(2)}`} /></small></div>
+        <div><span><MathFormula latex={String.raw`\pi`} /></span><strong><MathFormula latex={String.raw`\pi(a\mid s)`} /></strong><small>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]} · 1.00</small></div>
       </div>
       <p className="mdp-interface-hint"><strong>{text.tupleTitle}</strong>{text.tupleHint}</p>
 

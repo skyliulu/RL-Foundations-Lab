@@ -4,22 +4,22 @@ import { evaluateDpo, evaluateGrpo } from '../engine/post-training'
 import MathFormula from './MathFormula'
 
 const nodeDetail = {
-  prompt: ['state s₀', 'UTF-8 text', 'batch item'],
-  policyModel: ['actor πθ', 'token logits', 'GPU forward'],
-  rollout: ['trajectory τ', 'tokens + logprobs', 'generation workers'],
-  reference: ['πref', 'reference logprobs', 'frozen forward'],
-  rewardModel: ['R(τ)', 'sequence reward', 'scoring forward'],
-  valueModel: ['Vφ(sₜ)', 'token values', 'critic forward'],
-  gae: ['Âₜ, R̂ₜ', 'training tensors', 'CPU / GPU batch op'],
-  updateModel: ['LCLIP + LV + KL', 'minibatches', 'backward + optimizer'],
+  prompt: [String.raw`s_0`, 'UTF-8 text', 'batch item'],
+  policyModel: [String.raw`\pi_\theta`, 'token logits', 'GPU forward'],
+  rollout: [String.raw`\tau`, 'tokens + logprobs', 'generation workers'],
+  reference: [String.raw`\pi_{\mathrm{ref}}`, 'reference logprobs', 'frozen forward'],
+  rewardModel: [String.raw`R(\tau)`, 'sequence reward', 'scoring forward'],
+  valueModel: [String.raw`V_\phi(s_t)`, 'token values', 'critic forward'],
+  gae: [String.raw`\widehat A_t,\widehat R_t`, 'training tensors', 'CPU / GPU batch op'],
+  updateModel: [String.raw`L^{\mathrm{CLIP}}+L^V+D_{\mathrm{KL}}`, 'minibatches', 'backward + optimizer'],
 }
 
-function PipelineNode({ id, label, active, onClick, icon }) {
+function PipelineNode({ id, label, active, onClick, iconLatex }) {
   return (
     <button type="button" className={`pipeline-node ${active ? 'active' : ''}`} onClick={() => onClick(id)}>
-      <span className="node-icon">{icon}</span>
+      <span className="node-icon"><MathFormula latex={iconLatex} /></span>
       <strong>{label}</strong>
-      <small>{nodeDetail[id][0]}</small>
+      <small><MathFormula latex={nodeDetail[id][0]} /></small>
     </button>
   )
 }
@@ -68,18 +68,18 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
       {method === 'dpo' ? (
         <div className="method-algorithm-view">
           <div className="preference-pair">
-            <article className="chosen"><small>{lang === 'zh' ? '偏好回答 y_w' : 'Chosen response y_w'}</small><p>{lang === 'zh' ? '瑞利散射对较短波长更强，因此天空在人眼中主要呈蓝色。' : 'Rayleigh scattering is stronger for shorter wavelengths, making the sky appear predominantly blue.'}</p><b>Δ log π = +{dpo.chosenShift.toFixed(2)}</b></article>
+            <article className="chosen"><small>{lang === 'zh' ? '偏好回答 ' : 'Chosen response '}<MathFormula latex={String.raw`y_w`} /></small><p>{lang === 'zh' ? '瑞利散射对较短波长更强，因此天空在人眼中主要呈蓝色。' : 'Rayleigh scattering is stronger for shorter wavelengths, making the sky appear predominantly blue.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=+${dpo.chosenShift.toFixed(2)}`} /></b></article>
             <span>≻</span>
-            <article><small>{lang === 'zh' ? '被拒回答 y_l' : 'Rejected response y_l'}</small><p>{lang === 'zh' ? '因为太空是蓝色的，所以天空也是蓝色的。' : 'The sky is blue because outer space is blue.'}</p><b>Δ log π = {dpo.rejectedShift.toFixed(2)}</b></article>
+            <article><small>{lang === 'zh' ? '被拒回答 ' : 'Rejected response '}<MathFormula latex={String.raw`y_l`} /></small><p>{lang === 'zh' ? '因为太空是蓝色的，所以天空也是蓝色的。' : 'The sky is blue because outer space is blue.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=${dpo.rejectedShift.toFixed(2)}`} /></b></article>
           </div>
-          <div className="shared-equation"><MathFormula block latex={String.raw`\mathcal L_{\mathrm{DPO}}=-\log\sigma\!\left(\beta\left[\Delta\log\pi(y_w)-\Delta\log\pi(y_l)\right]\right)`} /><strong>p(yw ≻ yl) = {dpo.preferenceProbability.toFixed(3)} · loss = {dpo.loss.toFixed(3)}</strong></div>
+          <div className="shared-equation"><MathFormula block latex={String.raw`\mathcal L_{\mathrm{DPO}}=-\log\sigma\!\left(\beta\left[\Delta\log\pi(y_w)-\Delta\log\pi(y_l)\right]\right)`} /><strong><MathFormula latex={String.raw`p(y_w\succ y_l)=${dpo.preferenceProbability.toFixed(3)},\quad \mathrm{loss}=${dpo.loss.toFixed(3)}`} /></strong></div>
         </div>
       ) : method === 'grpo' ? (
         <div className="method-algorithm-view">
           <div className="group-responses">
-            {grpo.samples.map((sample) => <article key={sample.id} className={sample.advantage > 0 ? 'positive' : 'negative'}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong>R = {sample.reward.toFixed(2)}</strong><span>Â = {sample.advantage.toFixed(2)}</span><span>r = {sample.ratio.toFixed(2)} → {sample.clippedRatio.toFixed(2)}</span><b>J = {sample.objective.toFixed(3)}</b></article>)}
+            {grpo.samples.map((sample) => <article key={sample.id} className={sample.advantage > 0 ? 'positive' : 'negative'}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong><MathFormula latex={String.raw`R=${sample.reward.toFixed(2)}`} /></strong><span><MathFormula latex={String.raw`\widehat A=${sample.advantage.toFixed(2)}`} /></span><span><MathFormula latex={String.raw`r=${sample.ratio.toFixed(2)}\rightarrow ${sample.clippedRatio.toFixed(2)}`} /></span><b><MathFormula latex={String.raw`J=${sample.objective.toFixed(3)}`} /></b></article>)}
           </div>
-          <div className="shared-equation"><MathFormula block latex={String.raw`A_i=\frac{R_i-\mu_R}{\sigma_R+\varepsilon},\qquad J_i=\min(r_iA_i,\operatorname{clip}(r_i)A_i)-\beta D_{\mathrm{KL}}`} /><strong>μR = {grpo.mean.toFixed(3)} · σR = {grpo.std.toFixed(3)}</strong></div>
+          <div className="shared-equation"><MathFormula block latex={String.raw`A_i=\frac{R_i-\mu_R}{\sigma_R+\varepsilon},\qquad J_i=\min(r_iA_i,\operatorname{clip}(r_i)A_i)-\beta D_{\mathrm{KL}}`} /><strong><MathFormula latex={String.raw`\mu_R=${grpo.mean.toFixed(3)},\quad \sigma_R=${grpo.std.toFixed(3)}`} /></strong></div>
         </div>
       ) : view === 'algorithm' ? (
         <div className="algorithm-view">
@@ -88,38 +88,38 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
             <span>Rayleigh</span><span>scattering</span><span className="active-token">{selected.token}</span><span>shorter</span><span>wavelengths</span><span>EOS</span>
           </div>
           <div className="algorithm-columns">
-            <div><small>{lang === 'zh' ? '旧策略概率' : 'Old policy'}</small><strong>πold(aₜ|sₜ) = {selected.oldProbability.toFixed(2)}</strong></div>
-            <div><small>{c.ratio}</small><strong>rₜ = {selected.ratio.toFixed(3)}</strong></div>
-            <div><small>{c.advantage}</small><strong>Âₜ = {selected.advantage.toFixed(2)}</strong></div>
-            <div className={selected.clipped ? 'warn' : ''}><small>clip(rₜ)</small><strong>{selected.clippedRatio.toFixed(3)}</strong></div>
+            <div><small>{lang === 'zh' ? '旧策略概率' : 'Old policy'}</small><strong><MathFormula latex={String.raw`\pi_{\mathrm{old}}(a_t\mid s_t)=${selected.oldProbability.toFixed(2)}`} /></strong></div>
+            <div><small>{c.ratio}</small><strong><MathFormula latex={String.raw`r_t=${selected.ratio.toFixed(3)}`} /></strong></div>
+            <div><small>{c.advantage}</small><strong><MathFormula latex={String.raw`\widehat A_t=${selected.advantage.toFixed(2)}`} /></strong></div>
+            <div className={selected.clipped ? 'warn' : ''}><small><MathFormula latex={String.raw`\operatorname{clip}(r_t)`} /></small><strong>{selected.clippedRatio.toFixed(3)}</strong></div>
           </div>
-          <div className="shared-equation"><MathFormula block latex={String.raw`L_t=\min\!\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)-\beta D_{\mathrm{KL}}\!\left(\pi_\theta\,\|\,\pi_{\mathrm{ref}}\right)`} /><strong>{selected.surrogate.toFixed(3)} − {klBeta.toFixed(2)} × {selected.approxKl.toFixed(3)}</strong></div>
+          <div className="shared-equation"><MathFormula block latex={String.raw`L_t=\min\!\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)-\beta D_{\mathrm{KL}}\!\left(\pi_\theta\,\|\,\pi_{\mathrm{ref}}\right)`} /><strong><MathFormula latex={String.raw`${selected.surrogate.toFixed(3)}-${klBeta.toFixed(2)}\times ${selected.approxKl.toFixed(3)}`} /></strong></div>
         </div>
       ) : (
         <div className="system-view">
           <div className="pipeline-row primary-flow">
-            <PipelineNode id="prompt" label={c.prompt} icon="P" active={selectedNode === 'prompt'} onClick={setSelectedNode} />
+            <PipelineNode id="prompt" label={c.prompt} iconLatex={String.raw`P`} active={selectedNode === 'prompt'} onClick={setSelectedNode} />
             <span className="flow-arrow">→</span>
-            <PipelineNode id="policyModel" label={c.policyModel} icon="π" active={selectedNode === 'policyModel'} onClick={setSelectedNode} />
+            <PipelineNode id="policyModel" label={c.policyModel} iconLatex={String.raw`\pi`} active={selectedNode === 'policyModel'} onClick={setSelectedNode} />
             <span className="flow-arrow">→</span>
-            <PipelineNode id="rollout" label={c.rollout} icon="τ" active={selectedNode === 'rollout'} onClick={setSelectedNode} />
+            <PipelineNode id="rollout" label={c.rollout} iconLatex={String.raw`\tau`} active={selectedNode === 'rollout'} onClick={setSelectedNode} />
           </div>
           <div className="branch-lines" aria-hidden="true"><span>↙</span><span>↓</span><span>↘</span></div>
           <div className="pipeline-row scoring-flow">
-            <PipelineNode id="reference" label={c.reference} icon="π₀" active={selectedNode === 'reference'} onClick={setSelectedNode} />
-            <PipelineNode id="rewardModel" label={c.rewardModel} icon="R" active={selectedNode === 'rewardModel'} onClick={setSelectedNode} />
-            <PipelineNode id="valueModel" label={c.valueModel} icon="V" active={selectedNode === 'valueModel'} onClick={setSelectedNode} />
+            <PipelineNode id="reference" label={c.reference} iconLatex={String.raw`\pi_0`} active={selectedNode === 'reference'} onClick={setSelectedNode} />
+            <PipelineNode id="rewardModel" label={c.rewardModel} iconLatex={String.raw`R`} active={selectedNode === 'rewardModel'} onClick={setSelectedNode} />
+            <PipelineNode id="valueModel" label={c.valueModel} iconLatex={String.raw`V`} active={selectedNode === 'valueModel'} onClick={setSelectedNode} />
           </div>
           <div className="merge-lines" aria-hidden="true"><span>↘</span><span>↓</span><span>↙</span></div>
           <div className="pipeline-row update-flow">
-            <PipelineNode id="gae" label={c.gae} icon="Â" active={selectedNode === 'gae'} onClick={setSelectedNode} />
+            <PipelineNode id="gae" label={c.gae} iconLatex={String.raw`\widehat A`} active={selectedNode === 'gae'} onClick={setSelectedNode} />
             <span className="flow-arrow">→</span>
-            <PipelineNode id="updateModel" label={c.updateModel} icon="∇" active={selectedNode === 'updateModel'} onClick={setSelectedNode} />
-            <span className="flow-arrow loop-arrow">↺ πθ</span>
+            <PipelineNode id="updateModel" label={c.updateModel} iconLatex={String.raw`\nabla`} active={selectedNode === 'updateModel'} onClick={setSelectedNode} />
+            <span className="flow-arrow loop-arrow">↺ <MathFormula latex={String.raw`\pi_\theta`} /></span>
           </div>
           <aside className="node-inspector">
             <header><span>{c[selectedNode] || selectedNode}</span><b>{selectedId}</b></header>
-            <dl><div><dt>{lang === 'zh' ? '算法对象' : 'Algorithm object'}</dt><dd>{detail[0]}</dd></div><div><dt>{lang === 'zh' ? '数据对象' : 'Data object'}</dt><dd>{detail[1]}</dd></div><div><dt>{lang === 'zh' ? '工程动作' : 'System action'}</dt><dd>{detail[2]}</dd></div></dl>
+            <dl><div><dt>{lang === 'zh' ? '算法对象' : 'Algorithm object'}</dt><dd><MathFormula latex={detail[0]} /></dd></div><div><dt>{lang === 'zh' ? '数据对象' : 'Data object'}</dt><dd>{detail[1]}</dd></div><div><dt>{lang === 'zh' ? '工程动作' : 'System action'}</dt><dd>{detail[2]}</dd></div></dl>
             <p>{lang === 'zh' ? '点击任一节点，检查同一条样本在算法语义与工程生命周期中的位置。' : 'Select any node to inspect where the same sample lives in the algorithm and system lifecycle.'}</p>
           </aside>
         </div>
@@ -128,7 +128,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
       {method === 'ppo' && <div className="response-group">
         {result.samples.map((sample) => (
           <button type="button" key={sample.id} className={sample.id === selectedId ? 'active' : ''} onClick={() => setSelectedId(sample.id)}>
-            <b>{sample.id}</b><span>{sample.token}</span><small>R {sample.reward.toFixed(1)}</small><small>Â {sample.advantage.toFixed(2)}</small><small>{c.adjustedReward} {sample.adjustedReward.toFixed(2)}</small>
+            <b>{sample.id}</b><span>{sample.token}</span><small><MathFormula latex={String.raw`R=${sample.reward.toFixed(1)}`} /></small><small><MathFormula latex={String.raw`\widehat A=${sample.advantage.toFixed(2)}`} /></small><small>{c.adjustedReward} {sample.adjustedReward.toFixed(2)}</small>
           </button>
         ))}
       </div>}

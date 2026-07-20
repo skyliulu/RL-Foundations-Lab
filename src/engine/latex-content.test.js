@@ -59,6 +59,28 @@ test('JSX does not hand-build mathematical notation with sub or sup tags', () =>
   })
 })
 
+test('interactive components route formula-like labels through MathFormula', () => {
+  const engineDir = path.dirname(fileURLToPath(import.meta.url))
+  const componentsDir = path.resolve(engineDir, '..', 'components')
+  const formulaComponents = [
+    'BellmanLab.jsx',
+    'CourseWorldExplorer.jsx',
+    'MonteCarloLab.jsx',
+    'PpoLab.jsx',
+    'ReturnObservatory.jsx',
+    'SystemLab.jsx',
+  ]
+
+  formulaComponents.forEach((name) => {
+    const source = fs.readFileSync(path.join(componentsDir, name), 'utf8')
+    assert.match(source, /MathFormula/, `${name} should render notation with MathFormula`)
+    assert.doesNotMatch(source, /Gₜ|Sₜ|Aₜ|Rₜ₊₁|Vπ|πold|Âₜ|p\(s′/, `${name} contains hand-built pseudo-math`)
+  })
+
+  const ppoSource = fs.readFileSync(path.join(componentsDir, 'PpoLab.jsx'), 'utf8')
+  assert.match(ppoSource, /<foreignObject[\s\S]*?<MathFormula/, 'PPO chart labels should use MathFormula inside SVG')
+})
+
 test('chapter copy does not expose source-production references', () => {
   for (const locale of ['zh', 'en']) {
     for (const chapterId of copy[locale].chapters.map((chapter) => chapter.id)) {

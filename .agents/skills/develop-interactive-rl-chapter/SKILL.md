@@ -69,7 +69,8 @@ Preserve the source material's conceptual spine while turning it into a continuo
 
 - Store every mathematical expression as valid LaTeX source, preferably with `String.raw` for backslash-heavy strings.
 - Render math only through the shared `MathFormula` component. Do not hand-build math with Unicode superscripts/subscripts, HTML `<sub>/<sup>`, or visual approximations.
-- Treat display equations, inline symbols, axis labels, value cells, and derivation steps consistently.
+- Treat display equations, inline symbols, axis labels, value cells, derivation steps, table entries, and right-workbench content consistently.
+- Do not place formula-looking text such as `Gₜ`, `Vπ(s)`, `p(s′|s,a)`, or `γ = 0.9` directly in JSX. Convert it to valid LaTeX and render it with `MathFormula`, including inside labels, mappings, assumptions, and contextual explanations.
 - Fail tests on invalid LaTeX or on newly introduced mathematical pseudo-markup.
 
 ## Interactive Derivation Contract
@@ -115,10 +116,19 @@ Use this shape for derivation data:
 - Render supporting equations compactly near the prose. Use display math only when the equation needs its own reading step; do not enlarge every formula or force each short expression onto a separate row.
 - Inspect adjacent block edges and vertical rhythm in rendered desktop and mobile output, not only individual components.
 
+## Readability and Reference Contract
+
+- Set an explicit typography floor instead of shrinking text to fit dense interfaces. At the normal desktop viewport, keep article prose at least 14 px, supporting labels and explanations at least 12 px, and dense code or table cells at least 11 px.
+- Apply the floor to pseudocode, algorithm comparisons, worked-example tables, ledgers, controls, chart labels, inspectors, and the right workbench. If larger text no longer fits, add wrapping, scrolling, or a responsive layout instead of reducing the type again.
+- Inspect representative long Chinese and English labels at desktop and mobile widths. Do not approve a component from CSS values alone.
+- Render one final `Sources and further reading` section per chapter. Put source-specific and conceptual references in that section; do not append a second global concept-source footer beneath it.
+- Keep reference labels and page metadata readable, aligned to the chapter column, and free of duplicated links.
+
 ## Acceptance Checks
 
 - Search reader-facing strings for `课件`, `slide`, `lecture`, `PDF p`, and page-number production labels.
 - Search JSX/content for math-like `<sub>`, `<sup>`, Unicode pseudo-formulas, and raw formula strings bypassing `MathFormula`.
+- Search right-workbench mappings, assumptions, controls, table cells, and captions for formula-looking plain text.
 - Validate every LaTeX string with the same renderer used at runtime.
 - Confirm every derivation line remains visible before and after clicking.
 - Confirm a selected line updates the right workbench without changing the mathematical chain.
@@ -129,3 +139,5 @@ Use this shape for derivation data:
 - For every named algorithm, confirm that the reader can identify the limitation that motivated it, its complete execution loop, why its update is valid, and its tradeoff relative to the previous method.
 - Reject generic experiments whose visible state does not correspond to the chapter's actual algorithm state and data flow.
 - Measure the rendered left and right edges of the opening, representative prose, experiment entry, post-experiment interpretation, summary, and references. Confirm they use the same chapter grid and text column rather than unrelated widths.
+- Measure rendered font sizes in one algorithm block, one worked-example table, one experiment, and the right workbench; reject values below the readability floor unless a documented graphical exception remains legible at actual size.
+- Confirm each chapter ends with one source section and no separate concept-source footer.

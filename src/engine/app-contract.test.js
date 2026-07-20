@@ -71,7 +71,7 @@ test('the chapter shell keeps prose on one reading column and experiments on one
   assert.match(styles, /--chapter-frame:\s*1240px/)
   assert.match(styles, /--reading-column:\s*780px/)
   assert.match(styles, /\.chapter-shell\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
-  ;['derivation-sequence', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources', 'source-note'].forEach((className) => {
+  ;['derivation-sequence', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources'].forEach((className) => {
     assert.match(styles, new RegExp(`\\.${className}\\s*\\{[^}]*max-width:\\s*var\\(--reading-column\\)`), className)
   })
   assert.match(styles, /\.world-explorer\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
@@ -112,6 +112,32 @@ test('ordinary chapter-one formulas use the shared display treatment', () => {
   assert.match(narrative, /<MathFormula block latex=\{formula\}/)
   assert.match(styles, /\.narrative-formulas\s*\{[^}]*border-left:\s*2px solid var\(--navy\)/)
   assert.match(styles, /\.narrative-formulas\s*\{[^}]*background:\s*rgba\(23,79,130,\.035\)/)
+})
+
+test('right-workbench notation is rendered through MathFormula', () => {
+  const app = read('App.jsx')
+  assert.match(app, /latex=\{String\.raw`p\(s'\\mid s,a,h\)=p\(s'\\mid s,a\)`\}/)
+  assert.match(app, /latex=\{String\.raw`G_t`\}/)
+  assert.match(app, /latex=\{String\.raw`V\^\{\\pi\}\(s\)`\}/)
+  assert.doesNotMatch(app, />p\(s′\|s,a,history\) = p\(s′\|s,a\)</)
+  assert.doesNotMatch(app, /Gₜ|Vπ\(s\)/)
+})
+
+test('algorithms, tables, experiments, and the right workbench share a readable type floor', () => {
+  const styles = read('styles.css')
+  assert.match(styles, /--font-dense:\s*\.75rem/)
+  assert.match(styles, /--font-support:\s*\.76rem/)
+  assert.match(styles, /\.deepening-pseudocode code\s*\{[^}]*var\(--font-code\)/)
+  assert.match(styles, /\.deepening-example-table span\s*\{[^}]*var\(--font-support\)/)
+  assert.match(styles, /Readability floor for algorithms, evidence tables, and interactive workbenches/)
+})
+
+test('every chapter ends with one source section and no duplicate concept-source footer', () => {
+  const app = read('App.jsx')
+  const styles = read('styles.css')
+  assert.match(app, /function ChapterSources/)
+  assert.doesNotMatch(app, /source-note|概念依据|Concept sources/)
+  assert.doesNotMatch(styles, /\.source-note/)
 })
 
 test('the homepage explains the learning path and gives readers an actionable chapter rhythm', () => {

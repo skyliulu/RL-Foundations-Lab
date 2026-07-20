@@ -15,10 +15,10 @@ function SamplePlane({ samples, clip, selectedId, onSelect, lang }) {
       <line className="plane-axis" x1={x(0)} x2={x(0)} y1={pad.top} y2={height - pad.bottom} />
       <line className="clip-line" x1={pad.left} x2={width - pad.right} y1={y(1 + clip)} y2={y(1 + clip)} />
       <line className="clip-line" x1={pad.left} x2={width - pad.right} y1={y(1 - clip)} y2={y(1 - clip)} />
-      <text x={width - 138} y={y(1 + clip) - 6}>1 + ε = {(1 + clip).toFixed(2)}</text>
-      <text x={width - 138} y={y(1 - clip) + 17}>1 − ε = {(1 - clip).toFixed(2)}</text>
-      <text x={width - 94} y={height - 10}>{lang === 'zh' ? '优势 Aₜ' : 'Advantage Aₜ'}</text>
-      <text x="6" y="18">rₜ</text>
+      <foreignObject x={width - 150} y={y(1 + clip) - 22} width="140" height="24"><div xmlns="http://www.w3.org/1999/xhtml" className="svg-math-label"><MathFormula latex={String.raw`1+\epsilon=${(1 + clip).toFixed(2)}`} /></div></foreignObject>
+      <foreignObject x={width - 150} y={y(1 - clip) + 2} width="140" height="24"><div xmlns="http://www.w3.org/1999/xhtml" className="svg-math-label"><MathFormula latex={String.raw`1-\epsilon=${(1 - clip).toFixed(2)}`} /></div></foreignObject>
+      <foreignObject x={width - 145} y={height - 29} width="135" height="24"><div xmlns="http://www.w3.org/1999/xhtml" className="svg-math-label axis-label">{lang === 'zh' ? '优势 ' : 'Advantage '}<MathFormula latex={String.raw`\widehat A_t`} /></div></foreignObject>
+      <foreignObject x="6" y="2" width="54" height="24"><div xmlns="http://www.w3.org/1999/xhtml" className="svg-math-label"><MathFormula latex={String.raw`r_t`} /></div></foreignObject>
       {samples.map((sample) => (
         <g
           key={sample.id}

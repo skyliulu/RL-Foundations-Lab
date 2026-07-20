@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { ACTIONS, allStates, indexOf, isForbidden, isGoal, isSame, keyOf } from '../engine/gridworld'
 import { estimateStateValue } from '../engine/returns'
 import { returnPresetConfigs } from '../content/returns'
+import MathFormula from './MathFormula'
 
 const sampleOptions = [1, 4, 8, 32]
 
@@ -66,6 +67,7 @@ export default function ReturnObservatory({ lang, content }) {
   const visibleSteps = sample.steps.slice(0, 14)
   const maxContribution = Math.max(...visibleSteps.map((step) => Math.abs(step.contribution)), 0.001)
   const error = result.mean - result.exact
+  const visibleReturnLatex = String.raw`G_0=${visibleSteps.map((step) => `${step.discount.toFixed(2)}\\times(${step.reward})`).join('+')}+\cdots`
 
   function applyPreset(id) {
     const preset = returnPresetConfigs[id]
@@ -137,9 +139,9 @@ export default function ReturnObservatory({ lang, content }) {
         {mode === 'trajectory' ? (
           <section className="return-tape-panel">
             <header><span>{text.trajectoryTape}</span><small>{text.visibleSteps}</small></header>
-            <div className="return-formula-live"><strong>G₀</strong> = {visibleSteps.map((step, index) => <span key={step.time}>{index > 0 && ' + '}<b>{step.discount.toFixed(2)}</b>×{step.reward}</span>)} + …</div>
+            <div className="return-formula-live"><MathFormula block latex={visibleReturnLatex} /></div>
             <div className="return-step-table">
-              <div className="return-step-head"><span>t</span><span>sₜ → aₜ → sₜ₊₁</span><span>r</span><span>γᵗ</span><span>{text.contribution}</span></div>
+              <div className="return-step-head"><span><MathFormula latex={String.raw`t`} /></span><span><MathFormula latex={String.raw`s_t\rightarrow a_t\rightarrow s_{t+1}`} /></span><span><MathFormula latex={String.raw`r`} /></span><span><MathFormula latex={String.raw`\gamma^t`} /></span><span>{text.contribution}</span></div>
               {visibleSteps.map((step) => (
                 <div key={step.time} className={step.reward !== 0 ? 'reward-step' : ''}>
                   <span>{step.time}</span><span>{stateLabel(step.state, text.statePrefix)} <b>{ACTIONS[step.action].arrow}</b> {stateLabel(step.nextState, text.statePrefix)}</span><span>{step.reward > 0 ? '+' : ''}{step.reward}</span><span>{step.discount.toFixed(3)}</span><span className="contribution-cell"><i style={{ width: `${Math.abs(step.contribution) / maxContribution * 100}%` }} /><b>{step.contribution.toFixed(3)}</b></span>

@@ -36,16 +36,16 @@ function ChapterHeader({ chapter, content, prerequisites }) {
 
 function MdpRail({ lang }) {
   const labels = lang === 'zh'
-    ? { loop: '交互闭环', agent: '智能体', environment: '环境', policy: '策略 π(a|s)', response: '转移 p(s′|s,a) 与奖励 p(r|s,a)', markov: 'Markov 性', markovText: '给定当前状态与动作，下一步与更早历史条件独立。' }
-    : { loop: 'Interaction loop', agent: 'Agent', environment: 'Environment', policy: 'Policy π(a|s)', response: 'Transition p(s′|s,a) and reward p(r|s,a)', markov: 'Markov property', markovText: 'Given the current state and action, the next step is conditionally independent of earlier history.' }
+    ? { loop: '交互闭环', agent: '智能体', environment: '环境', and: '与', markov: 'Markov 性', markovText: '给定当前状态与动作，下一步与更早历史条件独立。' }
+    : { loop: 'Interaction loop', agent: 'Agent', environment: 'Environment', and: 'and', markov: 'Markov property', markovText: 'Given the current state and action, the next step is conditionally independent of earlier history.' }
   return (
     <>
       <section className="rail-section">
         <span className="rail-kicker">{labels.loop}</span>
         <MathFormula block className="mdp-loop-formula" latex={String.raw`S_t \xrightarrow{A_t} (R_{t+1},S_{t+1})`} />
-        <dl className="mapping-list"><div><dt>{labels.agent}</dt><dd>{labels.policy}</dd></div><div><dt>{labels.environment}</dt><dd>{labels.response}</dd></div></dl>
+        <dl className="mapping-list"><div><dt>{labels.agent}</dt><dd><MathFormula latex={String.raw`\pi(a\mid s)`} /></dd></div><div><dt>{labels.environment}</dt><dd className="rail-math-pair"><MathFormula latex={String.raw`p(s'\mid s,a)`} /><span>{labels.and}</span><MathFormula latex={String.raw`p(r\mid s,a)`} /></dd></div></dl>
       </section>
-      <section className="rail-section"><span className="rail-kicker">{labels.markov}</span><div className="rail-formula compact">p(s′|s,a,history) = p(s′|s,a)</div><p>{labels.markovText}</p></section>
+      <section className="rail-section"><span className="rail-kicker">{labels.markov}</span><MathFormula block className="rail-formula compact mdp-markov-formula" latex={String.raw`p(s'\mid s,a,h)=p(s'\mid s,a)`} /><p>{labels.markovText}</p></section>
     </>
   )
 }
@@ -73,12 +73,13 @@ function BellmanRail({ lang }) {
 
 function ReturnRail({ lang }) {
   const labels = lang === 'zh'
-    ? { return: '单条轨迹的回报', value: '状态价值', distinction: '对象区别', text: 'Gₜ 是随机变量的一次实现；Vπ(s) 是给定起点后的条件期望。', horizon: '有效时间尺度' }
-    : { return: 'Return of one trajectory', value: 'State value', distinction: 'Object distinction', text: 'Gₜ is one realization of a random variable; Vπ(s) is its conditional expectation given the start.', horizon: 'Effective horizon' }
+    ? { return: '单条轨迹的回报', value: '状态价值', distinction: '对象区别', sample: '是随机变量的一次实现；', expectation: '是给定起点后的条件期望。', horizon: '有效时间尺度' }
+    : { return: 'Return of one trajectory', value: 'State value', distinction: 'Object distinction', sample: 'is one realization of a random variable;', expectation: 'is its conditional expectation given the start.', horizon: 'Effective horizon' }
+  const horizons = [[0.5, 2], [0.9, 10], [0.95, 20]]
   return (
     <>
       <section className="rail-section"><span className="rail-kicker">{labels.return}</span><MathFormula block className="rail-formula compact" latex={String.raw`G_t=\sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`} /><span className="rail-kicker">{labels.value}</span><MathFormula block className="rail-formula compact" latex={String.raw`V^{\pi}(s)=\mathbb{E}[G_t\mid S_t=s]`} /></section>
-      <section className="rail-section"><span className="rail-kicker">{labels.distinction}</span><p>{labels.text}</p><div className="mapping-list"><div><dt>γ = 0.5</dt><dd>{labels.horizon} ≈ 2</dd></div><div><dt>γ = 0.9</dt><dd>{labels.horizon} ≈ 10</dd></div><div><dt>γ = 0.95</dt><dd>{labels.horizon} ≈ 20</dd></div></div></section>
+      <section className="rail-section"><span className="rail-kicker">{labels.distinction}</span><p className="rail-math-copy"><MathFormula latex={String.raw`G_t`} /><span>{labels.sample}</span><MathFormula latex={String.raw`V^{\pi}(s)`} /><span>{labels.expectation}</span></p><dl className="mapping-list">{horizons.map(([gamma, horizon]) => <div key={gamma}><dt><MathFormula latex={String.raw`\gamma=${gamma}`} /></dt><dd className="rail-math-pair"><span>{labels.horizon}</span><MathFormula latex={String.raw`\approx ${horizon}`} /></dd></div>)}</dl></section>
     </>
   )
 }
@@ -134,7 +135,7 @@ function FormulaContextRail({ context, lang }) {
       {context.latex && <><span className="context-label">{labels.selected}</span><MathFormula block className="context-formula" latex={context.latex} /></>}
       {context.beforeLatex && <><span className="context-label">{labels.before}</span><MathFormula block className="context-formula before" latex={context.beforeLatex} /></>}
       {context.detail && <div className="context-detail"><span className="context-label">{labels.detail}</span><p>{context.detail}</p></div>}
-      {context.assumptions?.length > 0 && <div className="context-detail"><span className="context-label">{labels.assumptions}</span><ul>{context.assumptions.map((item) => <li key={item}>{/[\\_^{}]/.test(item) ? <MathFormula latex={item} /> : item}</li>)}</ul></div>}
+      {context.assumptions?.length > 0 && <div className="context-detail"><span className="context-label">{labels.assumptions}</span><ul>{context.assumptions.map((item) => <li key={item}>{/\\|[=<>^{}]/.test(item) && !/[\u3400-\u9fff]/.test(item) ? <MathFormula latex={item} /> : item}</li>)}</ul></div>}
       {context.symbols?.length > 0 && <><span className="context-label">{labels.symbols}</span><dl className="mapping-list">{context.symbols.map(([term, value]) => <div key={term}><dt><MathFormula latex={term} /></dt><dd>{value}</dd></div>)}</dl></>}
       {context.rows && <dl className="mapping-list">{context.rows.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>}
     </section>
@@ -441,11 +442,6 @@ export default function App() {
               <ChapterSources sources={content.sources} lang={lang} />
             </>
           )}
-          <footer className="source-note">
-            <span>{lang === 'zh' ? '概念依据' : 'Concept sources'}</span>
-            <a href="https://github.com/MathFoundationRL/Book-Mathematical-Foundation-of-Reinforcement-Learning" target="_blank" rel="noreferrer">Mathematical Foundations of Reinforcement Learning</a>
-            <a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noreferrer">Proximal Policy Optimization Algorithms</a>
-          </footer>
         </ChapterShell>
         )}
       </main>

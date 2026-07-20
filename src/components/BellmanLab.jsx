@@ -16,6 +16,7 @@ import {
 } from '../engine/gridworld'
 import { bellmanPresetConfigs } from '../content/bellman'
 import { phaseForFocus, useStepMicroscope } from '../interaction/stepMicroscope'
+import MathFormula from './MathFormula'
 
 const defaultState = { row: 3, col: 1 }
 
@@ -329,17 +330,17 @@ export default function BellmanLab({ lang, text }) {
         <aside className={`lab-panel update-panel focus-${focusTerm}`}>
           <header><span>{c.update}</span><small>{m.termByTerm}</small></header>
           <dl className="update-list">
-            <div><dt>{c.currentState} s</dt><dd><button onClick={() => focus('state')}>{stateLabel(selected)}</button></dd></div>
-            <div><dt>{c.action} a</dt><dd><button className="action-value" onClick={() => focus('action')}>{actionLabel(detail.action)}</button>{actionOverride && <small className="author-action">{m.presetAction}</small>}</dd></div>
-            <div><dt>{c.reward} R</dt><dd><button className="reward-value" onClick={() => focus('reward')}>{primary?.reward.toFixed(2)}</button></dd></div>
-            <div><dt>{c.nextState} s′</dt><dd><button onClick={() => focus('future')}>{primary ? stateLabel(primary.state) : '—'}</button></dd></div>
+            <div><dt>{c.currentState} <MathFormula latex={String.raw`s`} /></dt><dd><button onClick={() => focus('state')}>{stateLabel(selected)}</button></dd></div>
+            <div><dt>{c.action} <MathFormula latex={String.raw`a`} /></dt><dd><button className="action-value" onClick={() => focus('action')}>{actionLabel(detail.action)}</button>{actionOverride && <small className="author-action">{m.presetAction}</small>}</dd></div>
+            <div><dt>{c.reward} <MathFormula latex={String.raw`R`} /></dt><dd><button className="reward-value" onClick={() => focus('reward')}>{primary?.reward.toFixed(2)}</button></dd></div>
+            <div><dt>{c.nextState} <MathFormula latex={String.raw`s'`} /></dt><dd><button onClick={() => focus('future')}>{primary ? stateLabel(primary.state) : '—'}</button></dd></div>
           </dl>
           <div className="formula-stack" aria-label="Bellman target">
-            <div><button className={focusTerm === 'target' ? 'active-term state-term' : 'state-term'} onClick={() => focus('target')}>T</button> = <button className={focusTerm === 'reward' ? 'active-term reward-term' : 'reward-term'} onClick={() => focus('reward')}>R</button> + <button className={focusTerm === 'gamma' ? 'active-term gamma-term' : 'gamma-term'} onClick={() => focus('gamma')}>γ</button><button className={focusTerm === 'future' ? 'active-term future-term' : 'future-term'} onClick={() => focus('future')}>V(s′)</button></div>
+            <div><button className={focusTerm === 'target' ? 'active-term state-term' : 'state-term'} onClick={() => focus('target')}><MathFormula latex={String.raw`T`} /></button> = <button className={focusTerm === 'reward' ? 'active-term reward-term' : 'reward-term'} onClick={() => focus('reward')}><MathFormula latex={String.raw`R`} /></button> + <button className={focusTerm === 'gamma' ? 'active-term gamma-term' : 'gamma-term'} onClick={() => focus('gamma')}><MathFormula latex={String.raw`\gamma`} /></button><button className={focusTerm === 'future' ? 'active-term future-term' : 'future-term'} onClick={() => focus('future')}><MathFormula latex={String.raw`V(s')`} /></button></div>
             {noise === 0 ? (
-              <div className="substitution">= <span>{primary?.reward.toFixed(2)}</span> + <span>{gamma.toFixed(2)}</span> × <span>{primaryNextValue.toFixed(2)}</span></div>
+              <MathFormula block className="substitution" latex={String.raw`=${primary?.reward.toFixed(2)}+${gamma.toFixed(2)}\times ${primaryNextValue.toFixed(2)}`} />
             ) : (
-              <div className="substitution">= Σ p(s′|s,a)[R + γV(s′)]</div>
+              <MathFormula block className="substitution" latex={String.raw`=\sum_{s'}p(s'\mid s,a)\left[R+\gamma V(s')\right]`} />
             )}
             <strong className="target-value">= {detail.target.toFixed(3)}</strong>
           </div>

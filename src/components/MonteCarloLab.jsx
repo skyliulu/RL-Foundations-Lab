@@ -96,7 +96,7 @@ export default function MonteCarloLab({ lang, content }) {
 
         <section className="mc-episode-panel">
           <header><span>{zh ? 'Episode tape' : 'Episode tape'}</span><div>{result.samples.map((item, index) => <button type="button" key={item.index} className={sampleSlot === index ? 'active' : ''} onClick={() => setSampleSlot(index)}>#{item.index + 1}</button>)}</div></header>
-          <div className="mc-tape-head"><span>t</span><span>Sₜ</span><span>Aₜ</span><span>Rₜ₊₁</span><span>Gₜ</span><span>{zh ? '用于更新' : 'Used'}</span></div>
+          <div className="mc-tape-head"><span><MathFormula latex={String.raw`t`} /></span><span><MathFormula latex={String.raw`S_t`} /></span><span><MathFormula latex={String.raw`A_t`} /></span><span><MathFormula latex={String.raw`R_{t+1}`} /></span><span><MathFormula latex={String.raw`G_t`} /></span><span>{zh ? '用于更新' : 'Used'}</span></div>
           <div className="mc-tape-body">
             {sample.steps.map((step) => <div key={step.time} className={step.used ? 'used' : 'skipped'}><span>{step.time}</span><strong>s{indexOf(step.state) + 1}</strong><span>{ACTIONS[step.action].arrow} {actionCopy[lang][step.action]}</span><span className={step.reward < 0 ? 'negative' : step.reward > 0 ? 'positive' : ''}>{step.reward > 0 ? '+' : ''}{step.reward}</span><span>{format(step.returnValue)}</span><span>{step.used ? '●' : '—'}</span></div>)}
           </div>
