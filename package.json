@@ -2,6 +2,11 @@
   "name": "rl-foundations-lab",
   "private": true,
   "version": "0.1.0",
+  "homepage": "https://skyliulu.github.io/RL-Foundations-Lab/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skyliulu/RL-Foundations-Lab.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

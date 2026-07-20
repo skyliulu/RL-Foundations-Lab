@@ -14,6 +14,7 @@ import SystemLab from './components/SystemLab'
 import LearningLab from './components/LearningLab'
 import MonteCarloChapter from './components/MonteCarloChapter'
 import TokenMdpLab from './components/TokenMdpLab'
+import GitHubRepoBadge from './components/GitHubRepoBadge'
 import { copy } from './content'
 
 const part23Ids = ['approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
@@ -242,7 +243,10 @@ export default function App() {
         <button className="brand" type="button" onClick={() => setActive('mdp')}>
           <span className="brand-mark">RL</span><span><strong>{text.brand}</strong><small>{text.lab}</small></span>
         </button>
-        <div className="header-actions"><button type="button" className="language-switch" onClick={() => setLang((value) => value === 'zh' ? 'en' : 'zh')}>{lang === 'zh' ? 'EN' : '中'}</button></div>
+        <div className="header-actions">
+          <GitHubRepoBadge lang={lang} />
+          <button type="button" className="language-switch" onClick={() => setLang((value) => value === 'zh' ? 'en' : 'zh')}>{lang === 'zh' ? 'EN' : '中'}</button>
+        </div>
       </header>
 
       <aside className={`left-nav ${navCompact ? 'is-compact' : ''}`}>

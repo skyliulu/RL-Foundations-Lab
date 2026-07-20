@@ -8,7 +8,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const src = join(here, '..')
 const read = (path) => readFileSync(join(src, path), 'utf8')
 
-test('the site stays stateless and performs no remote data calls', () => {
+test('the learning experience stays stateless and performs no remote compute calls', () => {
   const source = [
     read('App.jsx'),
     read('components/BellmanLab.jsx'),
@@ -24,6 +24,17 @@ test('the site stays stateless and performs no remote data calls', () => {
   ].join('\n')
   ;['localStorage', 'sessionStorage', 'document.cookie', 'fetch(', 'XMLHttpRequest', 'WebSocket'].forEach((forbidden) => {
     assert.equal(source.includes(forbidden), false, `found forbidden persistent/network API: ${forbidden}`)
+  })
+})
+
+test('the header exposes only the public GitHub repository metadata request', () => {
+  const badge = read('components/GitHubRepoBadge.jsx')
+  assert.match(badge, /https:\/\/github\.com\/skyliulu\/RL-Foundations-Lab/)
+  assert.match(badge, /https:\/\/api\.github\.com\/repos\/skyliulu\/RL-Foundations-Lab/)
+  assert.match(badge, /stargazers_count/)
+  assert.match(badge, /fetch\(REPOSITORY_API_URL/)
+  ;['localStorage', 'sessionStorage', 'document.cookie', 'XMLHttpRequest', 'WebSocket'].forEach((forbidden) => {
+    assert.equal(badge.includes(forbidden), false, `found forbidden persistent/network API: ${forbidden}`)
   })
 })
 

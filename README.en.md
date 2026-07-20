@@ -2,6 +2,8 @@
 
 [简体中文](./README.md) · English
 
+[Live site](https://skyliulu.github.io/RL-Foundations-Lab/) · [GitHub repository](https://github.com/skyliulu/RL-Foundations-Lab)
+
 **Interactive reinforcement learning from grid worlds to PPO and language-model post-training.**
 
 RL Foundations Lab is a bilingual interactive course for learners who already know basic probability, calculus, and optimization. It follows the conceptual spine of *Mathematical Foundations of Reinforcement Learning* without flattening the material into isolated cards: definitions, derivations, algorithmic motivation, pseudocode, and limitations remain part of a continuous narrative, while embedded experiments expose the internal state that would otherwise require writing and running code.
@@ -58,7 +60,7 @@ Derivations keep their complete chain of equalities visible. Each step can be se
 - **Explain why before presenting how**: every mechanism begins with the limitation of the preceding method.
 - **Preserve the mathematical spine**: interaction strengthens the required definitions and derivations; it does not replace them.
 - **Share state across evidence**: canvases, tables, plots, and numerical formulas read from the same experiment state.
-- **Stateless and browser-only**: no account, saved progress, persisted parameters, or remote compute API is required.
+- **Stateless and browser-only**: no account, saved progress, persisted parameters, or remote compute API is required; the header only reads the public GitHub star count anonymously.
 - **Structurally equivalent bilingual content**: both languages share chapters, mathematics, experiments, and references.
 
 ## Run locally

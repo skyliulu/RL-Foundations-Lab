@@ -66,7 +66,13 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--navy); color: var(--navy); font-family: Georgia, serif; font-size: .86rem; letter-spacing: .08em; }
 .brand strong { display: block; font-size: 1.06rem; letter-spacing: .08em; font-weight: 500; }
 .brand small { display: block; margin-top: 3px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: .67rem; letter-spacing: .1em; text-transform: uppercase; }
-.header-actions { display: flex; align-items: center; gap: 18px; font-family: "Microsoft YaHei", sans-serif; }
+.header-actions { display: flex; align-items: center; gap: 10px; font-family: "Microsoft YaHei", sans-serif; }
+.github-repo-badge { display: inline-flex; align-items: center; height: 34px; border: 1px solid var(--line-strong); border-radius: 3px; color: var(--ink); text-decoration: none; }
+.github-repo-badge:hover { border-color: var(--navy); background: var(--navy-soft); color: var(--navy); }
+.github-mark { width: 17px; height: 17px; margin: 0 8px; }
+.github-repo-label { padding-right: 9px; font-size: .7rem; letter-spacing: .04em; }
+.github-star-count { display: inline-flex; align-items: center; gap: 5px; min-width: 49px; height: 100%; padding: 0 8px; border-left: 1px solid var(--line); color: var(--navy); font-family: Georgia, serif; font-size: .69rem; font-variant-numeric: tabular-nums; }
+.github-star-count > span { color: var(--amber); font-size: .67rem; }
 .language-switch { width: 38px; height: 34px; border: 1px solid var(--line-strong); border-radius: 3px; background: transparent; color: var(--navy); cursor: pointer; font-size: .78rem; }
 .language-switch:hover { background: var(--navy-soft); }
 
@@ -872,7 +878,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 }
 
 @media (max-width: 520px) {
-  .site-header { padding-inline: 14px; }.brand strong { font-size: .85rem; }.brand-mark { width: 32px; height: 32px; }
+  .site-header { padding-inline: 14px; }.brand { gap: 8px; }.brand strong { font-size: .85rem; }.brand small { max-width: 128px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.brand-mark { width: 32px; height: 32px; }.github-repo-label { display: none; }.github-mark { margin-inline: 7px; }.github-star-count { min-width: 43px; padding-inline: 6px; }
   .experiment-heading { align-items: flex-start; }.method-badge { display: none; }
   .preset-observation { grid-template-columns: 1fr; gap: 4px; }
   .control-deck { grid-template-columns: 1fr; }.control-deck > * { grid-column: 1 !important; border-left: 0 !important; }.step-actions { grid-template-columns: 1fr 1fr; }
