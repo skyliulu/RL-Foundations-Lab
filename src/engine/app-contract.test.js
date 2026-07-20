@@ -142,6 +142,30 @@ test('article prose, algorithms, and worked tables share the inline-math rendere
   assert.match(monteCarlo, /<code><MathText>\{line\}<\/MathText><\/code>/)
 })
 
+test('interactive structural selectors cannot restyle nested MathText or KaTeX spans', () => {
+  const styles = read('styles.css')
+  assert.match(styles, /\.pseudocode-lines button > span\s*\{/)
+  assert.doesNotMatch(styles, /\.pseudocode-lines span\s*\{/)
+  assert.match(styles, /\.mc-lab-heading > div > span\s*\{/)
+  assert.match(styles, /\.mc-variant-switch button > span\s*\{/)
+  assert.match(styles, /\.learning-lab-question > span\s*\{/)
+  assert.match(styles, /\.modern-extension-lab > header > span\s*\{/)
+  assert.match(styles, /\.response-group button > b, \.response-group button > span, \.response-group button > small/)
+})
+
+test('token diagrams use isolated layout classes and responsive overflow ownership', () => {
+  const system = read('components/SystemLab.jsx')
+  const tokenMdp = read('components/TokenMdpLab.jsx')
+  const styles = read('styles.css')
+  assert.match(system, /className="policy-token-strip"/)
+  assert.match(tokenMdp, /className="token-trajectory-ledger"/)
+  assert.doesNotMatch(system, /className="token-trajectory"/)
+  assert.doesNotMatch(tokenMdp, /className="token-trajectory"/)
+  assert.match(styles, /\.token-trajectory-ledger\s*\{[^}]*overflow-x:\s*auto/)
+  assert.match(styles, /\.update-flow \.loop-arrow\s*\{[^}]*flex-basis:\s*100%/)
+  assert.match(styles, /input\[type="range"\]\s*\{[^}]*margin:\s*6px 0 0/)
+})
+
 test('every chapter ends with one source section and no duplicate concept-source footer', () => {
   const app = read('App.jsx')
   const styles = read('styles.css')

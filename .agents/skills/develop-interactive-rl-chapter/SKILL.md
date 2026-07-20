@@ -123,6 +123,9 @@ Use this shape for derivation data:
 - Set an explicit typography floor instead of shrinking text to fit dense interfaces. At the normal desktop viewport, keep article prose at least 14 px, supporting labels and explanations at least 12 px, and dense code or table cells at least 11 px.
 - Apply the floor to pseudocode, algorithm comparisons, worked-example tables, ledgers, controls, chart labels, inspectors, and the right workbench. If larger text no longer fits, add wrapping, scrolling, or a responsive layout instead of reducing the type again.
 - Inspect representative long Chinese and English labels at desktop and mobile widths. Do not approve a component from CSS values alone.
+- Keep interaction CSS structurally scoped. Never use a broad descendant selector such as `.component span` for a step badge, label, or token when `MathText` or KaTeX may add nested spans; target a direct child or a dedicated class instead.
+- Give semantically different diagrams distinct class names even when their visible nouns overlap. A token strip and a token ledger, for example, must not share one layout class.
+- Put `min-width: 0` on flex/grid children that contain bilingual text, let labels wrap before shrinking type, and make only the designated formula/table/trajectory surface own horizontal scrolling.
 - Render one final `Sources and further reading` section per chapter. Put source-specific and conceptual references in that section; do not append a second global concept-source footer beneath it.
 - Keep reference labels and page metadata readable, aligned to the chapter column, and free of duplicated links.
 
@@ -136,6 +139,8 @@ Use this shape for derivation data:
 - Confirm every derivation line remains visible before and after clicking.
 - Confirm a selected line updates the right workbench without changing the mathematical chain.
 - Inspect desktop and mobile renders at actual reading size.
+- Traverse all chapter interactions in both languages at narrow mobile, tablet, and desktop widths. Reject any experiment root whose `scrollWidth` exceeds its `clientWidth`, unless the excess belongs to an explicit inner scroll surface whose children remain internally legible.
+- Inspect nested `MathText` and KaTeX markup against component CSS. A rule intended for a structural badge, row, or label must not match the renderer's internal spans.
 - List the first occurrence of every chapter-specific technical term and confirm that occurrence includes a definition or local explanation.
 - Confirm required teaching content forms a coherent article without relying on generic card grids.
 - Compare the completed chapter against its source-coverage matrix and fail it if any required algorithm, variant, theorem condition, comparison, pseudocode stage, or worked example lacks a visible destination.

@@ -84,7 +84,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
         </div>
       ) : view === 'algorithm' ? (
         <div className="algorithm-view">
-          <div className="token-trajectory">
+          <div className="policy-token-strip">
             <span className="prompt-token">{lang === 'zh' ? '问题：为什么天空看起来是蓝色？' : 'Prompt: Why does the sky look blue?'}</span>
             <span>Rayleigh</span><span>scattering</span><span className="active-token">{selected.token}</span><span>shorter</span><span>wavelengths</span><span>EOS</span>
           </div>

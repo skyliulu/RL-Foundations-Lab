@@ -50,7 +50,7 @@ export default function TokenMdpLab({ lang, content }) {
         <label><span>{zh ? '折扣' : 'Discount'} <MathFormula latex={String.raw`\gamma`} /> <output>{number(gamma)}</output></span><input type="range" min="0.5" max="1" step="0.05" value={gamma} onChange={(event) => setGamma(Number(event.target.value))} /></label>
       </div>
       <div className="token-mdp-equation"><MathFormula block latex={String.raw`r_t=r_t^{\mathrm{process}}-\beta(\log\pi_{\mathrm{old},t}-\log\pi_{\mathrm{ref},t})+\mathbf 1[t=T-1]R_{\mathrm{terminal}}`} /></div>
-      <div className="token-trajectory" role="table" aria-label={zh ? 'Token 轨迹账本' : 'Token trajectory ledger'}>
+      <div className="token-trajectory-ledger" role="table" aria-label={zh ? 'Token 轨迹账本' : 'Token trajectory ledger'}>
         <div className="token-trajectory-head" role="row"><b>{zh ? '状态 / 前缀' : 'State / prefix'}</b><b>{zh ? '动作 token' : 'Action token'}</b><b>{zh ? 'KL 代价' : 'KL cost'}</b><b>{zh ? '过程奖励' : 'Process reward'}</b><b>{zh ? '总奖励' : 'Reward'}</b><b>Return</b></div>
         {rows.map((row) => <div className="token-trajectory-row" role="row" key={`${row.index}-${row.token}`}><span>{row.index === 0 ? (zh ? 'prompt' : 'prompt') : selected.tokens.slice(0, row.index).join(' ')}</span><strong>{row.token}</strong><span>{number(row.klCost)}</span><span>{number(row.process)}</span><span>{number(row.reward)}</span><span>{number(row.returnValue)}</span></div>)}
       </div>

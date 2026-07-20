@@ -42,6 +42,8 @@ When a chapter changes, update together:
 
 During rendered QA, compare the left and right edges of the chapter opening, prose, derivation, experiment entry, post-experiment interpretation, summary, and references. Reject accidental width changes, narrow-wide-narrow component rhythms, decorative gutters, oversized display math, or spacing that makes one continuous chapter look like unrelated cards.
 
+For interaction CSS, scope structural rules to direct children or dedicated classes. Do not target generic descendant `span`, `small`, or `strong` nodes inside components that can contain `MathText` or KaTeX. Keep flex/grid children shrinkable with `min-width: 0`, isolate intentional horizontal scrolling to a named inner surface, and reject any chapter experiment whose outer root overflows in either language at mobile, tablet, or desktop widths.
+
 During content QA, record the first reader-visible occurrence of chapter-specific terminology. Reject unexplained references to concepts introduced only in later chapters and reject chapters whose required knowledge exists mainly as cards rather than a readable argument.
 
 Also maintain a source-coverage matrix. Every required source item must map to prose, a derivation, complete pseudocode, a worked example, or an experiment; formulas alone do not count as coverage of an algorithm.
