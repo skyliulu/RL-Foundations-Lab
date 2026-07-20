@@ -91,3 +91,21 @@ test('ordinary MDP sections use article headings instead of numbered timeline ca
   assert.match(source, /narrative-heading/)
   assert.doesNotMatch(source, /narrative-index|padStart\(/)
 })
+
+test('the homepage explains the learning path and gives readers an actionable chapter rhythm', () => {
+  const source = read('components/HomePage.jsx')
+  assert.match(source, /home-reading-guide/)
+  assert.match(source, /reading-guide-steps/)
+  assert.match(source, /找到问题/)
+  assert.match(source, /展开推导/)
+  assert.doesNotMatch(source, /home-principles|Why 先于 How/)
+})
+
+test('page and workbench scroll surfaces share one global scrollbar treatment', () => {
+  const styles = read('styles.css')
+  assert.match(styles, /--scrollbar-thumb:/)
+  assert.match(styles, /--scrollbar-thumb-hover:/)
+  assert.match(styles, /\*\s*\{[^}]*scrollbar-width:\s*thin/)
+  assert.match(styles, /\*::\-webkit-scrollbar\s*\{[^}]*width:\s*7px;[^}]*height:\s*7px/)
+  assert.doesNotMatch(styles, /\.left-nav::\-webkit-scrollbar/)
+})

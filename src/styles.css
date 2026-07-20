@@ -17,13 +17,30 @@
   --amber: #b96d13;
   --amber-soft: #f4e5c9;
   --danger: #9f4a2d;
+  --scrollbar-thumb: rgba(23, 79, 130, .28);
+  --scrollbar-thumb-hover: rgba(23, 79, 130, .46);
+  --scrollbar-track: transparent;
   --shadow: 0 12px 36px rgba(66, 56, 38, 0.08);
   --chapter-frame: 1240px;
   --reading-column: 780px;
   font-size: 16px;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+*::-webkit-scrollbar { width: 7px; height: 7px; }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); background-clip: padding-box; }
+*::-webkit-scrollbar-corner { background: transparent; }
 html { scroll-behavior: smooth; }
 body { margin: 0; min-width: 0; min-height: 100vh; background:
   radial-gradient(circle at 20% 10%, rgba(255,255,255,.44) 0 1px, transparent 1.5px) 0 0 / 18px 18px,
@@ -87,24 +104,6 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
   border-right: 1px solid var(--line);
   overflow: auto;
 }
-.left-nav,
-.left-nav nav {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(23, 79, 130, .28) transparent;
-}
-.left-nav::-webkit-scrollbar { width: 7px; }
-.left-nav nav::-webkit-scrollbar { height: 6px; }
-.left-nav::-webkit-scrollbar-track,
-.left-nav nav::-webkit-scrollbar-track { background: transparent; }
-.left-nav::-webkit-scrollbar-thumb,
-.left-nav nav::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgba(23, 79, 130, .24);
-  background-clip: padding-box;
-}
-.left-nav::-webkit-scrollbar-thumb:hover,
-.left-nav nav::-webkit-scrollbar-thumb:hover { background: rgba(23, 79, 130, .42); background-clip: padding-box; }
 .nav-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 8px 18px; }
 .nav-label { color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: .69rem; letter-spacing: .15em; text-transform: uppercase; }
 .nav-collapse { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--line); background: transparent; color: var(--navy); cursor: pointer; font-family: "Microsoft YaHei", sans-serif; font-size: .56rem; }
@@ -142,7 +141,8 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .learning-map { border-top: 1px solid var(--line); }
 .map-heading { display: grid; grid-template-columns: 170px 1fr; gap: 24px; padding: 34px 0 26px; }
 .map-heading > span { color: var(--navy); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; }
-.map-heading h2 { margin: 0; font-size: clamp(1.5rem, 2.5vw, 2.25rem); font-weight: 480; }
+.map-heading h2 { max-width: 780px; margin: 0; font-size: clamp(1.5rem, 2.5vw, 2.25rem); font-weight: 480; line-height: 1.35; }
+.map-heading p { max-width: 760px; margin: 12px 0 0; color: var(--muted); font-size: .84rem; line-height: 1.8; }
 .phase-list { border-bottom: 1px solid var(--line); }
 .learning-phase { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.7fr); gap: 34px; padding: 30px 0; border-top: 1px solid var(--line); }
 .phase-intro { display: grid; grid-template-columns: 42px 1fr; gap: 14px; }
@@ -158,23 +158,30 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .phase-chapters button small { min-height: 28px; margin-top: 8px; color: var(--navy); font-size: .58rem; line-height: 1.35; }
 .phase-chapters button strong { font-size: .78rem; font-weight: 520; line-height: 1.4; }
 .phase-chapters button i { position: absolute; top: 8px; right: 8px; color: var(--line-strong); font-style: normal; }
-.home-principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 72px; border-block: 1px solid var(--line); }
-.home-principles article { padding: 26px; border-left: 1px solid var(--line); }
-.home-principles article:first-child { border-left: 0; }
-.home-principles span { color: var(--navy); font: .75rem Georgia, serif; }
-.home-principles h3 { margin: 12px 0 8px; font-size: 1rem; }
-.home-principles p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.75; }
+.home-reading-guide { margin-top: 72px; padding: 34px 0 0; border-top: 1px solid var(--line-strong); }
+.reading-guide-intro { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 24px; margin-bottom: 30px; }
+.reading-guide-intro > span { color: var(--teal); font-size: .68rem; letter-spacing: .14em; }
+.reading-guide-intro h2 { margin: 0; font-size: clamp(1.35rem, 2.2vw, 1.95rem); font-weight: 480; }
+.reading-guide-intro p { max-width: 720px; margin: 10px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.75; }
+.reading-guide-steps { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; border-block: 1px solid var(--line); list-style: none; }
+.reading-guide-steps li { position: relative; min-width: 0; padding: 24px 22px 26px; }
+.reading-guide-steps li + li { border-left: 1px solid var(--line); }
+.reading-guide-steps li > span { display: block; color: var(--navy); font: .72rem Georgia, serif; }
+.reading-guide-steps strong { display: block; margin: 12px 0 8px; font-size: .94rem; font-weight: 520; }
+.reading-guide-steps p { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.72; }
 
 @media (max-width: 760px) {
   .home-hero { padding-top: 18px; }
   .home-hero h1 { font-size: clamp(2.45rem, 13vw, 4.4rem); }
-  .map-heading, .learning-phase { grid-template-columns: 1fr; }
+  .map-heading, .learning-phase, .reading-guide-intro { grid-template-columns: 1fr; }
   .map-heading { gap: 8px; }
   .learning-phase { gap: 18px; }
   .phase-chapters button { flex-basis: 132px; }
-  .home-principles { grid-template-columns: 1fr; }
-  .home-principles article, .home-principles article:first-child { border-left: 0; border-top: 1px solid var(--line); }
-  .home-principles article:first-child { border-top: 0; }
+  .reading-guide-intro { gap: 8px; }
+  .reading-guide-steps { grid-template-columns: 1fr 1fr; }
+  .reading-guide-steps li + li { border-left: 1px solid var(--line); }
+  .reading-guide-steps li:nth-child(3) { border-left: 0; }
+  .reading-guide-steps li:nth-child(n+3) { border-top: 1px solid var(--line); }
 }
 .chapter-shell { width: 100%; max-width: var(--chapter-frame); margin: 0 auto; }
 .chapter-header { max-width: var(--reading-column); margin: 0 auto; }
