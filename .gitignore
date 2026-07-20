@@ -2,3 +2,8 @@ node_modules/
 dist/
 .vite/
 *.log
+/output/
+/review.html
+/src/review.jsx
+/src/review.css
+/design-qa.md

@@ -484,7 +484,7 @@ PPO 现代实验必须同时支持：
 1. Bellman Microscope：课件 Grid World、固定/贪心策略、单步 backup、公式分解与残差。
 2. Planning Arena：同步与原地值迭代的运行框架和公平比较外壳。
 3. Actor-Critic / PPO Lab：advantage、ratio 与 PPO clipping 样本平面。
-4. PPO System View：共享 rollout 的算法视图与系统视图。
+4. Post-training Method Atlas：在共享任务上比较 PPO-based RLHF、DPO、GRPO 的数据、反馈与系统代价。
 
 这些页面用于证明交互方向，不按“已完成课程章节”计数。
 

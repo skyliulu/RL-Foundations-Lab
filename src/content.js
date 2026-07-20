@@ -11,7 +11,7 @@ import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, m
 export const copy = {
   zh: {
     brand: '强化学习原理实验室',
-    lab: '从网格世界到 PPO',
+    lab: '从网格世界到大语言模型后训练',
     toc: '学习地图',
     chapters: [
       { id: 'mdp', number: '01', kicker: '经典基础', title: '网格世界与交互基础', subtitle: '从具体场景逐步建立完整决策模型' },
@@ -29,7 +29,7 @@ export const copy = {
       { id: 'actorcritic', number: '13', kicker: '策略与价值协作', title: 'Actor–Critic', subtitle: '用 TD error 连接 Actor 与 Critic' },
       { id: 'ppo', number: '14', kicker: '现代策略优化', title: 'PPO', subtitle: '从 advantage 到稳定更新' },
       { id: 'tokenmdp', number: '15', kicker: '语言模型决策过程', title: 'Token MDP', subtitle: '把 response 定义为 token 轨迹' },
-      { id: 'rlhf', number: '16', kicker: '语言模型后训练', title: 'PPO 系统视图', subtitle: '让算法与工程共享同一批 rollout' },
+      { id: 'rlhf', number: '16', kicker: '语言模型后训练', title: '后训练方法与系统', subtitle: '比较 PPO-based RLHF、DPO 与 GRPO' },
     ],
     prerequisites: '前置：状态、动作、奖励与回报',
     mdp: { ...mdpChapter.zh, sources: mdpChapter.sources },
@@ -64,7 +64,7 @@ export const copy = {
   },
   en: {
     brand: 'RL Foundations Lab',
-    lab: 'From Grid Worlds to PPO',
+    lab: 'From Grid Worlds to Language-Model Post-Training',
     toc: 'Learning map',
     chapters: [
       { id: 'mdp', number: '01', kicker: 'Classical foundation', title: 'Grid World & Interaction Basics', subtitle: 'Build a complete decision model from one concrete scene' },
@@ -82,7 +82,7 @@ export const copy = {
       { id: 'actorcritic', number: '13', kicker: 'Policy and value cooperate', title: 'Actor–Critic', subtitle: 'Connect actor and critic through TD error' },
       { id: 'ppo', number: '14', kicker: 'Modern policy optimization', title: 'PPO', subtitle: 'From advantage to stable updates' },
       { id: 'tokenmdp', number: '15', kicker: 'Language-model decision process', title: 'Token MDP', subtitle: 'Define a response as a token trajectory' },
-      { id: 'rlhf', number: '16', kicker: 'Language-model post-training', title: 'PPO System View', subtitle: 'One rollout batch across algorithm and engineering' },
+      { id: 'rlhf', number: '16', kicker: 'Language-model post-training', title: 'Methods and Systems', subtitle: 'Compare PPO-based RLHF, DPO, and GRPO' },
     ],
     prerequisites: 'Prerequisites: states, actions, rewards, and returns',
     mdp: { ...mdpChapter.en, sources: mdpChapter.sources },

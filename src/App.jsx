@@ -15,6 +15,7 @@ import LearningLab from './components/LearningLab'
 import MonteCarloChapter from './components/MonteCarloChapter'
 import TokenMdpLab from './components/TokenMdpLab'
 import GitHubRepoBadge from './components/GitHubRepoBadge'
+import HomePage from './components/HomePage'
 import { copy } from './content'
 
 const part23Ids = ['approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
@@ -222,7 +223,7 @@ function ChapterSources({ sources, lang }) {
 
 export default function App() {
   const [lang, setLang] = useState('zh')
-  const [active, setActive] = useState('mdp')
+  const [active, setActive] = useState('home')
   const [navCompact, setNavCompact] = useState(false)
   const [rightOpen, setRightOpen] = useState(false)
   const [rightContext, setRightContext] = useState(null)
@@ -240,7 +241,7 @@ export default function App() {
   return (
     <div className={`app-shell ${navCompact ? 'nav-compact' : ''} ${rightOpen ? 'rail-open' : ''}`}>
       <header className="site-header">
-        <button className="brand" type="button" onClick={() => setActive('mdp')}>
+        <button className="brand" type="button" onClick={() => setActive('home')}>
           <span className="brand-mark">RL</span><span><strong>{text.brand}</strong><small>{text.lab}</small></span>
         </button>
         <div className="header-actions">
@@ -252,6 +253,9 @@ export default function App() {
       <aside className={`left-nav ${navCompact ? 'is-compact' : ''}`}>
         <div className="nav-head"><span className="nav-label">{text.toc}</span><button type="button" className="nav-collapse" aria-expanded={!navCompact} onClick={() => setNavCompact((value) => !value)}>{navCompact ? (lang === 'zh' ? '展开' : 'Expand') : (lang === 'zh' ? '缩进' : 'Collapse')}</button></div>
         <nav>
+          <button type="button" className={`home-nav-item ${active === 'home' ? 'active' : ''}`} onClick={() => setActive('home')}>
+            <span className="nav-number">⌂</span><span className="nav-copy"><small>{lang === 'zh' ? '课程入口' : 'Course entry'}</small><strong>{lang === 'zh' ? '学习全景' : 'Learning map'}</strong><em>{lang === 'zh' ? '四部分 · 十六章' : 'Four parts · sixteen chapters'}</em></span>
+          </button>
           {text.chapters.map((item) => (
             <button type="button" key={item.id} className={active === item.id ? 'active' : ''} onClick={() => setActive(item.id)}>
               <span className="nav-number">{item.number}</span><span className="nav-copy"><small>{item.kicker}</small><strong>{item.title}</strong><em>{item.subtitle}</em></span>
@@ -261,6 +265,7 @@ export default function App() {
       </aside>
 
       <main className="article-column">
+        {active === 'home' ? <HomePage lang={lang} chapters={text.chapters} onSelect={setActive} /> : (
         <ChapterShell>
           <ChapterHeader chapter={chapter} content={content} prerequisites={content.prerequisite || text.prerequisites} />
           <DepthBand lang={lang} active={active} content={content} />
@@ -404,7 +409,7 @@ export default function App() {
           )}
           {active === 'rlhf' && (
             <>
-              <ClickableDerivation eyebrow={lang === 'zh' ? '从序列决策到训练批次' : 'From sequential decisions to a training batch'} title={lang === 'zh' ? 'PPO 怎样成为语言模型后训练系统的一部分？' : 'How does PPO become part of a language-model post-training system?'} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ClickableDerivation eyebrow={lang === 'zh' ? '从反馈数据到更新目标' : 'From feedback data to update objectives'} title={lang === 'zh' ? '三条后训练路线怎样从共同目标中分叉？' : 'How do three post-training routes branch from one objective?'} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
               <ChapterDeepening sections={text.rlhf.deepening} lang={lang} />
               <p className="article-copy chapter-transition">{text.rlhf.experimentIntro}</p>
               <SystemLab lang={lang} text={text} />
@@ -420,9 +425,10 @@ export default function App() {
             <a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noreferrer">Proximal Policy Optimization Algorithms</a>
           </footer>
         </ChapterShell>
+        )}
       </main>
 
-      <RightRail active={active} lang={lang} open={rightOpen} context={rightContext} content={content} onToggle={() => setRightOpen((value) => !value)} />
+      {active !== 'home' && <RightRail active={active} lang={lang} open={rightOpen} context={rightContext} content={content} onToggle={() => setRightOpen((value) => !value)} />}
     </div>
   )
 }

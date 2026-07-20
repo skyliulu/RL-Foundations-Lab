@@ -1,101 +1,103 @@
 # RL Foundations Lab
 
-简体中文 · [English](./README.en.md)
+English · [简体中文](./README.zh-CN.md)
 
-[在线体验](https://skyliulu.github.io/RL-Foundations-Lab/) · [GitHub 仓库](https://github.com/skyliulu/RL-Foundations-Lab)
+[Live site](https://skyliulu.github.io/RL-Foundations-Lab/) · [GitHub repository](https://github.com/skyliulu/RL-Foundations-Lab)
 
-**强化学习原理实验室：从网格世界到 PPO 与语言模型后训练。**
+**Interactive reinforcement learning from grid worlds to language-model post-training.**
 
-RL Foundations Lab 是一门面向具备概率、微积分和基础优化知识学习者的双语交互式强化学习课程。它沿着 *Mathematical Foundations of Reinforcement Learning* 的理论主线展开，但不把内容压缩成知识卡片：定义、推导、算法动机、伪代码与局限仍然保留在连续正文中，交互实验则把原本需要写代码才能观察的中间状态直接嵌入章节。
+RL Foundations Lab is a bilingual interactive course for learners who already know basic probability, calculus, and optimization. It follows the conceptual spine of *Mathematical Foundations of Reinforcement Learning* without flattening the material into isolated cards: definitions, derivations, algorithmic motivation, pseudocode, and limitations remain part of a continuous narrative, while embedded experiments expose the internal state that would otherwise require writing and running code.
 
-项目希望回答的不只是“算法怎么做”，还包括：前一种方法为什么不够、新机制改变了什么、公式为什么成立，以及参数变化如何沿着算法链路影响最终结果。
+The course is designed to answer more than “how does the algorithm work?” It asks why the previous method is insufficient, what the new mechanism changes, why the mathematics is valid, and how a parameter change propagates through the algorithm to the observed result.
 
-## 学习路径
+## Learning path
 
-课程共 16 章，默认中文，并可随时切换英文。
+The course contains 16 chapters. The website opens in Chinese and can be switched to English at any time.
 
-### 第一部分 · 数学基础与动态规划
+### Part I · Mathematical foundations and dynamic programming
 
-- **01 网格世界与交互基础**：状态、动作、奖励、策略、环境模型与 Markov 性。
-- **02 Return 与 State Value**：从奖励序列、折扣回报到状态价值。
-- **03 Bellman 方程**：从价值定义逐步推导一步递归关系。
-- **04 Bellman 最优方程**：让动作价值竞争，并理解最优策略的来源。
-- **05 更新顺序与收敛**：比较 Value Iteration、Policy Iteration 与 Truncated Policy Iteration。
+- **01 Grid World and interaction basics**: states, actions, rewards, policies, environment models, and the Markov property.
+- **02 Return and state value**: from reward sequences and discounted returns to value functions.
+- **03 Bellman equation**: derive the one-step recursion from the definition of value.
+- **04 Bellman optimality**: let action values compete and explain where an optimal policy comes from.
+- **05 Update order and convergence**: compare Value Iteration, Policy Iteration, and Truncated Policy Iteration.
 
-### 第二部分 · 无模型学习
+### Part II · Model-free learning
 
-- **06 Monte Carlo Learning**：从完整 episode 到 Basic MC、Exploring Starts 与 ε-greedy control。
-- **07 随机逼近与步长**：理解增量均值、噪声、步长条件与收敛权衡。
-- **08 TD Prediction**：通过 bootstrap 在 episode 结束前更新价值。
-- **09 Sarsa 与 Q-learning**：比较 on-policy 与 off-policy control 的目标和行为。
+- **06 Monte Carlo learning**: from complete episodes to Basic MC, Exploring Starts, and ε-greedy control.
+- **07 Stochastic approximation and step sizes**: incremental means, noise, step-size conditions, and convergence trade-offs.
+- **08 TD prediction**: use bootstrapping to update value before an episode terminates.
+- **09 Sarsa and Q-learning**: compare the targets and behavior of on-policy and off-policy control.
 
-### 第三部分 · 函数近似与策略学习
+### Part III · Function approximation and policy learning
 
-- **10 Value Function Approximation**：用参数共享把一次样本推广到相似状态。
-- **11 Deep Q-learning**：理解 replay buffer、target network 与训练稳定性。
-- **12 Policy Gradient**：直接优化策略，并解释梯度估计的来源与方差。
-- **13 Actor–Critic**：用 Critic 的价值估计改善 Actor 的策略更新。
+- **10 Value function approximation**: share parameters so one sample can affect similar states.
+- **11 Deep Q-learning**: understand replay buffers, target networks, and training stability.
+- **12 Policy gradient**: optimize the policy directly and derive the gradient estimator and its variance.
+- **13 Actor–Critic**: improve the actor using value estimates supplied by the critic.
 
-### 第四部分 · PPO 与语言模型后训练
+### Part IV · Language-model post-training
 
-- **14 PPO**：从 advantage、importance ratio 到 clipped surrogate objective。
-- **15 Token MDP**：把 prompt、token、response 与序列奖励映射到强化学习对象。
-- **16 PPO 系统视图**：把 policy、reference、reward、value model 与 rollout batch 放进同一条训练链路。
+- **14 PPO**: from advantages and importance ratios to the clipped surrogate objective.
+- **15 Token MDP**: map prompts, tokens, responses, and sequence rewards to reinforcement-learning objects.
+- **16 Post-training methods and systems**: compare PPO-based RLHF, DPO, and GRPO by data source, feedback signal, model roles, and online/offline behavior.
 
-## 交互式学习
+## Interactive learning
 
-交互不是正文之外的演示动画，而是论证的一部分。当前课程包含：
+The interactions are part of the argument, not animations appended to the article. The course currently includes:
 
-- 贯穿经典章节的同一套 5×5 Course World，可观察状态、动作、奖励、策略与价值如何共同变化；
-- Return Observatory、Bellman Microscope、Optimality Switch 与 Planning Arena，用于追踪回报、单步 backup、动作竞争和算法收敛；
-- Monte Carlo episode tape、动作价值表与策略更新，用同一条轨迹比较不同 MC control 方法；
-- 随机逼近、TD、Sarsa/Q-learning、函数近似、DQN、Policy Gradient 与 Actor–Critic 的章节内参数实验；
-- PPO Clip Plane，用样本级 ratio 与 advantage 直接显示哪些更新被裁剪；
-- Token Trajectory Lab 与 PPO 系统视图，让同一批 rollout 在算法公式和工程组件间保持可追溯。
+- one shared 5×5 Course World across the classical chapters, exposing how states, actions, rewards, policies, and values change together;
+- Return Observatory, Bellman Microscope, Optimality Switch, and Planning Arena for tracing returns, one-step backups, action competition, and convergence;
+- a Monte Carlo episode tape, action-value table, and policy update view for comparing MC control methods on the same trajectory;
+- chapter-level parameter experiments for stochastic approximation, TD, Sarsa/Q-learning, function approximation, DQN, Policy Gradient, and Actor–Critic;
+- PPO Clip Plane, where sample-level ratios and advantages reveal exactly which updates are clipped;
+- Token Trajectory Lab and a post-training method atlas for comparing PPO-based RLHF, DPO, and GRPO with traceable data and update signals.
 
-公式推导保留完整的等式链。每一步都可以被选中，并在右侧工作台中查看使用的规则、假设、符号含义和当前数值解释。
+Derivations keep their complete chain of equalities visible. Each step can be selected to inspect its rule, assumptions, symbol definitions, and current numerical interpretation in the right-hand workbench.
 
-## 产品原则
+## Product principles
 
-- **先解释 why，再呈现 how**：每个机制都从上一种方法的不足开始。
-- **数学主线不缩水**：交互用于增强理解，不替代必要的定义、证明与推导。
-- **实验与公式共享状态**：画布、表格、曲线和公式数值来自同一份运行数据。
-- **无状态、浏览器端运行**：不需要账号，不保存学习进度或实验参数，不请求远端计算 API；页眉只匿名读取公开的 GitHub Star 数。
-- **中英文结构等价**：两种语言共享章节结构、公式、实验和参考资料。
+- **Explain why before presenting how**: every mechanism begins with the limitation of the preceding method.
+- **Preserve the mathematical spine**: interaction strengthens the required definitions and derivations; it does not replace them.
+- **Share state across evidence**: canvases, tables, plots, and numerical formulas read from the same experiment state.
+- **Stateless and browser-only**: no account, saved progress, persisted parameters, or remote compute API is required; the header only reads the public GitHub star count anonymously.
+- **Structurally equivalent bilingual content**: both languages share chapters, mathematics, experiments, and references.
 
-## 本地运行
+## Run locally
 
-需要 Node.js 与 npm。
+Node.js and npm are required.
 
 ```bash
 npm install
 npm run dev
 ```
 
-验证测试与生产构建：
+Run the test suite and production build:
 
 ```bash
 npm test
 npm run build
 ```
 
-## 当前状态与边界
+## Project status and boundaries
 
-01–16 章均已形成可运行的双语学习路径，经典基础、无模型方法、函数近似、PPO 和语言模型后训练已经连成一条连续主线。部分中段章节的交互仍在从参数实验继续加强为更细粒度的算法内部状态可视化。
+Chapters 01–16 form a runnable bilingual path from classical foundations through model-free learning and function approximation to PPO and language-model post-training. Some middle-course interactions are still evolving from parameter labs into more explicit visualizations of algorithm-internal state.
 
-项目是教学工具，不是通用 RL 训练框架：所有实验在浏览器内运行；Grid World 使用精确或可复现的教学计算；PPO 与语言模型章节不训练真实神经网络，也不需要后端算力。
+This is a teaching tool, not a general-purpose RL training framework. Every experiment runs in the browser. Grid World uses exact or reproducible instructional computation, while the PPO and language-model chapters do not train real neural networks or require backend compute.
 
-## 参考资料
+## References
 
 - [Mathematical Foundations of Reinforcement Learning](https://github.com/MathFoundationRL/Book-Mathematical-Foundation-of-Reinforcement-Learning)
 - [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 - [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155)
+- [Direct Preference Optimization](https://arxiv.org/abs/2305.18290)
+- [DeepSeekMath / GRPO](https://arxiv.org/abs/2402.03300)
 
-每章末尾还会列出与该章定义、推导和算法直接对应的来源。
+Each chapter also ends with sources mapped directly to its definitions, derivations, and algorithms.
 
-## 项目文档
+## Project documents
 
-- [产品蓝图](./PRODUCT_BLUEPRINT.md)
-- [课程地图](./CURRICULUM_MAP.md)
-- [章节重构审计](./CHAPTER_REBUILD_AUDIT.md)
-- [实施路线图](./EXECUTION_ROADMAP.md)
+- [Product blueprint](./PRODUCT_BLUEPRINT.md)
+- [Curriculum map](./CURRICULUM_MAP.md)
+- [Chapter rebuild audit](./CHAPTER_REBUILD_AUDIT.md)
+- [Execution roadmap](./EXECUTION_ROADMAP.md)

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
+import { evaluateDpo, evaluateGrpo } from '../engine/post-training'
 import MathFormula from './MathFormula'
 
 const nodeDetail = {
@@ -25,29 +26,62 @@ function PipelineNode({ id, label, active, onClick, icon }) {
 
 export default function SystemLab({ lang, text }) {
   const c = text.common
+  const [method, setMethod] = useState('ppo')
   const [view, setView] = useState('system')
   const [selectedId, setSelectedId] = useState('A')
   const [selectedNode, setSelectedNode] = useState('rollout')
   const [clip, setClip] = useState(0.2)
   const [klBeta, setKlBeta] = useState(0.08)
   const result = useMemo(() => evaluatePpo({ clip, updateStrength: 0.32, klBeta }), [clip, klBeta])
+  const dpo = useMemo(() => evaluateDpo({ beta: Math.max(0.02, klBeta) }), [klBeta])
+  const grpo = useMemo(() => evaluateGrpo({ clip, klBeta }), [clip, klBeta])
   const selected = result.samples.find((sample) => sample.id === selectedId) || result.samples[0]
   const detail = nodeDetail[selectedNode]
 
   return (
     <section className="system-lab">
+      <div className="method-switch" role="group" aria-label={lang === 'zh' ? '后训练方法' : 'Post-training method'}>
+        {[['ppo', 'PPO-based RLHF'], ['dpo', 'DPO'], ['grpo', 'GRPO']].map(([id, label]) => <button type="button" key={id} className={method === id ? 'active' : ''} onClick={() => setMethod(id)}>{label}</button>)}
+      </div>
+      <div className="method-contract">
+        {(lang === 'zh' ? {
+          ppo: [['数据', '在线单条 rollout'], ['反馈', 'Reward model / verifier'], ['Baseline', 'Value model'], ['代价', '四类模型与 token 对齐']],
+          dpo: [['数据', '离线 chosen / rejected'], ['反馈', '成对偏好标签'], ['Baseline', 'Reference policy'], ['代价', '无法探索数据外回答']],
+          grpo: [['数据', '在线成组 rollout'], ['反馈', 'Reward model / verifier'], ['Baseline', '组均值与标准差'], ['代价', '每个 prompt 多次生成']],
+        } : {
+          ppo: [['Data', 'online single rollouts'], ['Feedback', 'reward model / verifier'], ['Baseline', 'value model'], ['Cost', 'four roles + token alignment']],
+          dpo: [['Data', 'offline chosen / rejected'], ['Feedback', 'pairwise preference label'], ['Baseline', 'reference policy'], ['Cost', 'no exploration beyond data']],
+          grpo: [['Data', 'online response groups'], ['Feedback', 'reward model / verifier'], ['Baseline', 'group mean and std. dev.'], ['Cost', 'several generations per prompt']],
+        })[method].map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}
+      </div>
       <div className="system-toolbar">
-        <div className="view-switch" role="group" aria-label={lang === 'zh' ? '视图切换' : 'View switch'}>
+        {method === 'ppo' && <div className="view-switch" role="group" aria-label={lang === 'zh' ? '视图切换' : 'View switch'}>
           <button type="button" className={view === 'algorithm' ? 'active' : ''} onClick={() => setView('algorithm')}>{c.algorithm}</button>
           <button type="button" className={view === 'system' ? 'active' : ''} onClick={() => setView('system')}>{c.system}</button>
-        </div>
+        </div>}
         <label><span>{c.clip}<output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
         <label><span>{c.klBeta}<output>{klBeta.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={klBeta} onChange={(event) => setKlBeta(Number(event.target.value))} /></label>
       </div>
 
-      <div className="shared-batch-banner"><span>◎</span><div><strong>{c.samples}</strong><small>{c.selectSample}</small></div><b>batch_042 · seed 17</b></div>
+      <div className="shared-batch-banner"><span>◎</span><div><strong>{method === 'dpo' ? (lang === 'zh' ? '同一组离线偏好对' : 'One offline preference pair') : c.samples}</strong><small>{method === 'ppo' ? c.selectSample : (lang === 'zh' ? '保持任务不变，比较数据与优化信号' : 'Keep the task fixed while comparing data and update signals')}</small></div><b>{method === 'dpo' ? 'pair_017' : 'batch_042 · seed 17'}</b></div>
 
-      {view === 'algorithm' ? (
+      {method === 'dpo' ? (
+        <div className="method-algorithm-view">
+          <div className="preference-pair">
+            <article className="chosen"><small>{lang === 'zh' ? '偏好回答 y_w' : 'Chosen response y_w'}</small><p>{lang === 'zh' ? '瑞利散射对较短波长更强，因此天空在人眼中主要呈蓝色。' : 'Rayleigh scattering is stronger for shorter wavelengths, making the sky appear predominantly blue.'}</p><b>Δ log π = +{dpo.chosenShift.toFixed(2)}</b></article>
+            <span>≻</span>
+            <article><small>{lang === 'zh' ? '被拒回答 y_l' : 'Rejected response y_l'}</small><p>{lang === 'zh' ? '因为太空是蓝色的，所以天空也是蓝色的。' : 'The sky is blue because outer space is blue.'}</p><b>Δ log π = {dpo.rejectedShift.toFixed(2)}</b></article>
+          </div>
+          <div className="shared-equation"><MathFormula block latex={String.raw`\mathcal L_{\mathrm{DPO}}=-\log\sigma\!\left(\beta\left[\Delta\log\pi(y_w)-\Delta\log\pi(y_l)\right]\right)`} /><strong>p(yw ≻ yl) = {dpo.preferenceProbability.toFixed(3)} · loss = {dpo.loss.toFixed(3)}</strong></div>
+        </div>
+      ) : method === 'grpo' ? (
+        <div className="method-algorithm-view">
+          <div className="group-responses">
+            {grpo.samples.map((sample) => <article key={sample.id} className={sample.advantage > 0 ? 'positive' : 'negative'}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong>R = {sample.reward.toFixed(2)}</strong><span>Â = {sample.advantage.toFixed(2)}</span><span>r = {sample.ratio.toFixed(2)} → {sample.clippedRatio.toFixed(2)}</span><b>J = {sample.objective.toFixed(3)}</b></article>)}
+          </div>
+          <div className="shared-equation"><MathFormula block latex={String.raw`A_i=\frac{R_i-\mu_R}{\sigma_R+\varepsilon},\qquad J_i=\min(r_iA_i,\operatorname{clip}(r_i)A_i)-\beta D_{\mathrm{KL}}`} /><strong>μR = {grpo.mean.toFixed(3)} · σR = {grpo.std.toFixed(3)}</strong></div>
+        </div>
+      ) : view === 'algorithm' ? (
         <div className="algorithm-view">
           <div className="token-trajectory">
             <span className="prompt-token">{lang === 'zh' ? '问题：为什么天空看起来是蓝色？' : 'Prompt: Why does the sky look blue?'}</span>
@@ -91,13 +125,13 @@ export default function SystemLab({ lang, text }) {
         </div>
       )}
 
-      <div className="response-group">
+      {method === 'ppo' && <div className="response-group">
         {result.samples.map((sample) => (
           <button type="button" key={sample.id} className={sample.id === selectedId ? 'active' : ''} onClick={() => setSelectedId(sample.id)}>
             <b>{sample.id}</b><span>{sample.token}</span><small>R {sample.reward.toFixed(1)}</small><small>Â {sample.advantage.toFixed(2)}</small><small>{c.adjustedReward} {sample.adjustedReward.toFixed(2)}</small>
           </button>
         ))}
-      </div>
+      </div>}
     </section>
   )
 }
