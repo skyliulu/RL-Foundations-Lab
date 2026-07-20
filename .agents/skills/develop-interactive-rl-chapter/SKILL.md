@@ -72,6 +72,8 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Treat display equations, inline symbols, axis labels, value cells, derivation steps, table entries, and right-workbench content consistently.
 - Do not place formula-looking text such as `Gₜ`, `Vπ(s)`, `p(s′|s,a)`, or `γ = 0.9` directly in JSX. Convert it to valid LaTeX and render it with `MathFormula`, including inside labels, mappings, assumptions, and contextual explanations.
 - Fail tests on invalid LaTeX or on newly introduced mathematical pseudo-markup.
+- Fix repeated math defects at the shared rendering boundary first. Paragraph, pseudocode, worked-table, caption, control, and workbench renderers must all route formula runs through the math component; chapter-by-chapter string replacement is not a complete repair.
+- Treat automatic normalization of legacy pseudo-math as migration compatibility only. New or edited mathematical content must still be stored as explicit valid LaTeX.
 
 ## Interactive Derivation Contract
 
@@ -130,6 +132,7 @@ Use this shape for derivation data:
 - Search JSX/content for math-like `<sub>`, `<sup>`, Unicode pseudo-formulas, and raw formula strings bypassing `MathFormula`.
 - Search right-workbench mappings, assumptions, controls, table cells, and captions for formula-looking plain text.
 - Validate every LaTeX string with the same renderer used at runtime.
+- Traverse the rendered DOM of every chapter in both languages. Any formula-like text node outside `.math-formula` is a release-blocking failure; report its chapter and parent selector.
 - Confirm every derivation line remains visible before and after clicking.
 - Confirm a selected line updates the right workbench without changing the mathematical chain.
 - Inspect desktop and mobile renders at actual reading size.
@@ -139,5 +142,5 @@ Use this shape for derivation data:
 - For every named algorithm, confirm that the reader can identify the limitation that motivated it, its complete execution loop, why its update is valid, and its tradeoff relative to the previous method.
 - Reject generic experiments whose visible state does not correspond to the chapter's actual algorithm state and data flow.
 - Measure the rendered left and right edges of the opening, representative prose, experiment entry, post-experiment interpretation, summary, and references. Confirm they use the same chapter grid and text column rather than unrelated widths.
-- Measure rendered font sizes in one algorithm block, one worked-example table, one experiment, and the right workbench; reject values below the readability floor unless a documented graphical exception remains legible at actual size.
+- Measure every algorithm, pseudocode, worked-example table, experiment inspector, and right-workbench text surface on desktop and mobile. Reject any value below the readability floor unless a documented graphical exception remains legible at actual size; a single representative sample cannot close a site-wide typography issue.
 - Confirm each chapter ends with one source section and no separate concept-source footer.

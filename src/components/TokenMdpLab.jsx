@@ -46,8 +46,8 @@ export default function TokenMdpLab({ lang, content }) {
       <div className="token-mdp-controls">
         <fieldset><legend>{zh ? '选择一条 response' : 'Choose a response'}</legend>{options.map((item) => <button type="button" className={variant === item.id ? 'active' : ''} key={item.id} onClick={() => setVariant(item.id)}>{item.label}</button>)}</fieldset>
         <label><span>{zh ? '终局奖励' : 'Terminal reward'} <output>{number(terminalReward)}</output></span><input type="range" min="-2" max="4" step="0.25" value={terminalReward} onChange={(event) => setTerminalReward(Number(event.target.value))} /></label>
-        <label><span>{zh ? 'KL 强度 β' : 'KL strength β'} <output>{number(beta)}</output></span><input type="range" min="0" max="1" step="0.05" value={beta} onChange={(event) => setBeta(Number(event.target.value))} /></label>
-        <label><span>{zh ? '折扣 γ' : 'Discount γ'} <output>{number(gamma)}</output></span><input type="range" min="0.5" max="1" step="0.05" value={gamma} onChange={(event) => setGamma(Number(event.target.value))} /></label>
+        <label><span>{zh ? 'KL 强度' : 'KL strength'} <MathFormula latex={String.raw`\beta`} /> <output>{number(beta)}</output></span><input type="range" min="0" max="1" step="0.05" value={beta} onChange={(event) => setBeta(Number(event.target.value))} /></label>
+        <label><span>{zh ? '折扣' : 'Discount'} <MathFormula latex={String.raw`\gamma`} /> <output>{number(gamma)}</output></span><input type="range" min="0.5" max="1" step="0.05" value={gamma} onChange={(event) => setGamma(Number(event.target.value))} /></label>
       </div>
       <div className="token-mdp-equation"><MathFormula block latex={String.raw`r_t=r_t^{\mathrm{process}}-\beta(\log\pi_{\mathrm{old},t}-\log\pi_{\mathrm{ref},t})+\mathbf 1[t=T-1]R_{\mathrm{terminal}}`} /></div>
       <div className="token-trajectory" role="table" aria-label={zh ? 'Token 轨迹账本' : 'Token trajectory ledger'}>

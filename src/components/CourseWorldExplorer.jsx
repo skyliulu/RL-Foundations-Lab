@@ -14,6 +14,7 @@ import {
   transitionsFor,
 } from '../engine/gridworld'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 const actionCopy = {
   zh: { up: '上', right: '右', down: '下', left: '左', stay: '停留' },
@@ -69,8 +70,8 @@ export default function CourseWorldExplorer({ lang, content }) {
   return (
     <section className="world-explorer" aria-label={content.figure}>
       <header className="world-explorer-heading">
-        <div><span className="figure-number">{content.figure}</span><p>{content.instruction}</p></div>
-        <span className="method-badge">MDP · S × A → R × S′</span>
+        <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
+        <span className="method-badge">MDP · <MathFormula latex={String.raw`\mathcal S\times\mathcal A\rightarrow\mathcal R\times\mathcal S'`} /></span>
       </header>
 
       <div className="mdp-interface-strip" aria-label={text.tupleTitle}>
@@ -80,7 +81,7 @@ export default function CourseWorldExplorer({ lang, content }) {
         <div><span>R</span><strong><MathFormula latex={String.raw`p(r\mid s,a)`} /></strong><small><MathFormula latex={String.raw`\mathbb E[r]=${expectedReward.toFixed(2)}`} /></small></div>
         <div><span><MathFormula latex={String.raw`\pi`} /></span><strong><MathFormula latex={String.raw`\pi(a\mid s)`} /></strong><small>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]} · 1.00</small></div>
       </div>
-      <p className="mdp-interface-hint"><strong>{text.tupleTitle}</strong>{text.tupleHint}</p>
+      <p className="mdp-interface-hint"><strong>{text.tupleTitle}</strong><MathText>{text.tupleHint}</MathText></p>
 
       <div className="world-explorer-stage">
         <section className="world-map-panel">
@@ -110,7 +111,7 @@ export default function CourseWorldExplorer({ lang, content }) {
             <span><i className="legend-forbidden" />{text.forbidden} −1</span>
             <span><i className="legend-goal" />{text.goal} +1</span>
             <span><i className="legend-current" />{text.selected}</span>
-            <span><i className="legend-possible" />{text.transition}</span>
+            <span><i className="legend-possible" /><MathText>{text.transition}</MathText></span>
           </div>
           <p className="world-model-note">{text.clickState} · {text.noTerminal}</p>
         </section>
@@ -125,7 +126,7 @@ export default function CourseWorldExplorer({ lang, content }) {
             ))}
           </div>
           <button type="button" className="policy-action-button" onClick={() => setAction(policyAction)}>
-            <span>{text.followPolicy}</span><strong>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]}</strong>
+            <span><MathText>{text.followPolicy}</MathText></span><strong>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]}</strong>
           </button>
           <label className="world-noise-control">
             <span>{text.noise}<output>{noise.toFixed(2)}</output></span>
@@ -140,7 +141,7 @@ export default function CourseWorldExplorer({ lang, content }) {
         </section>
 
         <section className="transition-panel">
-          <header><span>{text.distribution}</span><small>{text.expectedReward}: {expectedReward.toFixed(2)}</small></header>
+          <header><span><MathText>{text.distribution}</MathText></span><small>{text.expectedReward}: {expectedReward.toFixed(2)}</small></header>
           <div className="transition-equation">
             <span>{labelState(current, text.statePrefix)}</span><b>{ACTIONS[action].arrow}</b><span>?</span>
           </div>

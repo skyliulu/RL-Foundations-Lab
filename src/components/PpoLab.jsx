@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 function SamplePlane({ samples, clip, selectedId, onSelect, lang }) {
   const width = 640
@@ -55,10 +56,10 @@ export default function PpoLab({ lang, text }) {
         <div className="ac-node critic"><small>Critic</small><strong><MathFormula latex={String.raw`V_\phi(s)`} /></strong><span>{lang === 'zh' ? '估计 baseline' : 'estimates baseline'}</span></div>
         <div className="advantage-chip"><small>Advantage</small><strong><MathFormula latex={String.raw`\widehat{A}_t=\widehat{Q}_t-V_\phi(s_t)`} /></strong></div>
       </div>
-      <p className="bridge-copy">{text.ppo.acBridge}</p>
+      <p className="bridge-copy"><MathText>{text.ppo.acBridge}</MathText></p>
 
       <div className="ppo-controls">
-        <label><span>{c.clip}<output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
+        <label><span><MathText>{c.clip}</MathText><output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
         <label><span>{c.strength}<output>{strength.toFixed(2)}</output></span><input type="range" min="0.05" max="0.65" step="0.01" value={strength} onChange={(event) => setStrength(Number(event.target.value))} /></label>
         <div className="ppo-metrics"><span><small>{c.clipped}</small><strong>{result.clippedCount} / {result.samples.length}</strong></span><span><small>{c.meanKl}</small><strong>{result.meanKl.toFixed(4)}</strong></span><span><small>{c.objective}</small><strong>{result.policyObjective.toFixed(3)}</strong></span></div>
       </div>
@@ -71,13 +72,13 @@ export default function PpoLab({ lang, text }) {
         <aside className="ppo-inspector">
           <header><span>{lang === 'zh' ? `样本 ${selected.id}` : `Sample ${selected.id}`}</span><strong className={selected.clipped ? 'clipped-label' : ''}>{selected.clipped ? c.clipped : c.free}</strong></header>
           <dl>
-            <div><dt>{c.advantage}</dt><dd>{selected.advantage.toFixed(2)}</dd></div>
-            <div><dt>{c.ratio}</dt><dd>{selected.ratio.toFixed(3)}</dd></div>
+            <div><dt><MathText>{c.advantage}</MathText></dt><dd>{selected.advantage.toFixed(2)}</dd></div>
+            <div><dt><MathText>{c.ratio}</MathText></dt><dd>{selected.ratio.toFixed(3)}</dd></div>
             <div><dt><MathFormula latex={String.raw`\operatorname{clip}(r_t)`} /></dt><dd>{selected.clippedRatio.toFixed(3)}</dd></div>
           </dl>
           <div className="ppo-formula">
             <MathFormula block latex={String.raw`L_t^{\mathrm{CLIP}}=\min\!\left(r_t\widehat{A}_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat{A}_t\right)`} />
-            <strong>= {selected.surrogate.toFixed(3)}</strong>
+            <strong><MathFormula latex={String.raw`=${selected.surrogate.toFixed(3)}`} /></strong>
           </div>
           <p>{selected.clipped
             ? (lang === 'zh' ? '该样本想把策略推得超出近端区间，目标函数截断了额外收益。' : 'This sample would push the policy beyond the proximal region, so extra gain is capped.')

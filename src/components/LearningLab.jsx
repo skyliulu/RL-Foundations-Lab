@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 import { learningLabRunners } from '../engine/learning-labs.js'
 
 const defaults = {
@@ -106,18 +107,18 @@ export default function LearningLab({ id, lang, content }) {
   const set = (key, value) => setParams((current) => ({ ...current, [key]: value }))
   return (
     <section className={`learning-lab learning-lab-${id}`} aria-label={content.figure}>
-      <header className="learning-lab-heading"><div><span>{content.figure}</span><p>{content.instruction}</p></div><button type="button" onClick={() => setParams(defaults[id])}>{zh ? '恢复基线' : 'Reset baseline'}</button></header>
-      <div className="learning-lab-question"><span>{zh ? '本实验回答' : 'Question'}</span><strong>{content.question}</strong></div>
+      <header className="learning-lab-heading"><div><span>{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div><button type="button" onClick={() => setParams(defaults[id])}>{zh ? '恢复基线' : 'Reset baseline'}</button></header>
+      <div className="learning-lab-question"><span>{zh ? '本实验回答' : 'Question'}</span><strong><MathText>{content.question}</MathText></strong></div>
       <div className="learning-lab-controls">
-        {config.controls.map(([key, min, max, step], index) => <label key={key}><span>{config.labels[lang][index]}<output>{format(params[key])}</output></span><input type="range" min={min} max={max} step={step} value={params[key]} onChange={(event) => set(key, Number(event.target.value))} /></label>)}
+        {config.controls.map(([key, min, max, step], index) => <label key={key}><span><MathText>{config.labels[lang][index]}</MathText><output>{format(params[key])}</output></span><input type="range" min={min} max={max} step={step} value={params[key]} onChange={(event) => set(key, Number(event.target.value))} /></label>)}
         {id === 'montecarlo' && <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((value) => <button type="button" key={value} className={params.visit === value ? 'active' : ''} onClick={() => set('visit', value)}>{value === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>}
-        {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} onClick={() => set('decay', value)}>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</button>)}</div></fieldset>}
+        {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} onClick={() => set('decay', value)}><MathText>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</MathText></button>)}</div></fieldset>}
       </div>
       <div className="learning-lab-stage">
         <div className="learning-chart-panel"><header><span>{zh ? '参数改变后的可见结果' : 'Visible result under current parameters'}</span><small>{zh ? '所有曲线均在浏览器内确定性重算' : 'All curves are recomputed deterministically in the browser'}</small></header><LearningLineChart values={result.series} label={content.figure} /></div>
-        <aside className="learning-metrics"><MathFormula block latex={config.formula} />{metrics.map(([label, value]) => <div key={label}><span>{label}</span><strong>{format(value)}</strong></div>)}</aside>
+        <aside className="learning-metrics"><MathFormula block latex={config.formula} />{metrics.map(([label, value]) => <div key={label}><span><MathText>{label}</MathText></span><strong>{format(value)}</strong></div>)}</aside>
       </div>
-      <footer><span>{zh ? '读图提示' : 'Reading cue'}</span><p>{content.explorer.cue}</p></footer>
+      <footer><span>{zh ? '读图提示' : 'Reading cue'}</span><p><MathText>{content.explorer.cue}</MathText></p></footer>
     </section>
   )
 }

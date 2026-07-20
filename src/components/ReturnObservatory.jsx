@@ -3,6 +3,7 @@ import { ACTIONS, allStates, indexOf, isForbidden, isGoal, isSame, keyOf } from 
 import { estimateStateValue } from '../engine/returns'
 import { returnPresetConfigs } from '../content/returns'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 const sampleOptions = [1, 4, 8, 32]
 
@@ -88,7 +89,7 @@ export default function ReturnObservatory({ lang, content }) {
   return (
     <section className="return-observatory" aria-label={content.figure}>
       <header className="return-heading">
-        <div><span className="figure-number">{content.figure}</span><p>{content.instruction}</p></div>
+        <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
         <div className="return-mode-switch" role="group" aria-label={text.valueLens}>
           <button type="button" className={mode === 'trajectory' ? 'active' : ''} onClick={() => setMode('trajectory')}>{text.modeTrajectory}</button>
           <button type="button" className={mode === 'value' ? 'active' : ''} onClick={() => setMode('value')}>{text.modeValue}</button>
@@ -99,19 +100,19 @@ export default function ReturnObservatory({ lang, content }) {
         <span>{text.preset}</span>
         {Object.keys(returnPresetConfigs).map((id) => (
           <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}>
-            <strong>{text.presetItems[id].title}</strong><small>{text.presetItems[id].note}</small>
+            <strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small>
           </button>
         ))}
       </div>
 
       <div className="return-control-row">
-        <label><span>{text.gamma}<output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>
+        <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>
         <label><span>{text.noise}<output>{noise.toFixed(2)}</output></span><input type="range" min="0" max="0.4" step="0.1" value={noise} onChange={(event) => customize(() => setNoise(Number(event.target.value)))} /></label>
         <fieldset><legend>{text.sampleCount}</legend><div>{sampleOptions.map((count) => <button type="button" key={count} className={sampleCount === count ? 'active' : ''} onClick={() => customize(() => { setSampleCount(count); setSelectedRun(0) })}>{count}</button>)}</div></fieldset>
       </div>
 
       <div className="return-metrics">
-        <div><span>{text.exact}</span><strong>{formatValue(result.exact)}</strong><small>{text.fixedPolicy}</small></div>
+        <div><span><MathText>{text.exact}</MathText></span><strong>{formatValue(result.exact)}</strong><small><MathText>{text.fixedPolicy}</MathText></small></div>
         <div><span>{text.estimate}</span><strong>{formatValue(result.mean)}</strong><small>n = {sampleCount}</small></div>
         <div><span>{text.error}</span><strong className={Math.abs(error) > 0.2 ? 'warn' : ''}>{error > 0 ? '+' : ''}{formatValue(error)}</strong><small>{noise === 0 ? text.deterministic : text.stochastic}</small></div>
       </div>
@@ -127,12 +128,12 @@ export default function ReturnObservatory({ lang, content }) {
               </button>
             ))}
           </div>
-          <p>{isGoal(start) ? text.targetContinuing : `${text.fixedPolicy} · ${text.courseBaseline}`}</p>
+          <p><MathText>{isGoal(start) ? text.targetContinuing : `${text.fixedPolicy} · ${text.courseBaseline}`}</MathText></p>
           <dl className="return-readout">
             <div><dt>{text.selectedRun}</dt><dd>#{selectedIndex + 1}</dd></div>
             <div><dt>{text.seed}</dt><dd>{sample.seed}</dd></div>
             <div><dt>{text.return}</dt><dd>{formatValue(sample.discountedReturn)}</dd></div>
-            <div><dt>{text.remainingBound}</dt><dd>≤ {formatValue(sample.tailBound)}</dd></div>
+            <div><dt>{text.remainingBound}</dt><dd><MathFormula latex={String.raw`\le ${formatValue(sample.tailBound)}`} /></dd></div>
           </dl>
         </section>
 
@@ -148,7 +149,7 @@ export default function ReturnObservatory({ lang, content }) {
                 </div>
               ))}
             </div>
-            <footer><span>{text.runningReturn}</span><strong>{formatValue(sample.discountedReturn)}</strong><small>{text.tailNote}</small></footer>
+            <footer><span><MathText>{text.runningReturn}</MathText></span><strong>{formatValue(sample.discountedReturn)}</strong><small><MathText>{text.tailNote}</MathText></small></footer>
           </section>
         ) : (
           <section className="value-lens-panel">

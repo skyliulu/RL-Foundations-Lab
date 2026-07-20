@@ -23,6 +23,9 @@ Use `.agents/skills/develop-interactive-rl-chapter/SKILL.md` whenever creating, 
 ## Mathematical rendering
 
 - Store mathematical expressions as valid LaTeX strings and render them with the shared `MathFormula` component.
+- Route formula-like runs in prose, pseudocode, tables, controls, captions, and the right workbench through the shared math-rendering boundary. Raw Unicode pseudo-formulas are not acceptable reader-facing output.
+- Treat the legacy inline-math normalizer as migration compatibility, not an authoring format; new and edited formulas must be explicit valid LaTeX.
+- Before release, audit every chapter DOM in both languages: formula-like text outside `.math-formula` is a failure. Measure every algorithm, table, inspector, and workbench surface on desktop and mobile rather than sampling one component.
 - Do not assemble formulas with Unicode superscripts/subscripts, HTML `<sub>/<sup>`, or hand-styled fragments.
 - Keep a complete derivation chain visible in the article. Make each transformation line selectable and send its explanation, rule, assumptions, symbols, and before/after LaTeX to the right workbench.
 - Do not add standalone Derivation Explorer interfaces that hide or duplicate the article derivation.

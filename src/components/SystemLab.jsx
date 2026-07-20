@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
 import { evaluateDpo, evaluateGrpo } from '../engine/post-training'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 const nodeDetail = {
   prompt: [String.raw`s_0`, 'UTF-8 text', 'batch item'],
@@ -59,8 +60,8 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
           <button type="button" className={view === 'algorithm' ? 'active' : ''} onClick={() => setView('algorithm')}>{c.algorithm}</button>
           <button type="button" className={view === 'system' ? 'active' : ''} onClick={() => setView('system')}>{c.system}</button>
         </div>}
-        <label><span>{c.clip}<output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
-        <label><span>{c.klBeta}<output>{klBeta.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={klBeta} onChange={(event) => setKlBeta(Number(event.target.value))} /></label>
+        <label><span><MathText>{c.clip}</MathText><output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
+        <label><span><MathText>{c.klBeta}</MathText><output>{klBeta.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={klBeta} onChange={(event) => setKlBeta(Number(event.target.value))} /></label>
       </div>
 
       <div className="shared-batch-banner"><span>◎</span><div><strong>{method === 'dpo' ? (lang === 'zh' ? '同一组离线偏好对' : 'One offline preference pair') : c.samples}</strong><small>{method === 'ppo' ? c.selectSample : (lang === 'zh' ? '保持任务不变，比较数据与优化信号' : 'Keep the task fixed while comparing data and update signals')}</small></div><b>{method === 'dpo' ? 'pair_017' : 'batch_042 · seed 17'}</b></div>

@@ -1,5 +1,6 @@
 import ClickableDerivation from './ClickableDerivation.jsx'
 import MathFormula from './MathFormula.jsx'
+import MathText from './MathText.jsx'
 import MonteCarloLab from './MonteCarloLab.jsx'
 
 function ReasoningPath({ content, lang }) {
@@ -8,8 +9,8 @@ function ReasoningPath({ content, lang }) {
       <header><span>{lang === 'zh' ? '问题驱动的主线' : 'Problem-driven spine'}</span><h2>{lang === 'zh' ? '先看原方法为什么失效，再引入新机制' : 'Start with the failure, then introduce the mechanism'}</h2></header>
       {content.reasoningPath.map((section, index) => (
         <article key={section.id}>
-          <div className="mc-reasoning-index"><span>{index + 1}</span><small>{section.kicker}</small></div>
-          <div className="mc-reasoning-copy"><h3>{section.title}</h3>{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}{section.formula && <MathFormula block latex={section.formula} />}</div>
+          <div className="mc-reasoning-index"><span>{index + 1}</span><small><MathText>{section.kicker}</MathText></small></div>
+          <div className="mc-reasoning-copy"><h3><MathText>{section.title}</MathText></h3>{section.paragraphs.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}{section.formula && <MathFormula block latex={section.formula} />}</div>
         </article>
       ))}
     </section>
@@ -24,13 +25,13 @@ function AlgorithmFamily({ content, lang }) {
       <div className="mc-algorithm-stack">
         {content.algorithms.map((algorithm, index) => (
           <article key={algorithm.id} className={`mc-algorithm-card algorithm-${algorithm.id}`}>
-            <header><span>{String(index + 1).padStart(2, '0')}</span><div><small>{index === 0 ? (zh ? '起点' : 'Starting point') : (zh ? '修复上一层' : 'Repairs predecessor')}</small><h3>{algorithm.label}</h3></div></header>
+            <header><span>{String(index + 1).padStart(2, '0')}</span><div><small>{index === 0 ? (zh ? '起点' : 'Starting point') : (zh ? '修复上一层' : 'Repairs predecessor')}</small><h3><MathText>{algorithm.label}</MathText></h3></div></header>
             <div className="mc-algorithm-logic">
-              <div><span>{zh ? '核心机制' : 'Mechanism'}</span><p>{algorithm.premise}</p></div>
-              <div><span>{zh ? '解决了什么' : 'What it solves'}</span><p>{algorithm.solves}</p></div>
-              <div className="limitation"><span>{zh ? '仍然失败在哪里' : 'Remaining failure'}</span><p>{algorithm.limitation}</p></div>
+              <div><span>{zh ? '核心机制' : 'Mechanism'}</span><p><MathText>{algorithm.premise}</MathText></p></div>
+              <div><span>{zh ? '解决了什么' : 'What it solves'}</span><p><MathText>{algorithm.solves}</MathText></p></div>
+              <div className="limitation"><span>{zh ? '仍然失败在哪里' : 'Remaining failure'}</span><p><MathText>{algorithm.limitation}</MathText></p></div>
             </div>
-            <div className="mc-pseudocode"><span>{zh ? '完整伪代码' : 'Complete pseudocode'}</span><ol>{algorithm.pseudocode.map((line, lineIndex) => <li key={`${lineIndex}-${line}`}><b>{String(lineIndex + 1).padStart(2, '0')}</b><code>{line}</code></li>)}</ol></div>
+            <div className="mc-pseudocode"><span>{zh ? '完整伪代码' : 'Complete pseudocode'}</span><ol>{algorithm.pseudocode.map((line, lineIndex) => <li key={`${lineIndex}-${line}`}><b>{String(lineIndex + 1).padStart(2, '0')}</b><code><MathText>{line}</MathText></code></li>)}</ol></div>
             {index < content.algorithms.length - 1 && <div className="mc-handoff"><span>↓</span><strong>{index === 0 ? (zh ? '复用途中访问' : 'Reuse intermediate visits') : (zh ? '把覆盖写进策略' : 'Put coverage into the policy')}</strong></div>}
           </article>
         ))}
@@ -51,7 +52,7 @@ export default function MonteCarloChapter({ content, lang, onSelect }) {
         onSelect={onSelect}
       />
       <AlgorithmFamily content={content} lang={lang} />
-      <p className="article-copy chapter-transition">{content.experimentIntro}</p>
+      <p className="article-copy chapter-transition"><MathText>{content.experimentIntro}</MathText></p>
       <MonteCarloLab lang={lang} content={content} />
     </>
   )

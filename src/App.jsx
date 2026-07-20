@@ -5,6 +5,7 @@ import ChapterDeepening from './components/ChapterDeepening'
 import ClickableDerivation from './components/ClickableDerivation'
 import CourseWorldExplorer from './components/CourseWorldExplorer'
 import MathFormula from './components/MathFormula'
+import MathText from './components/MathText'
 import MdpNarrative from './components/MdpNarrative'
 import ReturnObservatory from './components/ReturnObservatory'
 import OptimalitySwitch from './components/OptimalitySwitch'
@@ -27,9 +28,9 @@ function ChapterHeader({ chapter, content, prerequisites }) {
   return (
     <header className="chapter-header">
       <span className="chapter-eyebrow">{content.eyebrow}</span>
-      <h1>{content.title}</h1>
-      <p className="chapter-intro">{content.intro}</p>
-      <span className="prerequisite">↳ {prerequisites}</span>
+      <h1><MathText>{content.title}</MathText></h1>
+      <p className="chapter-intro"><MathText>{content.intro}</MathText></p>
+      <span className="prerequisite">↳ <MathText>{prerequisites}</MathText></span>
     </header>
   )
 }
@@ -45,7 +46,7 @@ function MdpRail({ lang }) {
         <MathFormula block className="mdp-loop-formula" latex={String.raw`S_t \xrightarrow{A_t} (R_{t+1},S_{t+1})`} />
         <dl className="mapping-list"><div><dt>{labels.agent}</dt><dd><MathFormula latex={String.raw`\pi(a\mid s)`} /></dd></div><div><dt>{labels.environment}</dt><dd className="rail-math-pair"><MathFormula latex={String.raw`p(s'\mid s,a)`} /><span>{labels.and}</span><MathFormula latex={String.raw`p(r\mid s,a)`} /></dd></div></dl>
       </section>
-      <section className="rail-section"><span className="rail-kicker">{labels.markov}</span><MathFormula block className="rail-formula compact mdp-markov-formula" latex={String.raw`p(s'\mid s,a,h)=p(s'\mid s,a)`} /><p>{labels.markovText}</p></section>
+      <section className="rail-section"><span className="rail-kicker">{labels.markov}</span><MathFormula block className="rail-formula compact mdp-markov-formula" latex={String.raw`p(s'\mid s,a,h)=p(s'\mid s,a)`} /><p><MathText>{labels.markovText}</MathText></p></section>
     </>
   )
 }
@@ -87,7 +88,7 @@ function ReturnRail({ lang }) {
 function PlanningRail({ lang }) {
   return (
     <>
-      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '最优性算子' : 'Optimality operator'}</span><MathFormula block className="rail-formula compact" latex={String.raw`V_{k+1}(s)=\max_a\mathbb{E}[R+\gamma V_k(s')]`} /><p>{lang === 'zh' ? '同步与原地更新只改变新值被复用的时机，不改变不动点。' : 'Synchronous and in-place updates change when new values are reused, not the fixed point.'}</p></section>
+      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '最优性算子' : 'Optimality operator'}</span><MathFormula block className="rail-formula compact" latex={String.raw`V_{k+1}(s)=\max_a\mathbb{E}[R+\gamma V_k(s')]`} /><p><MathText>{lang === 'zh' ? '同步与原地更新只改变新值被复用的时机，不改变不动点。' : 'Synchronous and in-place updates change when new values are reused, not the fixed point.'}</MathText></p></section>
       <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '公平比较协议' : 'Fair comparison protocol'}</span><ul className="numbered-notes"><li><b>1</b>{lang === 'zh' ? '同一环境与初始值' : 'Same environment and initialization'}</li><li><b>2</b>{lang === 'zh' ? '同一折扣、随机性与阈值' : 'Same discount, randomness, and threshold'}</li><li><b>3</b>{lang === 'zh' ? '只改变更新顺序' : 'Only update order changes'}</li></ul></section>
     </>
   )
@@ -97,7 +98,7 @@ function OptimalityRail({ lang }) {
   return (
     <>
       <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '右侧变化' : 'Right-hand change'}</span><MathFormula block className="rail-formula compact" latex={String.raw`T^{\pi}V(s)=\sum_a\pi(a\mid s)q_V(s,a)`} /><MathFormula block className="rail-formula compact" latex={String.raw`T^*V(s)=\max_a q_V(s,a)`} /></section>
-      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '关键性质' : 'Key property'}</span><p>{lang === 'zh' ? '任意概率加权平均都不会超过最大项，因此最大化策略分布等价于选择最大动作价值。' : 'No probability-weighted average can exceed its largest member, so maximizing over policy distributions is equivalent to selecting the largest action value.'}</p></section>
+      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '关键性质' : 'Key property'}</span><p><MathText>{lang === 'zh' ? '任意概率加权平均都不会超过最大项，因此最大化策略分布等价于选择最大动作价值。' : 'No probability-weighted average can exceed its largest member, so maximizing over policy distributions is equivalent to selecting the largest action value.'}</MathText></p></section>
     </>
   )
 }
@@ -106,7 +107,7 @@ function PpoRail({ lang }) {
   return (
     <>
       <section className="rail-section"><span className="rail-kicker">PPO-Clip</span><MathFormula block className="rail-formula multiline" latex={String.raw`L^{\mathrm{CLIP}}(\theta)=\widehat{\mathbb{E}}_t\!\left[\min\!\left(r_t\widehat{A}_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat{A}_t\right)\right]`} /><MathFormula block latex={String.raw`r_t=\frac{\pi_\theta(a_t\mid s_t)}{\pi_{\mathrm{old}}(a_t\mid s_t)}`} /></section>
-      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '读图方法' : 'How to read the plane'}</span><ul className="numbered-notes"><li><b>+</b>{lang === 'zh' ? '优势为正：提高动作概率' : 'Positive advantage: raise probability'}</li><li><b>−</b>{lang === 'zh' ? '优势为负：降低动作概率' : 'Negative advantage: lower probability'}</li><li><b>ε</b>{lang === 'zh' ? '越小：更新越保守，也更容易停滞' : 'Smaller: safer updates, but easier to stall'}</li></ul></section>
+      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '读图方法' : 'How to read the plane'}</span><ul className="numbered-notes"><li><b><MathFormula latex={String.raw`+`} /></b>{lang === 'zh' ? '优势为正：提高动作概率' : 'Positive advantage: raise probability'}</li><li><b><MathFormula latex={String.raw`-`} /></b>{lang === 'zh' ? '优势为负：降低动作概率' : 'Negative advantage: lower probability'}</li><li><b><MathFormula latex={String.raw`\epsilon`} /></b>{lang === 'zh' ? '越小：更新越保守，也更容易停滞' : 'Smaller: safer updates, but easier to stall'}</li></ul></section>
     </>
   )
 }
@@ -118,7 +119,7 @@ function RlhfRail({ lang }) {
   return (
     <>
       <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '概念迁移' : 'Concept bridge'}</span><h2>{lang === 'zh' ? '经典 RL → 语言模型' : 'Classical RL → language models'}</h2><dl className="mapping-list">{rows.map(([left, right]) => <div key={left}><dt>{left}</dt><dd>{right}</dd></div>)}</dl></section>
-      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '共享证据' : 'Shared evidence'}</span><p>{lang === 'zh' ? '算法视图和系统视图使用同一个 batch id、seed、样本奖励、advantage 与 ratio。' : 'Algorithm and system views share the same batch id, seed, rewards, advantages, and ratios.'}</p></section>
+      <section className="rail-section"><span className="rail-kicker">{lang === 'zh' ? '共享证据' : 'Shared evidence'}</span><p><MathText>{lang === 'zh' ? '算法视图和系统视图使用同一个 batch id、seed、样本奖励、advantage 与 ratio。' : 'Algorithm and system views share the same batch id, seed, rewards, advantages, and ratios.'}</MathText></p></section>
     </>
   )
 }
@@ -131,13 +132,13 @@ function FormulaContextRail({ context, lang }) {
     <section className="rail-section formula-context-rail">
       <span className="rail-kicker">{lang === 'zh' ? '公式上下文' : 'Formula context'}</span>
       <h2>{context.title}</h2>
-      <p>{context.body}</p>
+      <p><MathText>{context.body}</MathText></p>
       {context.latex && <><span className="context-label">{labels.selected}</span><MathFormula block className="context-formula" latex={context.latex} /></>}
       {context.beforeLatex && <><span className="context-label">{labels.before}</span><MathFormula block className="context-formula before" latex={context.beforeLatex} /></>}
-      {context.detail && <div className="context-detail"><span className="context-label">{labels.detail}</span><p>{context.detail}</p></div>}
-      {context.assumptions?.length > 0 && <div className="context-detail"><span className="context-label">{labels.assumptions}</span><ul>{context.assumptions.map((item) => <li key={item}>{/\\|[=<>^{}]/.test(item) && !/[\u3400-\u9fff]/.test(item) ? <MathFormula latex={item} /> : item}</li>)}</ul></div>}
-      {context.symbols?.length > 0 && <><span className="context-label">{labels.symbols}</span><dl className="mapping-list">{context.symbols.map(([term, value]) => <div key={term}><dt><MathFormula latex={term} /></dt><dd>{value}</dd></div>)}</dl></>}
-      {context.rows && <dl className="mapping-list">{context.rows.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>}
+      {context.detail && <div className="context-detail"><span className="context-label">{labels.detail}</span><p><MathText>{context.detail}</MathText></p></div>}
+      {context.assumptions?.length > 0 && <div className="context-detail"><span className="context-label">{labels.assumptions}</span><ul>{context.assumptions.map((item) => <li key={item}>{/\\|[=<>^{}]/.test(item) && !/[\u3400-\u9fff]/.test(item) ? <MathFormula latex={item} /> : <MathText>{item}</MathText>}</li>)}</ul></div>}
+      {context.symbols?.length > 0 && <><span className="context-label">{labels.symbols}</span><dl className="mapping-list">{context.symbols.map(([term, value]) => <div key={term}><dt><MathFormula latex={term} /></dt><dd><MathText>{value}</MathText></dd></div>)}</dl></>}
+      {context.rows && <dl className="mapping-list">{context.rows.map(([term, value]) => <div key={term}><dt><MathText>{term}</MathText></dt><dd><MathText>{value}</MathText></dd></div>)}</dl>}
     </section>
   )
 }
@@ -147,9 +148,9 @@ function ChapterGuideRail({ content, lang }) {
     <section className="rail-section">
       <span className="rail-kicker">{lang === 'zh' ? '本章主问题' : 'Chapter question'}</span>
       <h2>{content.question}</h2>
-      <p>{content.bridge}</p>
+      <p><MathText>{content.bridge}</MathText></p>
       <span className="rail-kicker">{lang === 'zh' ? '完成后应能解释' : 'After this chapter'}</span>
-      <ul className="term-list">{content.summary.slice(0, 3).map((item) => <li key={item}><i className="dot future-dot" /><span>{item}</span></li>)}</ul>
+      <ul className="term-list">{content.summary.slice(0, 3).map((item) => <li key={item}><i className="dot future-dot" /><MathText>{item}</MathText></li>)}</ul>
     </section>
   )
 }
@@ -181,9 +182,9 @@ function ChapterPrelude({ content }) {
     <section className="derivation-sequence" aria-label={content.title}>
       {content.prelude.map((step, index) => (
         <article className="derivation-step" key={step.id}>
-          <header><span>{String(index + 1).padStart(2, '0')}</span><small>{step.kicker}</small></header>
-          <h2>{step.title}</h2>
-          {step.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          <header><span>{String(index + 1).padStart(2, '0')}</span><small><MathText>{step.kicker}</MathText></small></header>
+          <h2><MathText>{step.title}</MathText></h2>
+          {step.paragraphs.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
           {step.formulas && <div className="derivation-formulas">{step.formulas.map((formula) => <MathFormula block latex={formula} key={formula} />)}</div>}
         </article>
       ))}
@@ -196,9 +197,9 @@ function ChapterSections({ content }) {
     <section className="chapter-article-sections">
       {content.sections.map((section) => (
         <article key={section.id} className={`chapter-article-section section-${section.id}`}>
-          <span>{section.kicker}</span>
-          <h2>{section.title}</h2>
-          {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          <span><MathText>{section.kicker}</MathText></span>
+          <h2><MathText>{section.title}</MathText></h2>
+          {section.paragraphs.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
           {section.formula && <MathFormula block className="section-formula" latex={section.formula} />}
         </article>
       ))}
@@ -210,8 +211,8 @@ function ChapterSummary({ content, lang }) {
   return (
     <section className="chapter-summary">
       <span>{lang === 'zh' ? '本章收束' : 'Chapter summary'}</span>
-      <h2>{content.summaryTitle || (lang === 'zh' ? '从长期回报到可求解的状态方程' : 'From long-term return to solvable state equations')}</h2>
-      <ul>{content.summary.map((item) => <li key={item}>{item}</li>)}</ul>
+      <h2><MathText>{content.summaryTitle || (lang === 'zh' ? '从长期回报到可求解的状态方程' : 'From long-term return to solvable state equations')}</MathText></h2>
+      <ul>{content.summary.map((item) => <li key={item}><MathText>{item}</MathText></li>)}</ul>
     </section>
   )
 }
@@ -284,9 +285,9 @@ export default function App() {
             <>
               <MdpNarrative sections={text.mdp.learningPath} overview={text.mdp.overview} />
               <ChapterDeepening sections={text.mdp.deepening} lang={lang} />
-              <p className="article-copy chapter-transition">{text.mdp.experimentIntro}</p>
+              <p className="article-copy chapter-transition"><MathText>{text.mdp.experimentIntro}</MathText></p>
               <CourseWorldExplorer lang={lang} content={text.mdp} />
-              <p className="article-copy chapter-interpretation">{text.mdp.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{text.mdp.interpretation}</MathText></p>
               <ChapterSummary content={text.mdp} lang={lang} />
               <ChapterSources sources={text.mdp.sources} lang={lang} />
             </>
@@ -301,9 +302,9 @@ export default function App() {
               onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
             />
             <ChapterDeepening sections={text.returns.deepening} lang={lang} />
-            <p className="article-copy chapter-transition">{text.returns.experimentIntro || text.returns.bridge}</p>
+            <p className="article-copy chapter-transition"><MathText>{text.returns.experimentIntro || text.returns.bridge}</MathText></p>
             <ReturnObservatory lang={lang} content={text.returns} />
-            {text.returns.interpretation && <p className="article-copy chapter-interpretation">{text.returns.interpretation}</p>}
+            {text.returns.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.returns.interpretation}</MathText></p>}
             <ChapterSections content={text.returns} />
             <ChapterSummary content={text.returns} lang={lang} />
             <ChapterSources sources={text.returns.sources} lang={lang} />
@@ -319,9 +320,9 @@ export default function App() {
               onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
             />
             <ChapterDeepening sections={text.bellman.deepening} lang={lang} />
-            <p className="article-copy chapter-transition">{text.bellman.experimentIntro || text.bellman.bridge}</p>
+            <p className="article-copy chapter-transition"><MathText>{text.bellman.experimentIntro || text.bellman.bridge}</MathText></p>
             <BellmanLab lang={lang} text={text} />
-            {text.bellman.interpretation && <p className="article-copy chapter-interpretation">{text.bellman.interpretation}</p>}
+            {text.bellman.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.bellman.interpretation}</MathText></p>}
             <ChapterSections content={text.bellman} />
             <ChapterSummary content={text.bellman} lang={lang} />
             <ChapterSources sources={text.bellman.sources} lang={lang} />
@@ -337,9 +338,9 @@ export default function App() {
               onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
             />
             <ChapterDeepening sections={text.optimality.deepening} lang={lang} />
-            <p className="article-copy chapter-transition">{text.optimality.experimentIntro || text.optimality.bridge}</p>
+            <p className="article-copy chapter-transition"><MathText>{text.optimality.experimentIntro || text.optimality.bridge}</MathText></p>
             <OptimalitySwitch content={text.optimality} />
-            {text.optimality.interpretation && <p className="article-copy chapter-interpretation">{text.optimality.interpretation}</p>}
+            {text.optimality.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.optimality.interpretation}</MathText></p>}
             <ChapterSections content={text.optimality} />
             <ChapterSummary content={text.optimality} lang={lang} />
             <ChapterSources sources={text.optimality.sources} lang={lang} />
@@ -355,9 +356,9 @@ export default function App() {
               onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
             />
             <ChapterDeepening sections={text.planning.deepening} lang={lang} />
-            <p className="article-copy chapter-transition">{text.planning.experimentIntro || text.planning.bridge}</p>
+            <p className="article-copy chapter-transition"><MathText>{text.planning.experimentIntro || text.planning.bridge}</MathText></p>
             <PlanningLab content={text.planning} />
-            {text.planning.interpretation && <p className="article-copy chapter-interpretation">{text.planning.interpretation}</p>}
+            {text.planning.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.planning.interpretation}</MathText></p>}
             <ChapterSections content={text.planning} />
             <ChapterSummary content={text.planning} lang={lang} />
             <ChapterSources sources={text.planning.sources} lang={lang} />
@@ -370,7 +371,7 @@ export default function App() {
                 lang={lang}
                 onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
               />
-              <p className="article-copy chapter-interpretation">{content.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
               <ChapterSections content={content} />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />
@@ -386,9 +387,9 @@ export default function App() {
                 onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
               />
               <ChapterDeepening sections={content.deepening} lang={lang} />
-              <p className="article-copy chapter-transition">{content.experimentIntro}</p>
+              <p className="article-copy chapter-transition"><MathText>{content.experimentIntro}</MathText></p>
               <LearningLab key={active} id={active} lang={lang} content={content} />
-              <p className="article-copy chapter-interpretation">{content.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
               <ChapterSections content={content} />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />
@@ -398,9 +399,9 @@ export default function App() {
             <>
               <ClickableDerivation eyebrow={lang === 'zh' ? '从 Actor–Critic 到 PPO' : 'From Actor–Critic to PPO'} title={lang === 'zh' ? '怎样让一批旧策略样本支持多轮稳定更新？' : 'How can one old-policy batch support stable repeated updates?'} intro={text.ppo.derivationIntro} steps={text.ppo.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
               <ChapterDeepening sections={text.ppo.deepening} lang={lang} />
-              <p className="article-copy chapter-transition">{text.ppo.experimentIntro}</p>
+              <p className="article-copy chapter-transition"><MathText>{text.ppo.experimentIntro}</MathText></p>
               <PpoLab lang={lang} text={text} />
-              <p className="article-copy chapter-interpretation">{text.ppo.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{text.ppo.interpretation}</MathText></p>
               <ChapterSections content={text.ppo} />
               <ChapterSummary content={text.ppo} lang={lang} />
               <ChapterSources sources={text.ppo.sources} lang={lang} />
@@ -410,9 +411,9 @@ export default function App() {
             <>
               <ClickableDerivation eyebrow={lang === 'zh' ? '从语言生成到 MDP 五要素' : 'From generation to the five MDP elements'} title={lang === 'zh' ? '怎样把一条 response 严格定义为 token 轨迹？' : 'How is a response defined rigorously as a token trajectory?'} intro={text.tokenmdp.derivationIntro} steps={text.tokenmdp.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
               <ChapterDeepening sections={text.tokenmdp.deepening} lang={lang} />
-              <p className="article-copy chapter-transition">{text.tokenmdp.experimentIntro}</p>
+              <p className="article-copy chapter-transition"><MathText>{text.tokenmdp.experimentIntro}</MathText></p>
               <TokenMdpLab lang={lang} content={text.tokenmdp} />
-              <p className="article-copy chapter-interpretation">{text.tokenmdp.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{text.tokenmdp.interpretation}</MathText></p>
               <ChapterSections content={text.tokenmdp} />
               <ChapterSummary content={text.tokenmdp} lang={lang} />
               <ChapterSources sources={text.tokenmdp.sources} lang={lang} />
@@ -422,9 +423,9 @@ export default function App() {
             <>
               <ClickableDerivation eyebrow={text.rlhf.eyebrow} title={text.rlhf.title} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
               <ChapterDeepening sections={text.rlhf.deepening} lang={lang} />
-              <p className="article-copy chapter-transition">{text.rlhf.experimentIntro}</p>
+              <p className="article-copy chapter-transition"><MathText>{text.rlhf.experimentIntro}</MathText></p>
               <SystemLab lang={lang} text={text} ppoOnly />
-              <p className="article-copy chapter-interpretation">{text.rlhf.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{text.rlhf.interpretation}</MathText></p>
               <ChapterSections content={text.rlhf} />
               <ChapterSummary content={text.rlhf} lang={lang} />
               <ChapterSources sources={text.rlhf.sources} lang={lang} />
@@ -434,9 +435,9 @@ export default function App() {
             <>
               <ClickableDerivation eyebrow={lang === 'zh' ? '完整定义与推导' : 'Complete definition and derivation'} title={content.title} intro={content.derivationIntro || content.bridge} steps={content.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
               <ChapterDeepening sections={content.deepening} lang={lang} />
-              <p className="article-copy chapter-transition">{content.experimentIntro}</p>
+              <p className="article-copy chapter-transition"><MathText>{content.experimentIntro}</MathText></p>
               <ModernExtensionLab id={active} lang={lang} content={content} />
-              <p className="article-copy chapter-interpretation">{content.interpretation}</p>
+              <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
               <ChapterSections content={content} />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />

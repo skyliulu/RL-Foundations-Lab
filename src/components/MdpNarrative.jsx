@@ -1,4 +1,5 @@
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 import CourseWorldOverview from './CourseWorldOverview'
 
 function FormulaStack({ formulas }) {
@@ -20,15 +21,15 @@ export default function MdpNarrative({ sections, overview }) {
               <span className="narrative-kicker">{section.kicker}</span>
               <h2>{section.title}</h2>
             </header>
-            {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            {section.paragraphs.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
             {section.id === 'problem-setting' && <CourseWorldOverview content={overview} />}
             <FormulaStack formulas={section.formulas} />
             {section.compare && (
               <dl className="narrative-compare">
-                {section.compare.map(([owner, role]) => <div key={owner}><dt>{owner}</dt><dd>{role}</dd></div>)}
+                {section.compare.map(([owner, role]) => <div key={owner}><dt><MathText>{owner}</MathText></dt><dd><MathText>{role}</MathText></dd></div>)}
               </dl>
             )}
-            {section.note && <p className="narrative-note">{section.note}</p>}
+            {section.note && <p className="narrative-note"><MathText>{section.note}</MathText></p>}
           </div>
         </article>
       ))}

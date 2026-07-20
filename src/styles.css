@@ -24,9 +24,9 @@
   --chapter-frame: 1240px;
   --reading-column: 780px;
   --font-dense: .75rem;
-  --font-support: .76rem;
+  --font-support: .82rem;
   --font-ui: .78rem;
-  --font-code: .76rem;
+  --font-code: .86rem;
   font-size: 16px;
 }
 
@@ -287,6 +287,9 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .derivation-line-math { min-width: 0; overflow-x: auto; color: var(--ink); font-size: .9rem; }
 .derivation-line-math .katex-display { margin: .2em 0; text-align: left; }
 .math-formula .katex-display { overflow-x: auto; overflow-y: hidden; }
+.math-text { display: inline; }
+.math-text > span { display: inline; }
+.math-text .math-formula { display: inline-block; margin-inline: .08em; font-size: 1em; vertical-align: -.04em; }
 .context-label { display: block; margin: 16px 0 7px; color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-dense); letter-spacing: .07em; }
 .context-formula { padding: 11px 9px; border: 1px solid var(--line); background: rgba(255,255,255,.2); font-size: .82rem; }
 .context-formula.before { color: var(--muted); }
@@ -783,21 +786,21 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 .deepening-theorem { margin: 19px 0; padding: 17px 19px; border-block: 1px solid var(--line-strong); background: rgba(24,119,107,.04); }
 .deepening-theorem > span, .deepening-pseudocode > span, .deepening-example figcaption > span { display: block; color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-dense); letter-spacing: .08em; }
 .deepening-theorem > strong { display: block; margin: 8px 0; color: var(--navy); font-size: .83rem; font-weight: 500; line-height: 1.65; }
-.deepening-theorem > p { margin: 0 0 10px; color: var(--muted); font-size: .73rem; line-height: 1.75; }
+.deepening-theorem > p { margin: 0 0 10px; color: var(--muted); font-size: var(--font-support); line-height: 1.75; }
 .deepening-theorem .math-formula { margin: 7px 0; font-size: .78rem; text-align: center; }
-.deepening-theorem .deepening-condition { margin: 6px 0 0; color: var(--ink); font-size: .69rem; line-height: 1.65; }
+.deepening-theorem .deepening-condition { margin: 6px 0 0; color: var(--ink); font-size: var(--font-support); line-height: 1.65; }
 .deepening-pseudocode { margin: 20px 0; }
 .deepening-pseudocode ol { margin: 9px 0 0; padding: 10px 0; border-block: 1px solid var(--line); list-style: none; }
 .deepening-pseudocode li { display: grid; grid-template-columns: 30px 1fr; gap: 9px; padding: 5px 8px; }
 .deepening-pseudocode li:nth-child(even) { background: rgba(23,79,130,.025); }
-.deepening-pseudocode b { color: var(--muted); font: 400 .68rem Consolas, monospace; }
+.deepening-pseudocode b { color: var(--muted); font: 400 var(--font-dense) Consolas, monospace; }
 .deepening-pseudocode code { white-space: pre-wrap; color: var(--ink); font: var(--font-code)/1.62 Consolas, "Microsoft YaHei", monospace; }
 .deepening-example { margin: 22px 0 0; }
 .deepening-example figcaption { margin-bottom: 11px; }.deepening-example figcaption strong { display: block; margin-top: 6px; color: var(--navy); font-size: .88rem; font-weight: 500; }.deepening-example figcaption p { margin: 5px 0 0; color: var(--muted); font-size: var(--font-support); line-height: 1.65; }
 .deepening-example-table { display: grid; grid-template-columns: repeat(var(--example-columns),minmax(0,1fr)); border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }
 .deepening-example-table > * { min-width: 0; padding: 8px 9px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 .deepening-example-table b { background: rgba(23,79,130,.055); color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-support); font-weight: 500; }
-.deepening-example-table span { color: var(--muted); font: var(--font-support)/1.55 Consolas, "Microsoft YaHei", monospace; }
+.deepening-example-table > span { color: var(--muted); font: var(--font-support)/1.55 Consolas, "Microsoft YaHei", monospace; }
 .deepening-handoff { display: grid; grid-template-columns: 92px 1fr; gap: 13px; margin-top: 20px !important; padding: 12px 0; border-block: 1px solid var(--line); color: var(--ink) !important; }
 .deepening-handoff span { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: .58rem; }
 
@@ -841,7 +844,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 .mc-pseudocode ol { margin: 9px 0 0; padding: 10px 0; border-block: 1px solid var(--line); list-style: none; }
 .mc-pseudocode li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 4px 8px; }
 .mc-pseudocode li:nth-child(even) { background: rgba(23,79,130,.025); }
-.mc-pseudocode b { color: var(--muted); font: 400 .68rem Consolas, monospace; }
+.mc-pseudocode b { color: var(--muted); font: 400 var(--font-dense) Consolas, monospace; }
 .mc-pseudocode code { white-space: pre-wrap; color: var(--ink); font: var(--font-code)/1.62 Consolas, "Microsoft YaHei", monospace; }
 .mc-handoff { position: absolute; left: 50%; bottom: -39px; z-index: 2; display: flex; align-items: center; gap: 8px; transform: translateX(-50%); padding: 5px 10px; background: var(--paper); color: var(--teal); font-family: "Microsoft YaHei", sans-serif; white-space: nowrap; }
 .mc-handoff span { font-size: 1rem; }.mc-handoff strong { font-size: .52rem; font-weight: 400; }
@@ -1247,3 +1250,12 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 
 .svg-math-label.axis-label { gap: 4px; }
 .svg-math-label .math-formula { display: inline-block; margin: 0; }
+
+/* Modern labs use the same legibility floor as the chapter algorithms. */
+.modern-extension-lab .modern-controls label > span,
+.modern-extension-lab .preference-pair :is(small, b, p),
+.modern-extension-lab .group-responses :is(small, span, b),
+.modern-extension-lab .agent-trajectory article :is(span, small, strong, p),
+.modern-extension-lab .credit-track :is(small, strong) { font-size: var(--font-support); }
+
+.modern-extension-lab .agent-trajectory article :is(small, strong) { font-family: "Microsoft YaHei", Consolas, sans-serif; }

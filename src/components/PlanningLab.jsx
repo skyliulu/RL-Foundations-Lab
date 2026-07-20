@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { ACTIONS, GOAL, SIZE, isForbidden, isSame } from '../engine/gridworld'
 import { comparePlanningAlgorithms } from '../engine/planning'
 import { planningPresetConfigs } from '../content/planning'
+import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 const algorithmOrder = ['vi', 'tpi', 'pi']
 
@@ -90,13 +92,13 @@ export default function PlanningLab({ content }) {
 
   return (
     <section className="planning-arena" aria-label={content.figure}>
-      <header className="planning-heading"><div><span className="figure-number">{content.figure}</span><p>{content.instruction}</p></div><span className="planning-protocol"><b>◇</b>{text.protocol}</span></header>
-      <p className="planning-protocol-text"><strong>{text.protocol}</strong>{text.protocolText}</p>
+      <header className="planning-heading"><div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div><span className="planning-protocol"><b>◇</b>{text.protocol}</span></header>
+      <p className="planning-protocol-text"><strong>{text.protocol}</strong><MathText>{text.protocolText}</MathText></p>
 
-      <div className="planning-presets"><span>{text.preset}</span>{Object.keys(planningPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}><strong>{text.presetItems[id].title}</strong><small>{text.presetItems[id].note}</small></button>)}</div>
+      <div className="planning-presets"><span>{text.preset}</span>{Object.keys(planningPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}><strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small></button>)}</div>
 
       <div className="planning-controls">
-        <label><span>{text.gamma}<output>{gamma.toFixed(2)}</output></span><input type="range" min="0.5" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>
+        <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.5" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>
         <label><span>{text.noise}<output>{noise.toFixed(2)}</output></span><input type="range" min="0" max="0.4" step="0.1" value={noise} onChange={(event) => customize(() => setNoise(Number(event.target.value)))} /></label>
         <label><span>{text.truncation}<output>j={truncation}</output></span><input type="range" min="1" max="10" step="1" value={truncation} onChange={(event) => customize(() => setTruncation(Number(event.target.value)))} /></label>
         <label><span>{text.checkpoint}<output>k={activeCheckpoint}</output></span><input type="range" min="0" max={maxCheckpoint} step="1" value={activeCheckpoint} onChange={(event) => setCheckpoint(Number(event.target.value))} /></label>
@@ -109,7 +111,7 @@ export default function PlanningLab({ content }) {
           <PlanningCurve results={results} checkpoints={checkpoints} text={text} />
         </section>
         <section className="planning-result-panel">
-          <header><span>{text.sameLimit}</span><small>max |V−V*|</small></header>
+          <header><span>{text.sameLimit}</span><small><MathFormula latex={String.raw`\max\lvert V-V^*\rvert`} /></small></header>
           <div className="planning-result-table">
             {algorithmOrder.map((id) => <div key={id}><strong>{text[id]}</strong><span>{results[id].backups}<small>{text.backups}</small></span><span>{results[id].policyUpdates}<small>{text.policyUpdates}</small></span><span>{formatScientific(results[id].maxValueError)}<small>{text.finalError}</small></span></div>)}
           </div>

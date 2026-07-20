@@ -17,6 +17,7 @@ import {
 import { bellmanPresetConfigs } from '../content/bellman'
 import { phaseForFocus, useStepMicroscope } from '../interaction/stepMicroscope'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 const defaultState = { row: 3, col: 1 }
 
@@ -61,7 +62,7 @@ function ResidualTrace({ values, label }) {
 function DiscountValueGrid({ values, selected, maxAbs, label, onSelect }) {
   return (
     <figure className="discount-value-figure">
-      <figcaption>{label}</figcaption>
+      <figcaption><MathText>{label}</MathText></figcaption>
       <div className="discount-value-board" role="grid" aria-label={label}>
         {values.map((value, index) => {
           const state = { row: Math.floor(index / SIZE), col: index % SIZE }
@@ -229,7 +230,7 @@ export default function BellmanLab({ lang, text }) {
         </div>
         <p className="preset-observation">
           <strong>{m.observationLabel}</strong>
-          {activePresetContent?.observation || m.freeObservation}
+          <MathText>{activePresetContent?.observation || m.freeObservation}</MathText>
         </p>
       </div>
 
@@ -256,8 +257,8 @@ export default function BellmanLab({ lang, text }) {
                   {forbidden && <strong className="cell-reward">−1</strong>}
                   {goal && <strong className="cell-reward">+1</strong>}
                   <span className="policy-arrow">{arrowFor(state, policy, values, gamma, noise)}</span>
-                  {active && <span className="cell-tag">s</span>}
-                  {next && !active && <span className="cell-tag next-tag">s′</span>}
+                  {active && <span className="cell-tag"><MathFormula latex={String.raw`s`} /></span>}
+                  {next && !active && <span className="cell-tag next-tag"><MathFormula latex={String.raw`s'`} /></span>}
                 </button>
               )
             })}
@@ -266,13 +267,13 @@ export default function BellmanLab({ lang, text }) {
             <span><i className="legend-swatch goal-swatch" />{lang === 'zh' ? '进入目标 +1' : 'enter target +1'}</span>
             <span><i className="legend-swatch forbidden-swatch" />{lang === 'zh' ? '进入禁区 −1' : 'enter forbidden −1'}</span>
             <span><i className="legend-boundary" />{lang === 'zh' ? '越界 −1 / 原地' : 'boundary −1 / stay'}</span>
-            <span><i className="legend-outline" />s</span>
-            <span><i className="legend-outline next-outline" />s′</span>
+            <span><i className="legend-outline" /><MathFormula latex={String.raw`s`} /></span>
+            <span><i className="legend-outline next-outline" /><MathFormula latex={String.raw`s'`} /></span>
           </div>
         </section>
 
         <section className={`lab-panel value-panel ${focusTerm === 'future' || focusTerm === 'gamma' ? 'is-focused' : ''}`}>
-          <header><span>{c.value}</span><small>{isDiscountComparison ? m.matchedComparison : m.currentEstimate}</small></header>
+          <header><span><MathText>{c.value}</MathText></span><small>{isDiscountComparison ? m.matchedComparison : m.currentEstimate}</small></header>
           {isDiscountComparison ? (
             <>
               <div className="discount-compare">
@@ -293,12 +294,12 @@ export default function BellmanLab({ lang, text }) {
               </div>
               <div className="discount-selected-readout">
                 <span>{stateLabel(selected)}</span>
-                <strong>{discountComparison.baseline.values[selectedIndex].toFixed(2)} → {discountComparison.comparison.values[selectedIndex].toFixed(2)}</strong>
-                <small>Δ {discountComparison.deltas[selectedIndex].toFixed(2)}</small>
+                <strong><MathFormula latex={String.raw`${discountComparison.baseline.values[selectedIndex].toFixed(2)}\rightarrow${discountComparison.comparison.values[selectedIndex].toFixed(2)}`} /></strong>
+                <small><MathFormula latex={String.raw`\Delta=${discountComparison.deltas[selectedIndex].toFixed(2)}`} /></small>
               </div>
               <div className="course-benchmark">
                 <span>{m.courseReproduced}</span>
-                <strong>max |error| = {discountComparison.courseMaxError.toFixed(3)}</strong>
+                <strong><MathFormula latex={String.raw`\max\lvert\mathrm{error}\rvert=${discountComparison.courseMaxError.toFixed(3)}`} /></strong>
               </div>
             </>
           ) : (
@@ -336,13 +337,13 @@ export default function BellmanLab({ lang, text }) {
             <div><dt>{c.nextState} <MathFormula latex={String.raw`s'`} /></dt><dd><button onClick={() => focus('future')}>{primary ? stateLabel(primary.state) : '—'}</button></dd></div>
           </dl>
           <div className="formula-stack" aria-label="Bellman target">
-            <div><button className={focusTerm === 'target' ? 'active-term state-term' : 'state-term'} onClick={() => focus('target')}><MathFormula latex={String.raw`T`} /></button> = <button className={focusTerm === 'reward' ? 'active-term reward-term' : 'reward-term'} onClick={() => focus('reward')}><MathFormula latex={String.raw`R`} /></button> + <button className={focusTerm === 'gamma' ? 'active-term gamma-term' : 'gamma-term'} onClick={() => focus('gamma')}><MathFormula latex={String.raw`\gamma`} /></button><button className={focusTerm === 'future' ? 'active-term future-term' : 'future-term'} onClick={() => focus('future')}><MathFormula latex={String.raw`V(s')`} /></button></div>
+            <div><button className={focusTerm === 'target' ? 'active-term state-term' : 'state-term'} onClick={() => focus('target')}><MathFormula latex={String.raw`T`} /></button><MathFormula latex={String.raw`=`} /><button className={focusTerm === 'reward' ? 'active-term reward-term' : 'reward-term'} onClick={() => focus('reward')}><MathFormula latex={String.raw`R`} /></button><MathFormula latex={String.raw`+`} /><button className={focusTerm === 'gamma' ? 'active-term gamma-term' : 'gamma-term'} onClick={() => focus('gamma')}><MathFormula latex={String.raw`\gamma`} /></button><button className={focusTerm === 'future' ? 'active-term future-term' : 'future-term'} onClick={() => focus('future')}><MathFormula latex={String.raw`V(s')`} /></button></div>
             {noise === 0 ? (
               <MathFormula block className="substitution" latex={String.raw`=${primary?.reward.toFixed(2)}+${gamma.toFixed(2)}\times ${primaryNextValue.toFixed(2)}`} />
             ) : (
               <MathFormula block className="substitution" latex={String.raw`=\sum_{s'}p(s'\mid s,a)\left[R+\gamma V(s')\right]`} />
             )}
-            <strong className="target-value">= {detail.target.toFixed(3)}</strong>
+            <strong className="target-value"><MathFormula latex={String.raw`=${detail.target.toFixed(3)}`} /></strong>
           </div>
           {detail.transitions.length > 1 && (
             <div className="contribution-list" aria-label={lang === 'zh' ? '后继状态贡献' : 'Successor contributions'}>
@@ -352,8 +353,8 @@ export default function BellmanLab({ lang, text }) {
                 const contribution = transition.probability * (transition.reward + gamma * nextValue)
                 return (
                   <div key={`${stateLabel(transition.state)}-${transition.reward}`}>
-                    <span>{transition.probability.toFixed(2)} × ({transition.reward.toFixed(1)} + {gamma.toFixed(2)} × {nextValue.toFixed(2)})</span>
-                    <b>{contribution.toFixed(3)}</b>
+                    <span><MathFormula latex={String.raw`${transition.probability.toFixed(2)}\times(${transition.reward.toFixed(1)}+${gamma.toFixed(2)}\times${nextValue.toFixed(2)})`} /></span>
+                    <b><MathFormula latex={String.raw`=${contribution.toFixed(3)}`} /></b>
                   </div>
                 )
               })}
@@ -382,7 +383,7 @@ export default function BellmanLab({ lang, text }) {
               aria-pressed={algorithmPhase === phase}
               onClick={() => phase === 'select' ? focus('state') : phase === 'action' ? focus('action') : phase === 'target' ? focus('target') : microscope.setPhase('assign')}
             >
-              <span>{number}</span><code>{label}</code>
+              <span>{number}</span><code><MathText>{label}</MathText></code>
             </button>
           ))}
         </div>
@@ -390,7 +391,7 @@ export default function BellmanLab({ lang, text }) {
 
       <div className="control-deck">
         <label className={focusTerm === 'gamma' ? 'is-focused' : ''}>
-          <span>{c.gamma}<output>{gamma.toFixed(2)}</output></span>
+          <span><MathText>{c.gamma}</MathText><output>{gamma.toFixed(2)}</output></span>
           <input type="range" min="0" max="0.99" step="0.01" value={gamma} onChange={(event) => changeParameter(setGamma, Number(event.target.value))} />
         </label>
         <label>

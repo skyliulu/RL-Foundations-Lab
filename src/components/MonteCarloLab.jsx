@@ -9,6 +9,7 @@ import {
 } from '../engine/gridworld.js'
 import { runMonteCarloCourse } from '../engine/learning-labs.js'
 import MathFormula from './MathFormula.jsx'
+import MathText from './MathText.jsx'
 
 const defaults = {
   variant: 'epsilon',
@@ -52,26 +53,26 @@ export default function MonteCarloLab({ lang, content }) {
   return (
     <section className="mc-lab" aria-label={content.figure}>
       <header className="mc-lab-heading">
-        <div><span>{content.figure}</span><h2>{zh ? '同一批经验，三种算法怎样逐步修复前一种方法？' : 'How does each algorithm repair the previous one?'}</h2><p>{content.instruction}</p></div>
+        <div><span>{content.figure}</span><h2>{zh ? '同一批经验，三种算法怎样逐步修复前一种方法？' : 'How does each algorithm repair the previous one?'}</h2><p><MathText>{content.instruction}</MathText></p></div>
         <button type="button" onClick={() => { setParams(defaults); setSampleSlot(2) }}>{zh ? '恢复基线' : 'Reset'}</button>
       </header>
 
       <div className="mc-variant-switch" role="group" aria-label={zh ? '算法变体' : 'Algorithm variant'}>
         {['basic', 'exploring', 'epsilon'].map((id, index) => (
           <button type="button" key={id} className={params.variant === id ? 'active' : ''} onClick={() => set('variant', id)}>
-            <small>{index + 1}</small><strong>{variantCopy[lang][id][0]}</strong><span>{index === 0 ? (zh ? '定义直译' : 'Definition') : index === 1 ? (zh ? '提高复用' : 'Reuse data') : (zh ? '取消起点假设' : 'Remove start assumption')}</span>
+            <small>{index + 1}</small><strong><MathText>{variantCopy[lang][id][0]}</MathText></strong><span>{index === 0 ? (zh ? '定义直译' : 'Definition') : index === 1 ? (zh ? '提高复用' : 'Reuse data') : (zh ? '取消起点假设' : 'Remove start assumption')}</span>
           </button>
         ))}
       </div>
 
       <div className="mc-why-strip">
         <span>{zh ? '当前方法回答' : 'This method answers'}</span>
-        <div><strong>{variant[0]}</strong><p>{variant[1]}</p></div>
+        <div><strong><MathText>{variant[0]}</MathText></strong><p><MathText>{variant[1]}</MathText></p></div>
       </div>
 
       <div className="mc-controls">
         <label><span>{zh ? 'Episode 数' : 'Episodes'}<output>{params.episodes}</output></span><input type="range" min="8" max="72" step="8" value={params.episodes} onChange={(event) => set('episodes', Number(event.target.value))} /></label>
-        <label className={params.variant === 'epsilon' ? '' : 'disabled'}><span>{zh ? '探索率 ε' : 'Exploration ε'}<output>{params.epsilon.toFixed(2)}</output></span><input type="range" min="0.05" max="0.5" step="0.05" value={params.epsilon} disabled={params.variant !== 'epsilon'} onChange={(event) => set('epsilon', Number(event.target.value))} /></label>
+        <label className={params.variant === 'epsilon' ? '' : 'disabled'}><span>{zh ? '探索率' : 'Exploration'} <MathFormula latex={String.raw`\epsilon`} /><output>{params.epsilon.toFixed(2)}</output></span><input type="range" min="0.05" max="0.5" step="0.05" value={params.epsilon} disabled={params.variant !== 'epsilon'} onChange={(event) => set('epsilon', Number(event.target.value))} /></label>
         <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((id) => <button type="button" key={id} className={params.visit === id ? 'active' : ''} onClick={() => set('visit', id)}>{id === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>
       </div>
 
@@ -91,7 +92,7 @@ export default function MonteCarloLab({ lang, content }) {
               return <span key={keyOf(state)} className={`${isForbidden(state) ? 'forbidden' : ''} ${isGoal(state) ? 'goal' : ''}`} style={{ '--coverage': intensity }}><b>s{indexOf(state) + 1}</b><small>{visits}</small></span>
             })}
           </div>
-          <p>{zh ? '只看 Q 的数值是否稳定不够：没有被访问的状态—动作对仍然保持初值。' : 'A stable Q estimate is not enough: unvisited pairs still retain their initial values.'}</p>
+          <p><MathText>{zh ? '只看 Q 的数值是否稳定不够：没有被访问的状态—动作对仍然保持初值。' : 'A stable Q estimate is not enough: unvisited pairs still retain their initial values.'}</MathText></p>
         </section>
 
         <section className="mc-episode-panel">
@@ -103,10 +104,10 @@ export default function MonteCarloLab({ lang, content }) {
         </section>
 
         <aside className="mc-update-panel">
-          <header><span>{zh ? '该 episode 的 Q 更新' : 'Q updates in this episode'}</span><small>{sample.updates.length} {zh ? '次更新' : 'updates'}</small></header>
+          <header><span><MathText>{zh ? '该 episode 的 Q 更新' : 'Q updates in this episode'}</MathText></span><small>{sample.updates.length} {zh ? '次更新' : 'updates'}</small></header>
           <MathFormula block latex={String.raw`Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\frac{1}{N(S_t,A_t)}\left(G_t-Q(S_t,A_t)\right)`} />
           <div className="mc-update-list">
-            {sample.updates.slice(0, 7).map((update) => <div key={`${update.time}-${update.state}-${update.action}`}><span>{update.state} · {ACTIONS[update.action].arrow}</span><strong>{format(update.before)} → {format(update.after)}</strong><small>G = {format(update.returnValue)} · N = {update.visits}</small></div>)}
+            {sample.updates.slice(0, 7).map((update) => <div key={`${update.time}-${update.state}-${update.action}`}><span>{update.state} · {ACTIONS[update.action].arrow}</span><strong><MathFormula latex={String.raw`${format(update.before)}\rightarrow${format(update.after)}`} /></strong><small><MathFormula latex={String.raw`G=${format(update.returnValue)}\;\cdot\;N=${update.visits}`} /></small></div>)}
           </div>
           {sample.updates.length > 7 && <p>+ {sample.updates.length - 7} {zh ? '条更新未展开' : 'more updates'}</p>}
         </aside>
@@ -115,7 +116,7 @@ export default function MonteCarloLab({ lang, content }) {
       <section className="mc-policy-panel">
         <div><span>{zh ? '改进后的动作分布' : 'Improved action distribution'}</span><strong>{result.focusState}</strong></div>
         <div className="mc-policy-bars">{result.policy.map((item) => <span key={item.action}><b>{ACTIONS[item.action].arrow}</b><i><em style={{ width: `${item.probability * 100}%` }} /></i><small>{(item.probability * 100).toFixed(0)}%</small></span>)}</div>
-        <p>{params.variant === 'epsilon' ? (zh ? 'ε-greedy 让非贪心动作仍有正概率，因此覆盖得以继续；代价是策略通常不再属于全部策略中的严格最优策略。' : 'ε-greedy preserves positive probability for non-greedy actions. Coverage continues, but the policy is generally not globally optimal.') : (zh ? '确定性贪心改善会集中到一个动作；若起点和数据收集不能保证覆盖，错误的早期判断可能永远无法被修正。' : 'Deterministic greedy improvement concentrates on one action; without coverage, an early error may never be corrected.')}</p>
+        <p><MathText>{params.variant === 'epsilon' ? (zh ? 'ε-greedy 让非贪心动作仍有正概率，因此覆盖得以继续；代价是策略通常不再属于全部策略中的严格最优策略。' : 'ε-greedy preserves positive probability for non-greedy actions. Coverage continues, but the policy is generally not globally optimal.') : (zh ? '确定性贪心改善会集中到一个动作；若起点和数据收集不能保证覆盖，错误的早期判断可能永远无法被修正。' : 'Deterministic greedy improvement concentrates on one action; without coverage, an early error may never be corrected.')}</MathText></p>
       </section>
     </section>
   )

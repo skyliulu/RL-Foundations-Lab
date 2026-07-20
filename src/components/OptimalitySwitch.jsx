@@ -4,6 +4,7 @@ import { comparePolicyAndOptimal, inspectActionCompetition } from '../engine/opt
 import { optimalityPresetConfigs } from '../content/optimality'
 import { useStepMicroscope } from '../interaction/stepMicroscope'
 import MathFormula from './MathFormula'
+import MathText from './MathText'
 
 function stateLabel(state) {
   return `s${indexOf(state) + 1}`
@@ -71,7 +72,7 @@ export default function OptimalitySwitch({ content }) {
   return (
     <section className="optimality-switch" aria-label={content.figure}>
       <header className="optimality-heading">
-        <div><span className="figure-number">{content.figure}</span><p>{content.instruction}</p></div>
+        <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
         <div className="operator-switch" role="group" aria-label={text.chosen}>
           <button type="button" className={operator === 'policy' ? 'active' : ''} onClick={() => setOperator('policy')}>{text.policyMode}</button>
           <button type="button" className={operator === 'optimal' ? 'active' : ''} onClick={() => setOperator('optimal')}>{text.optimalMode}</button>
@@ -80,24 +81,24 @@ export default function OptimalitySwitch({ content }) {
 
       <div className="optimality-presets">
         <span>{text.preset}</span>
-        {Object.keys(optimalityPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}><strong>{text.presetItems[id].title}</strong><small>{text.presetItems[id].note}</small></button>)}
+        {Object.keys(optimalityPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}><strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small></button>)}
       </div>
 
       <div className="optimality-controls">
-        <label><span>{text.gamma}<output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => { const value = Number(event.target.value); customize(() => setGamma(value), { gamma: value }) }} /></label>
+        <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => { const value = Number(event.target.value); customize(() => setGamma(value), { gamma: value }) }} /></label>
         <label><span>{text.noise}<output>{noise.toFixed(2)}</output></span><input type="range" min="0" max="0.4" step="0.1" value={noise} onChange={(event) => { const value = Number(event.target.value); customize(() => setNoise(value), { noise: value }) }} /></label>
         <fieldset><legend>{text.forbiddenReward}</legend><div>{[-1, -5, -10].map((reward) => <button type="button" key={reward} className={forbiddenReward === reward ? 'active' : ''} onClick={() => customize(() => setForbiddenReward(reward), { forbiddenReward: reward })}>{reward}</button>)}</div></fieldset>
       </div>
 
       <div className="optimality-metrics">
-        <div><span>{text.policyValue}({stateLabel(selected)})</span><strong>{format(comparison.policy.values[selectedIndex])}</strong></div>
-        <div><span>{text.optimalValue}({stateLabel(selected)})</span><strong>{format(comparison.optimal.values[selectedIndex])}</strong></div>
+        <div><span><MathText>{`${text.policyValue}(${stateLabel(selected)})`}</MathText></span><strong>{format(comparison.policy.values[selectedIndex])}</strong></div>
+        <div><span><MathText>{`${text.optimalValue}(${stateLabel(selected)})`}</MathText></span><strong>{format(comparison.optimal.values[selectedIndex])}</strong></div>
         <div><span>{text.policyGap}</span><strong>{format(comparison.gaps[selectedIndex])}</strong></div>
       </div>
 
       <div className="optimality-stage">
         <section className="optimality-map-panel">
-          <header><div><span>{text.valueMap}</span><small>{operator === 'policy' ? text.policyOperator : text.optimalOperator}</small></div><em>{text.clickState}</em></header>
+          <header><div><span>{text.valueMap}</span><small><MathText>{operator === 'policy' ? text.policyOperator : text.optimalOperator}</MathText></small></div><em>{text.clickState}</em></header>
           <div className="optimality-grid">
             {allStates().map((state) => {
               const index = indexOf(state)
@@ -110,9 +111,9 @@ export default function OptimalitySwitch({ content }) {
         <section className="action-competition-panel">
           <header><div><span>{text.actionCompetition}</span><small>{text.sameSnapshot}</small></div><em>{stateLabel(selected)}</em></header>
           <div className="operator-formula">
-            <span>{operator === 'policy' ? text.expectationFormula : text.maxFormula}</span>
+            <span><MathText>{operator === 'policy' ? text.expectationFormula : text.maxFormula}</MathText></span>
                 <MathFormula block latex={operator === 'policy' ? String.raw`\sum_a\pi(a\mid s)q(s,a)` : String.raw`\max_a q(s,a)`} />
-            <b>= {format(chosenTarget)}</b>
+            <b><MathFormula latex={String.raw`=${format(chosenTarget)}`} /></b>
           </div>
           <div className="action-target-list">
             {detail.actions.map((item) => {
@@ -129,12 +130,12 @@ export default function OptimalitySwitch({ content }) {
               )
             })}
           </div>
-          <footer><span>{text.chosen}</span><strong>{ACTIONS[chosenAction].arrow} {text.actionLabels[chosenAction]}</strong><small>{text.solveNote}</small></footer>
+          <footer><span>{text.chosen}</span><strong>{ACTIONS[chosenAction].arrow} {text.actionLabels[chosenAction]}</strong><small><MathText>{text.solveNote}</MathText></small></footer>
           <div className="optimality-step-actions">
             <button type="button" className="primary" onClick={commitBackup}>{text.applyBackup}</button>
             <button type="button" onClick={microscope.undo} disabled={!microscope.canUndo}>{text.undo}</button>
-            <button type="button" onClick={() => microscope.reset({ values: comparison.policy.values, selection: selected, focusTerm: 'action', phase: 'action' })}>{text.resetSnapshot}</button>
-            <span>{text.before} {format(stepEvidence.before)} → {text.target} {format(stepEvidence.target)} · {text.residual} {format(stepEvidence.residual)}</span>
+            <button type="button" onClick={() => microscope.reset({ values: comparison.policy.values, selection: selected, focusTerm: 'action', phase: 'action' })}><MathText>{text.resetSnapshot}</MathText></button>
+            <span>{text.before} <MathFormula latex={String.raw`${format(stepEvidence.before)}\rightarrow${format(stepEvidence.target)}`} /> · {text.residual} <MathFormula latex={String.raw`${format(stepEvidence.residual)}`} /></span>
           </div>
         </section>
       </div>

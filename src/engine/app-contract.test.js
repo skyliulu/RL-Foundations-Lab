@@ -126,10 +126,20 @@ test('right-workbench notation is rendered through MathFormula', () => {
 test('algorithms, tables, experiments, and the right workbench share a readable type floor', () => {
   const styles = read('styles.css')
   assert.match(styles, /--font-dense:\s*\.75rem/)
-  assert.match(styles, /--font-support:\s*\.76rem/)
+  assert.match(styles, /--font-support:\s*\.82rem/)
   assert.match(styles, /\.deepening-pseudocode code\s*\{[^}]*var\(--font-code\)/)
-  assert.match(styles, /\.deepening-example-table span\s*\{[^}]*var\(--font-support\)/)
+  assert.match(styles, /\.deepening-example-table > span\s*\{[^}]*var\(--font-support\)/)
   assert.match(styles, /Readability floor for algorithms, evidence tables, and interactive workbenches/)
+})
+
+test('article prose, algorithms, and worked tables share the inline-math renderer', () => {
+  const app = read('App.jsx')
+  const deepening = read('components/ChapterDeepening.jsx')
+  const monteCarlo = read('components/MonteCarloChapter.jsx')
+  assert.match(app, /import MathText/)
+  assert.match(deepening, /<code><MathText>\{line\}<\/MathText><\/code>/)
+  assert.match(deepening, /<span key=\{`\$\{rowIndex\}-\$\{cellIndex\}-\$\{cell\}`\}><MathText>\{cell\}<\/MathText><\/span>/)
+  assert.match(monteCarlo, /<code><MathText>\{line\}<\/MathText><\/code>/)
 })
 
 test('every chapter ends with one source section and no duplicate concept-source footer', () => {
