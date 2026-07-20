@@ -163,12 +163,16 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .reading-guide-intro > span { color: var(--teal); font-size: .68rem; letter-spacing: .14em; }
 .reading-guide-intro h2 { margin: 0; font-size: clamp(1.35rem, 2.2vw, 1.95rem); font-weight: 480; }
 .reading-guide-intro p { max-width: 720px; margin: 10px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.75; }
-.reading-guide-steps { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; border-block: 1px solid var(--line); list-style: none; }
-.reading-guide-steps li { position: relative; min-width: 0; padding: 24px 22px 26px; }
+.reading-guide-steps { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; border-block: 1px solid var(--line); list-style: none; }
+.reading-guide-steps::before { content: ""; position: absolute; top: 40px; left: 12.5%; right: 12.5%; border-top: 1px solid rgba(23,79,130,.34); }
+.reading-guide-steps li { position: relative; z-index: 1; min-width: 0; padding: 24px 22px 26px; }
 .reading-guide-steps li + li { border-left: 1px solid var(--line); }
-.reading-guide-steps li > span { display: block; color: var(--navy); font: .72rem Georgia, serif; }
+.reading-step-number { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid rgba(23,79,130,.42); border-radius: 50%; background: var(--paper); color: var(--navy); font: .7rem Georgia, serif; }
 .reading-guide-steps strong { display: block; margin: 12px 0 8px; font-size: .94rem; font-weight: 520; }
 .reading-guide-steps p { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.72; }
+.reading-guide-cycle { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 18px 22px; border-bottom: 1px solid var(--line); background: rgba(24,119,107,.035); }
+.reading-guide-cycle span { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: .68rem; letter-spacing: .08em; }
+.reading-guide-cycle p { margin: 0; color: #4f5a52; font-size: .78rem; line-height: 1.7; }
 
 @media (max-width: 760px) {
   .home-hero { padding-top: 18px; }
@@ -178,10 +182,13 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
   .learning-phase { gap: 18px; }
   .phase-chapters button { flex-basis: 132px; }
   .reading-guide-intro { gap: 8px; }
-  .reading-guide-steps { grid-template-columns: 1fr 1fr; }
-  .reading-guide-steps li + li { border-left: 1px solid var(--line); }
-  .reading-guide-steps li:nth-child(3) { border-left: 0; }
-  .reading-guide-steps li:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .reading-guide-steps { grid-template-columns: 1fr; padding-block: 8px; }
+  .reading-guide-steps::before { top: 24px; bottom: 24px; left: 37px; right: auto; border-top: 0; border-left: 1px solid rgba(23,79,130,.34); }
+  .reading-guide-steps li { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 13px; padding: 13px 18px; }
+  .reading-guide-steps li + li { border: 0; }
+  .reading-step-number { width: 28px; height: 28px; }
+  .reading-guide-steps strong { margin-top: 2px; }
+  .reading-guide-cycle { grid-template-columns: 1fr; gap: 5px; padding-inline: 18px; }
 }
 .chapter-shell { width: 100%; max-width: var(--chapter-frame); margin: 0 auto; }
 .chapter-header { max-width: var(--reading-column); margin: 0 auto; }

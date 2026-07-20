@@ -85,12 +85,18 @@ export default function HomePage({ lang, chapters, onSelect }) {
         <ol className="reading-guide-steps">
           {readingSteps.map(([title, body], index) => (
             <li key={title}>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <strong>{title}</strong>
-              <p>{body}</p>
+              <span className="reading-step-number">{String(index + 1).padStart(2, '0')}</span>
+              <div className="reading-step-copy">
+                <strong>{title}</strong>
+                <p>{body}</p>
+              </div>
             </li>
           ))}
         </ol>
+        <div className="reading-guide-cycle">
+          <span>{isZh ? '迭代进入下一章' : 'Continue into the next chapter'}</span>
+          <p>{isZh ? '第 04 步得到的结论会暴露新的边界与问题，它们直接成为下一章第 01 步的起点。' : 'The conclusion in step 04 exposes new limits and questions, which become the starting point for step 01 of the next chapter.'}</p>
+        </div>
       </section>
     </div>
   )

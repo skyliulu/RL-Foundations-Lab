@@ -18,6 +18,7 @@ import GitHubRepoBadge from './components/GitHubRepoBadge'
 import HomePage from './components/HomePage'
 import ModernExtensionLab from './components/ModernExtensionLab'
 import { copy } from './content'
+import { detectBrowserLanguage, pageMetadata } from './i18n'
 
 const part23Ids = ['approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
 const modernExtensionIds = ['dpo', 'grpo', 'codingrl', 'agentmdp', 'credit']
@@ -224,7 +225,7 @@ function ChapterSources({ sources, lang }) {
 }
 
 export default function App() {
-  const [lang, setLang] = useState('zh')
+  const [lang, setLang] = useState(detectBrowserLanguage)
   const [active, setActive] = useState('home')
   const [navCompact, setNavCompact] = useState(false)
   const [rightOpen, setRightOpen] = useState(false)
@@ -237,6 +238,13 @@ export default function App() {
     setRightContext(null)
     setRightOpen(false)
   }, [active, lang])
+
+  useEffect(() => {
+    const metadata = pageMetadata[lang]
+    document.documentElement.lang = metadata.htmlLang
+    document.title = metadata.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', metadata.description)
+  }, [lang])
 
   const content = text[active]
 

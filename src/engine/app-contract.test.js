@@ -98,7 +98,20 @@ test('the homepage explains the learning path and gives readers an actionable ch
   assert.match(source, /reading-guide-steps/)
   assert.match(source, /找到问题/)
   assert.match(source, /展开推导/)
+  assert.match(source, /reading-guide-cycle/)
+  assert.match(source, /迭代进入下一章/)
   assert.doesNotMatch(source, /home-principles|Why 先于 How/)
+})
+
+test('language defaults are regional and update document metadata without persistence', () => {
+  const app = read('App.jsx')
+  const language = read('i18n.js')
+  assert.match(app, /useState\(detectBrowserLanguage\)/)
+  assert.match(app, /document\.documentElement\.lang/)
+  assert.match(app, /document\.title\s*=\s*metadata\.title/)
+  assert.match(language, /navigator\.languages/)
+  assert.match(language, /Asia\/Shanghai/)
+  assert.doesNotMatch(language, /fetch\(|localStorage|sessionStorage/)
 })
 
 test('page and workbench scroll surfaces share one global scrollbar treatment', () => {
