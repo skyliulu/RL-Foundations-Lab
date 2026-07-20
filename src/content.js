@@ -4,8 +4,9 @@ import { returnChapter } from './content/returns.js'
 import { optimalityChapter } from './content/optimality.js'
 import { planningChapter } from './content/planning.js'
 import { ppoChapter } from './content/ppo.js'
-import { rlhfChapter } from './content/rlhf.js'
+import { rlhfChapter } from './content/rlhf-system.js'
 import { tokenMdpChapter } from './content/token-mdp.js'
+import { agentMdpChapter, codingRlChapter, creditChapter, dpoChapter, grpoChapter } from './content/modern-extension.js'
 import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from './content/part23.js'
 
 export const copy = {
@@ -29,7 +30,12 @@ export const copy = {
       { id: 'actorcritic', number: '13', kicker: '策略与价值协作', title: 'Actor–Critic', subtitle: '用 TD error 连接 Actor 与 Critic' },
       { id: 'ppo', number: '14', kicker: '现代策略优化', title: 'PPO', subtitle: '从 advantage 到稳定更新' },
       { id: 'tokenmdp', number: '15', kicker: '语言模型决策过程', title: 'Token MDP', subtitle: '把 response 定义为 token 轨迹' },
-      { id: 'rlhf', number: '16', kicker: '语言模型后训练', title: '后训练方法与系统', subtitle: '比较 PPO-based RLHF、DPO 与 GRPO' },
+      { id: 'rlhf', number: '16', kicker: '在线偏好训练', title: 'PPO-based RLHF', subtitle: '五类模型角色与共享 batch' },
+      { id: 'dpo', number: '17', kicker: '离线偏好优化', title: 'DPO', subtitle: '从 KL 最优策略到直接偏好损失' },
+      { id: 'grpo', number: '18', kicker: '在线可验证奖励', title: '组相对策略优化（GRPO）', subtitle: '成组 rollout、相对优势与稳定化' },
+      { id: 'codingrl', number: '19', kicker: '可执行反馈', title: 'Coding RL', subtitle: '编译、测试与迭代修复' },
+      { id: 'agentmdp', number: '20', kicker: '多轮工具轨迹', title: 'Agent MDP', subtitle: '工具、观察、记忆与终止' },
+      { id: 'credit', number: '21', kicker: '长程任务', title: 'Credit Assignment', subtitle: '过程奖励、分段价值与事后归因' },
     ],
     prerequisites: '前置：状态、动作、奖励与回报',
     mdp: { ...mdpChapter.zh, sources: mdpChapter.sources },
@@ -48,6 +54,11 @@ export const copy = {
     ppo: { ...ppoChapter.zh, sources: ppoChapter.sources, acBridge: 'Actor–Critic 的核心接口没有消失：Critic 仍估计状态价值，advantage 仍决定策略更新方向；PPO 只改造 Actor 如何复用旧策略采集的数据。' },
     tokenmdp: { ...tokenMdpChapter.zh, sources: tokenMdpChapter.sources },
     rlhf: { ...rlhfChapter.zh, sources: rlhfChapter.sources },
+    dpo: { ...dpoChapter.zh, sources: dpoChapter.sources },
+    grpo: { ...grpoChapter.zh, sources: grpoChapter.sources },
+    codingrl: { ...codingRlChapter.zh, sources: codingRlChapter.sources },
+    agentmdp: { ...agentMdpChapter.zh, sources: agentMdpChapter.sources },
+    credit: { ...creditChapter.zh, sources: creditChapter.sources },
     common: {
       gamma: '折扣因子 γ', noise: '动作随机性（扩展）', policy: '策略', fixed: '示例固定策略', greedy: '贪心策略',
       previous: '上一步', step: '单步更新', play: '连续播放', pause: '暂停', reset: '重置',
@@ -82,7 +93,12 @@ export const copy = {
       { id: 'actorcritic', number: '13', kicker: 'Policy and value cooperate', title: 'Actor–Critic', subtitle: 'Connect actor and critic through TD error' },
       { id: 'ppo', number: '14', kicker: 'Modern policy optimization', title: 'PPO', subtitle: 'From advantage to stable updates' },
       { id: 'tokenmdp', number: '15', kicker: 'Language-model decision process', title: 'Token MDP', subtitle: 'Define a response as a token trajectory' },
-      { id: 'rlhf', number: '16', kicker: 'Language-model post-training', title: 'Methods and Systems', subtitle: 'Compare PPO-based RLHF, DPO, and GRPO' },
+      { id: 'rlhf', number: '16', kicker: 'Online preference training', title: 'PPO-based RLHF', subtitle: 'Five model roles and one shared batch' },
+      { id: 'dpo', number: '17', kicker: 'Offline preference optimization', title: 'DPO', subtitle: 'From KL optimum to direct preference loss' },
+      { id: 'grpo', number: '18', kicker: 'Online verifiable rewards', title: 'Group Relative Policy Optimization', subtitle: 'GRPO, grouped rollout, and stabilization' },
+      { id: 'codingrl', number: '19', kicker: 'Executable feedback', title: 'Coding RL', subtitle: 'Compilation, tests, and iterative repair' },
+      { id: 'agentmdp', number: '20', kicker: 'Multi-turn tool trajectories', title: 'Agent MDP', subtitle: 'Tools, observations, memory, termination' },
+      { id: 'credit', number: '21', kicker: 'Long-horizon tasks', title: 'Credit Assignment', subtitle: 'Process reward, segments, and post-hoc attribution' },
     ],
     prerequisites: 'Prerequisites: states, actions, rewards, and returns',
     mdp: { ...mdpChapter.en, sources: mdpChapter.sources },
@@ -101,6 +117,11 @@ export const copy = {
     ppo: { ...ppoChapter.en, sources: ppoChapter.sources, acBridge: 'The Actor–Critic interface remains: the critic estimates state value and advantage sets direction. PPO changes how the actor reuses data sampled by an old policy.' },
     tokenmdp: { ...tokenMdpChapter.en, sources: tokenMdpChapter.sources },
     rlhf: { ...rlhfChapter.en, sources: rlhfChapter.sources },
+    dpo: { ...dpoChapter.en, sources: dpoChapter.sources },
+    grpo: { ...grpoChapter.en, sources: grpoChapter.sources },
+    codingrl: { ...codingRlChapter.en, sources: codingRlChapter.sources },
+    agentmdp: { ...agentMdpChapter.en, sources: agentMdpChapter.sources },
+    credit: { ...creditChapter.en, sources: creditChapter.sources },
     common: {
       gamma: 'Discount γ', noise: 'Action randomness (extension)', policy: 'Policy', fixed: 'Example fixed policy', greedy: 'Greedy policy',
       previous: 'Undo', step: 'Single update', play: 'Play', pause: 'Pause', reset: 'Reset',

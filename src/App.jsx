@@ -16,9 +16,11 @@ import MonteCarloChapter from './components/MonteCarloChapter'
 import TokenMdpLab from './components/TokenMdpLab'
 import GitHubRepoBadge from './components/GitHubRepoBadge'
 import HomePage from './components/HomePage'
+import ModernExtensionLab from './components/ModernExtensionLab'
 import { copy } from './content'
 
 const part23Ids = ['approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
+const modernExtensionIds = ['dpo', 'grpo', 'codingrl', 'agentmdp', 'credit']
 
 function ChapterHeader({ chapter, content, prerequisites }) {
   return (
@@ -254,7 +256,7 @@ export default function App() {
         <div className="nav-head"><span className="nav-label">{text.toc}</span><button type="button" className="nav-collapse" aria-expanded={!navCompact} onClick={() => setNavCompact((value) => !value)}>{navCompact ? (lang === 'zh' ? '展开' : 'Expand') : (lang === 'zh' ? '缩进' : 'Collapse')}</button></div>
         <nav>
           <button type="button" className={`home-nav-item ${active === 'home' ? 'active' : ''}`} onClick={() => setActive('home')}>
-            <span className="nav-number">⌂</span><span className="nav-copy"><small>{lang === 'zh' ? '课程入口' : 'Course entry'}</small><strong>{lang === 'zh' ? '学习全景' : 'Learning map'}</strong><em>{lang === 'zh' ? '四部分 · 十六章' : 'Four parts · sixteen chapters'}</em></span>
+            <span className="nav-number">⌂</span><span className="nav-copy"><small>{lang === 'zh' ? '课程入口' : 'Course entry'}</small><strong>{lang === 'zh' ? '学习全景' : 'Learning map'}</strong><em>{lang === 'zh' ? '五部分 · 二十一章' : 'Five parts · twenty-one chapters'}</em></span>
           </button>
           {text.chapters.map((item) => (
             <button type="button" key={item.id} className={active === item.id ? 'active' : ''} onClick={() => setActive(item.id)}>
@@ -409,14 +411,26 @@ export default function App() {
           )}
           {active === 'rlhf' && (
             <>
-              <ClickableDerivation eyebrow={lang === 'zh' ? '从反馈数据到更新目标' : 'From feedback data to update objectives'} title={lang === 'zh' ? '三条后训练路线怎样从共同目标中分叉？' : 'How do three post-training routes branch from one objective?'} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ClickableDerivation eyebrow={text.rlhf.eyebrow} title={text.rlhf.title} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
               <ChapterDeepening sections={text.rlhf.deepening} lang={lang} />
               <p className="article-copy chapter-transition">{text.rlhf.experimentIntro}</p>
-              <SystemLab lang={lang} text={text} />
+              <SystemLab lang={lang} text={text} ppoOnly />
               <p className="article-copy chapter-interpretation">{text.rlhf.interpretation}</p>
               <ChapterSections content={text.rlhf} />
               <ChapterSummary content={text.rlhf} lang={lang} />
               <ChapterSources sources={text.rlhf.sources} lang={lang} />
+            </>
+          )}
+          {modernExtensionIds.includes(active) && (
+            <>
+              <ClickableDerivation eyebrow={lang === 'zh' ? '完整定义与推导' : 'Complete definition and derivation'} title={content.title} intro={content.derivationIntro || content.bridge} steps={content.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ChapterDeepening sections={content.deepening} lang={lang} />
+              <p className="article-copy chapter-transition">{content.experimentIntro}</p>
+              <ModernExtensionLab id={active} lang={lang} content={content} />
+              <p className="article-copy chapter-interpretation">{content.interpretation}</p>
+              <ChapterSections content={content} />
+              <ChapterSummary content={content} lang={lang} />
+              <ChapterSources sources={content.sources} lang={lang} />
             </>
           )}
           <footer className="source-note">

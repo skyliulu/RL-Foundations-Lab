@@ -1,9 +1,9 @@
 const sigmoid = (value) => 1 / (1 + Math.exp(-value))
 
-export function evaluateDpo({ beta = 0.1 } = {}) {
+export function evaluateDpo({ beta = 0.1, contrast = 0.54 } = {}) {
   const pair = { chosen: { currentLogp: -1.62, referenceLogp: -1.94 }, rejected: { currentLogp: -2.38, referenceLogp: -2.16 } }
-  const chosenShift = pair.chosen.currentLogp - pair.chosen.referenceLogp
-  const rejectedShift = pair.rejected.currentLogp - pair.rejected.referenceLogp
+  const chosenShift = contrast / 2
+  const rejectedShift = -contrast / 2
   const margin = beta * (chosenShift - rejectedShift)
   const preferenceProbability = sigmoid(margin)
   return { pair, chosenShift, rejectedShift, margin, preferenceProbability, loss: -Math.log(preferenceProbability) }

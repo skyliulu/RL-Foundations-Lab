@@ -12,7 +12,7 @@ The course is designed to answer more than “how does the algorithm work?” It
 
 ## Learning path
 
-The course contains 16 chapters. The website opens in Chinese and can be switched to English at any time.
+The course contains 21 chapters. The website opens in Chinese and can be switched to English at any time.
 
 ### Part I · Mathematical foundations and dynamic programming
 
@@ -40,7 +40,15 @@ The course contains 16 chapters. The website opens in Chinese and can be switche
 
 - **14 PPO**: from advantages and importance ratios to the clipped surrogate objective.
 - **15 Token MDP**: map prompts, tokens, responses, and sequence rewards to reinforcement-learning objects.
-- **16 Post-training methods and systems**: compare PPO-based RLHF, DPO, and GRPO by data source, feedback signal, model roles, and online/offline behavior.
+- **16 PPO-based RLHF system**: trace one shared token batch through policy, old policy, reference, reward, value, GAE, and PPO updates.
+- **17 Direct Preference Optimization (DPO)**: derive the pairwise objective from a KL-regularized optimum and locate the implicit reward.
+- **18 Group Relative Policy Optimization (GRPO)**: use online verifiable rewards, group-relative advantages, and DAPO-style stabilization.
+
+### Part V · Coding and long-horizon agents
+
+- **19 Coding RL**: turn compilation, tests, hidden cases, and iterative repair into executable feedback.
+- **20 Agent MDP**: model multi-turn tools, observations, memory, budgets, and termination as one trajectory.
+- **21 Long-horizon credit assignment**: compare terminal, discounted, process, segmented, and hindsight attribution.
 
 ## Interactive learning
 
@@ -51,7 +59,8 @@ The interactions are part of the argument, not animations appended to the articl
 - a Monte Carlo episode tape, action-value table, and policy update view for comparing MC control methods on the same trajectory;
 - chapter-level parameter experiments for stochastic approximation, TD, Sarsa/Q-learning, function approximation, DQN, Policy Gradient, and Actor–Critic;
 - PPO Clip Plane, where sample-level ratios and advantages reveal exactly which updates are clipped;
-- Token Trajectory Lab and a post-training method atlas for comparing PPO-based RLHF, DPO, and GRPO with traceable data and update signals.
+- Token Trajectory Lab and a shared-batch system map for PPO-based RLHF;
+- dedicated DPO preference, GRPO group-rollout, executable-code, multi-turn-agent, and long-horizon-credit labs.
 
 Derivations keep their complete chain of equalities visible. Each step can be selected to inspect its rule, assumptions, symbol definitions, and current numerical interpretation in the right-hand workbench.
 
@@ -81,7 +90,7 @@ npm run build
 
 ## Project status and boundaries
 
-Chapters 01–16 form a runnable bilingual path from classical foundations through model-free learning and function approximation to PPO and language-model post-training. Some middle-course interactions are still evolving from parameter labs into more explicit visualizations of algorithm-internal state.
+Chapters 01–21 form a runnable bilingual path from classical foundations through model-free learning and function approximation to language-model post-training, coding agents, and long-horizon credit assignment. Some middle-course interactions are still evolving from parameter labs into more explicit visualizations of algorithm-internal state.
 
 This is a teaching tool, not a general-purpose RL training framework. Every experiment runs in the browser. Grid World uses exact or reproducible instructional computation, while the PPO and language-model chapters do not train real neural networks or require backend compute.
 
@@ -92,6 +101,11 @@ This is a teaching tool, not a general-purpose RL training framework. Every expe
 - [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155)
 - [Direct Preference Optimization](https://arxiv.org/abs/2305.18290)
 - [DeepSeekMath / GRPO](https://arxiv.org/abs/2402.03300)
+- [DAPO](https://arxiv.org/abs/2503.14476)
+- [RLEF](https://arxiv.org/abs/2410.02089)
+- [SWE-RL](https://arxiv.org/abs/2502.18449)
+- [Agent Lightning](https://arxiv.org/abs/2508.03680)
+- [Hindsight Credit Assignment for Long-Horizon LLM Agents](https://arxiv.org/abs/2603.08754)
 
 Each chapter also ends with sources mapped directly to its definitions, derivations, and algorithms.
 

@@ -1,8 +1,8 @@
 # RL Foundations Lab 实施路线图
 
 - 文档版本：`v0.3`
-- 日期：`2026-07-19`
-- 状态：01–16 内容 Source Coverage 复审批次完成；06 为算法交互样板，专用实验硬化继续
+- 日期：`2026-07-20`
+- 状态：01–21 双语阅读主线已贯通；现代扩展专属实验已落地，专用实验硬化继续
 
 ## 1. 推进结论
 
@@ -39,7 +39,7 @@
 - 06 Monte Carlo 已按新标准完成第一版：完整算法演化、伪代码、共享 Grid World episode、访问覆盖、Q 更新和策略分布同步。
 - 01–05 已补齐审计中的手算、矩阵、contraction、完整算法例程与 worked example，并纳入统一连续正文组件。
 - 07–13 已恢复关键理论、算法族、定理条件、完整伪代码和 worked example；现有通用参数实验仍需逐章升级为专用内部状态画布。
-- 14 已补齐四种裁剪情况、完整 objective、GAE 与 minibatch 生命周期；15 Token MDP 已实现独立双语章节和逐 token 奖励实验；16 已补齐模型血缘、token reward、batch contract 与故障分析。
+- 14 已补齐四种裁剪情况、完整 objective、GAE 与 minibatch 生命周期；15 Token MDP 已实现独立双语章节和逐 token 奖励实验；16 已补齐模型血缘、token reward、batch contract 与故障分析；17–21 已分别加入 DPO、GRPO/RLVR、Coding RL、Agent MDP 与长程信用的完整推导和专属实验。
 
 ### M2 完成记录
 
@@ -182,7 +182,7 @@
 
 ### M6：PPO 与语言模型后训练
 
-覆盖章节：14-16。
+覆盖章节：14–21。
 
 目标：把 PPO 从静态公式样张升级为可推进的 rollout/update 实验，并完成算法到工程系统的迁移。
 
@@ -214,7 +214,7 @@
 - 来源索引与公开链接检查；
 - 全课程数值、交互和渲染回归。
 
-退出条件：16 个章节均满足章节完成定义。
+退出条件：21 个章节均满足章节完成定义。
 
 ## 5. 依赖顺序
 
@@ -271,7 +271,7 @@ M1 完成后，严格按以下顺序进入代码与内容工作：
 | 数值与文字分叉 | 公式、曲线和表格使用不同示例数据 | 单一实验状态和数值 fixture；禁止复制展示数值 |
 | 随机结果被当成规律 | 单 seed 曲线直接支撑结论 | 明确单样本/单运行/多 seed，并显示波动范围 |
 | 现代部分突然换术语 | 经典对象和 LLM 系统无中间桥梁 | 强制先完成 Token MDP Bridge，再进入 System Map |
-| 课程范围失控 | 不断加入 DPO、GRPO、Agent RL | 完整 v1 截止 PPO-based LM post-training，其他进入扩展区 |
+| 现代内容失去边界 | 把所有新论文继续堆进同一章节 | 现代主线按训练对象拆为 17–21；新增方法只有在回答现有章节未覆盖的新主问题时才进入正文 |
 
 ## 9. 每个里程碑的报告格式
 
@@ -286,4 +286,4 @@ M1 完成后，严格按以下顺序进入代码与内容工作：
 
 ## 10. 当前下一步
 
-01–16 的内容 Source Coverage 复审批次已经落地。下一阶段进入 **M4–M7 交互与证据硬化**：先按依赖顺序把 07–13 的通用曲线替换为 noisy-root、TD transition、Cliff control、feature sharing、replay batch、trajectory contribution 与 dual-optimizer 专用画布；同时把 14–16 的 PPO epoch/KL 和共享 token batch 做成可逐轮推进的状态机。每完成一章再补数值 fixture、多 seed 协议和桌面/窄屏渲染证据。
+01–21 的双语阅读主线和第一版专属实验已经落地。下一阶段进入 **M4–M7 交互与证据硬化**：先按依赖顺序把 07–13 的通用曲线替换为 noisy-root、TD transition、Cliff control、feature sharing、replay batch、trajectory contribution 与 dual-optimizer 专用画布；同时把 14–21 的更新循环、执行反馈、Agent 轨迹和信用分配做成可逐轮推进、可回放的状态机。每完成一章再补数值 fixture、多 seed 协议和桌面/窄屏渲染证据。

@@ -7,7 +7,8 @@ import { returnChapter, returnPresetConfigs } from '../content/returns.js'
 import { optimalityChapter, optimalityPresetConfigs } from '../content/optimality.js'
 import { planningChapter, planningPresetConfigs } from '../content/planning.js'
 import { ppoChapter } from '../content/ppo.js'
-import { rlhfChapter } from '../content/rlhf.js'
+import { rlhfChapter } from '../content/rlhf-system.js'
+import { agentMdpChapter, codingRlChapter, creditChapter, dpoChapter, grpoChapter } from '../content/modern-extension.js'
 import { tokenMdpChapter } from '../content/token-mdp.js'
 import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from '../content/part23.js'
 import { glossary } from '../content/glossary.js'
@@ -81,7 +82,7 @@ test('the Planning chapter compares VI, TPI, and PI under one content contract',
 })
 
 test('every implemented chapter has a complete reading-to-experiment arc', () => {
-  const chapters = [mdpChapter, returnChapter, bellmanChapter, optimalityChapter, planningChapter, monteCarloChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter, ppoChapter, tokenMdpChapter, rlhfChapter]
+  const chapters = [mdpChapter, returnChapter, bellmanChapter, optimalityChapter, planningChapter, monteCarloChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter, ppoChapter, tokenMdpChapter, rlhfChapter, dpoChapter, grpoChapter, codingRlChapter, agentMdpChapter, creditChapter]
   chapters.forEach((chapter) => {
     for (const locale of ['zh', 'en']) {
       const content = chapter[locale]
@@ -132,18 +133,23 @@ test('the Monte Carlo chapter preserves the complete source algorithm family and
 })
 
 test('modern chapters keep bilingual derivations and explicit model roles', () => {
-  for (const chapter of [ppoChapter, tokenMdpChapter, rlhfChapter]) {
+  for (const chapter of [ppoChapter, tokenMdpChapter, rlhfChapter, dpoChapter, grpoChapter, codingRlChapter, agentMdpChapter, creditChapter]) {
     assert.deepEqual(validateFoundationChapterDefinition(chapter), [])
     assert.deepEqual(chapter.zh.derivation.map((step) => step.id), chapter.en.derivation.map((step) => step.id))
   }
   assert.match(ppoChapter.zh.derivation.at(-1).latex, /CLIP/)
   assert.match(tokenMdpChapter.zh.derivation[0].latex, /y_\{<t\}/)
-  assert.match(rlhfChapter.zh.sections[0].formula, /pi_\{\\mathrm\{old\}\}/)
+  assert.match(rlhfChapter.zh.sections[0].formula, /pi_\{\\rm old\}/)
   assert.match(rlhfChapter.zh.derivation.at(-1).latex, /remain frozen/)
+  assert.match(dpoChapter.zh.derivation.at(-1).latex, /DPO/)
+  assert.match(grpoChapter.zh.derivation[2].latex, /sigma_R/)
+  assert.match(codingRlChapter.zh.derivation.map((step) => step.latex).join(' '), /Exec/)
+  assert.match(agentMdpChapter.zh.derivation.map((step) => step.latex).join(' '), /prod/)
+  assert.match(creditChapter.zh.derivation.at(-1).latex, /hind/)
 })
 
 test('source-coverage review preserves bilingual why chains and complete algorithm blocks', () => {
-  const reviewed = [mdpChapter, returnChapter, bellmanChapter, optimalityChapter, planningChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter, ppoChapter, tokenMdpChapter, rlhfChapter]
+  const reviewed = [mdpChapter, returnChapter, bellmanChapter, optimalityChapter, planningChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter, ppoChapter, tokenMdpChapter, rlhfChapter, dpoChapter, grpoChapter, codingRlChapter, agentMdpChapter, creditChapter]
   reviewed.forEach((chapter) => {
     assert.ok(chapter.zh.deepening.length >= 2, `${chapter.id}.zh.deepening`)
     assert.deepEqual(chapter.zh.deepening.map((item) => item.id), chapter.en.deepening.map((item) => item.id), chapter.id)

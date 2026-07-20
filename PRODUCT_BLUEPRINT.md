@@ -2,7 +2,7 @@
 
 - 文档版本：`v0.2 · 执行版`
 - 日期：`2026-07-19`
-- 当前阶段：01–16 章双语主线已贯通，进入章节交互深化与公开发布准备阶段
+- 当前阶段：01–21 章双语主线已贯通，进入章节交互深化与公开发布阶段
 - 正式名称：`RL Foundations Lab`（中文名：`强化学习原理实验室`）
 
 ## 1. 产品定义
@@ -280,11 +280,18 @@ flowchart LR
 
 | 实验 | 核心问题 | 主要交互 | 关键参数与证据 |
 |---|---|---|---|
-| 16. Token MDP Bridge | 经典 RL 中的对象如何映射到语言模型生成？ | 把 Grid World 的 state/action/trajectory 逐步转换成 prompt/token/response | temperature、max tokens、终止规则；token policy、序列概率和 trajectory reward |
-| 17. PPO-based RLHF System | PPO 算法怎样嵌入真实语言模型训练系统？ | 在算法视图与系统视图间联动 policy、reference、reward、value 和 rollout | KL `beta`、clip、GAE、rollout batch、update epochs；reward-KL 前沿、模型调用和数据生命周期 |
-| 18. Preference & Group Extensions | 不同后训练方法改变了哪一种数据或评价假设？ | 比较离线偏好对与在线回答组；展示 DPO/GRPO 等扩展的输入和更新信号 | pair margin、group size、reward normalization；数据来源、baseline 和训练依赖 |
+| 15. Token MDP Bridge | 经典 RL 中的对象如何映射到语言模型生成？ | 把 Grid World 的 state/action/trajectory 逐步转换成 prompt/token/response | temperature、max tokens、终止规则；token policy、序列概率和 trajectory reward |
+| 16. PPO-based RLHF System | PPO 算法怎样嵌入真实语言模型训练系统？ | 在算法视图与系统视图间联动 policy、reference、reward、value 和 rollout | KL `beta`、clip、GAE、rollout batch、update epochs；reward-KL 前沿、模型调用和数据生命周期 |
+| 17. DPO Preference Lab | 离线偏好对怎样直接产生策略梯度？ | 点击完整 KL 重参数化推导并调节 pair margin | `beta`、chosen/rejected log-ratio；偏好概率、loss 与覆盖边界 |
+| 18. GRPO Group Lab | 在线可验证任务怎样用组统计量替代 Critic？ | 切换全对、全错、混合与低方差回答组 | group reward、relative advantage、clip 与动态采样 |
 
-第 18 个实验属于扩展范围。首个现代版本以 PPO 和 PPO-based RLHF 为核心，不要求同时完整实现所有偏好优化算法。
+### 第七阶段：Coding 与长程 Agent
+
+| 实验 | 核心问题 | 主要交互 | 关键参数与证据 |
+|---|---|---|---|
+| 19. Executable Feedback Lab | 测试通过率何时是可靠奖励？ | 比较候选补丁、可见/隐藏测试与奖励聚合 | outcome、partial、weighted reward；隐藏失败与泛化 |
+| 20. Agent Trajectory Lab | 工具调用与观察怎样构成多轮 MDP？ | 切换成功、定位失败和测试后终止轨迹 | tool/action、observation、terminal、budget 与 cost |
+| 21. Credit Assignment Microscope | 最终成功怎样归因到早期决策？ | 在同一轨迹切换终局、折扣、过程与事后归因 | `gamma`、过程信号可信度、逐步 credit 与偏差 |
 
 ## 10. 参数实验系统
 
@@ -484,7 +491,8 @@ PPO 现代实验必须同时支持：
 1. Bellman Microscope：课件 Grid World、固定/贪心策略、单步 backup、公式分解与残差。
 2. Planning Arena：同步与原地值迭代的运行框架和公平比较外壳。
 3. Actor-Critic / PPO Lab：advantage、ratio 与 PPO clipping 样本平面。
-4. Post-training Method Atlas：在共享任务上比较 PPO-based RLHF、DPO、GRPO 的数据、反馈与系统代价。
+4. PPO-based RLHF Shared Batch：追踪 policy、old、reference、reward 与 value 的数据血缘。
+5. DPO、GRPO、Coding RL、Agent MDP 与长程信用各自使用专属交互，不压缩为一张方法卡片。
 
 这些页面用于证明交互方向，不按“已完成课程章节”计数。
 
@@ -505,7 +513,7 @@ Bellman 黄金章节必须完整覆盖：
 
 ### 16.3 完整 v1
 
-完整 v1 覆盖教材主线中的核心模块：MDP、Return/Value、Bellman、Optimality、VI/PI、MC、随机逼近、TD、Sarsa、Q-learning、函数近似、DQN、Policy Gradient、Actor-Critic，以及现代扩展 PPO 和语言模型后训练。具体实施顺序见 [EXECUTION_ROADMAP.md](./EXECUTION_ROADMAP.md)。
+完整 v1 覆盖教材主线中的核心模块：MDP、Return/Value、Bellman、Optimality、VI/PI、MC、随机逼近、TD、Sarsa、Q-learning、函数近似、DQN、Policy Gradient、Actor-Critic，以及 PPO、Token MDP、PPO-based RLHF、DPO、GRPO、Coding RL、Agent MDP 与长程信用分配。具体实施顺序见 [EXECUTION_ROADMAP.md](./EXECUTION_ROADMAP.md)。
 
 ### 16.4 后续扩展
 

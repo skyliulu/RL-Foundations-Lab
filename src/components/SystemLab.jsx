@@ -24,7 +24,7 @@ function PipelineNode({ id, label, active, onClick, icon }) {
   )
 }
 
-export default function SystemLab({ lang, text }) {
+export default function SystemLab({ lang, text, ppoOnly = false }) {
   const c = text.common
   const [method, setMethod] = useState('ppo')
   const [view, setView] = useState('system')
@@ -40,10 +40,10 @@ export default function SystemLab({ lang, text }) {
 
   return (
     <section className="system-lab">
-      <div className="method-switch" role="group" aria-label={lang === 'zh' ? '后训练方法' : 'Post-training method'}>
+      {!ppoOnly && <div className="method-switch" role="group" aria-label={lang === 'zh' ? '后训练方法' : 'Post-training method'}>
         {[['ppo', 'PPO-based RLHF'], ['dpo', 'DPO'], ['grpo', 'GRPO']].map(([id, label]) => <button type="button" key={id} className={method === id ? 'active' : ''} onClick={() => setMethod(id)}>{label}</button>)}
-      </div>
-      <div className="method-contract">
+      </div>}
+      {!ppoOnly && <div className="method-contract">
         {(lang === 'zh' ? {
           ppo: [['数据', '在线单条 rollout'], ['反馈', 'Reward model / verifier'], ['Baseline', 'Value model'], ['代价', '四类模型与 token 对齐']],
           dpo: [['数据', '离线 chosen / rejected'], ['反馈', '成对偏好标签'], ['Baseline', 'Reference policy'], ['代价', '无法探索数据外回答']],
@@ -53,7 +53,7 @@ export default function SystemLab({ lang, text }) {
           dpo: [['Data', 'offline chosen / rejected'], ['Feedback', 'pairwise preference label'], ['Baseline', 'reference policy'], ['Cost', 'no exploration beyond data']],
           grpo: [['Data', 'online response groups'], ['Feedback', 'reward model / verifier'], ['Baseline', 'group mean and std. dev.'], ['Cost', 'several generations per prompt']],
         })[method].map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}
-      </div>
+      </div>}
       <div className="system-toolbar">
         {method === 'ppo' && <div className="view-switch" role="group" aria-label={lang === 'zh' ? '视图切换' : 'View switch'}>
           <button type="button" className={view === 'algorithm' ? 'active' : ''} onClick={() => setView('algorithm')}>{c.algorithm}</button>

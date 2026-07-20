@@ -1,7 +1,7 @@
 # RL Foundations Lab 完整课程地图
 
 - 文档版本：`v0.1`
-- 日期：`2026-07-19`
+- 日期：`2026-07-20`
 - 状态：全课程内容 Source Coverage 复审完成；专用交互与数值证据硬化中
 - 适用范围：完整 v1 课程、黄金章节和后续章节排期
 
@@ -43,9 +43,16 @@ Part IV 现代策略优化与语言模型
   14 PPO
   15 Token MDP Bridge
   16 语言模型 PPO 后训练系统
+  17 Direct Preference Optimization
+  18 Group Relative Policy Optimization 与可验证奖励
+
+Part V Coding 与长程 Agent
+  19 Coding RL 与可执行反馈
+  20 多轮 Agent MDP
+  21 长程信用分配
 ```
 
-推荐主阅读路径为 01 → 16。已经理解经典 RL 的读者可以从 12 开始，但 14 仍要求理解 03、08、12 和 13 中的 value、TD error、importance ratio 与 advantage。
+推荐主阅读路径为 01 → 21。已经理解经典 RL 的读者可以从 12 开始，但 14 仍要求理解 03、08、12 和 13 中的 value、TD error、importance ratio 与 advantage。
 
 ## 3. 章节-课件-交互映射
 
@@ -67,6 +74,11 @@ Part IV 现代策略优化与语言模型
 | 14 | PPO | PPO 论文；承接 L10 pp.13-43 | 如何复用 rollout，又不让新策略一次偏离旧策略过远？ | PPO Update Lab | ratio、advantage、clipped/unclipped objective、KL、epochs 与 value loss | 待按新标准复审 |
 | 15 | Token MDP Bridge | L1-L10 抽象对象；现代扩展 | 经典 RL 的 state/action/trajectory 如何变成 token 生成对象？ | Representation Morph | prompt + prefix、next token、EOS、sequence reward 与 token-level credit 的逐步映射 | 待实现 |
 | 16 | 语言模型 PPO 后训练系统 | PPO；RLHF 系统资料 | PPO 的数学对象如何成为 policy/reference/reward/value/rollout 的工程生命周期？ | Shared-batch System Map | 同一 batch 的模型调用、reward、KL、advantage、ratio、minibatch 和参数更新 | 待按新标准复审 |
+| 17 | Direct Preference Optimization | DPO 论文 | 为什么固定偏好对可以绕过显式 reward model 与在线 rollout？ | Preference Pair Margin | KL 最优策略、隐式奖励、chosen/rejected log-ratio、β 与覆盖边界 | 第一版已实现 |
+| 18 | Group Relative Policy Optimization | DeepSeekMath；DAPO | 移除 Critic 后，在线可验证奖励怎样形成 baseline 与稳定更新？ | Group Rollout Board | 组均值、标准差、相对优势、零方差组、动态采样与非对称裁剪 | 第一版已实现 |
+| 19 | Coding RL | RLEF；SWE-RL | 编译与测试什么时候是可靠奖励，什么时候会成为可利用代理？ | Executable Feedback Lab | 可见/隐藏测试、稀疏/稠密奖励、难度权重与多轮修复状态 | 第一版已实现 |
+| 20 | 多轮 Agent MDP | Agent Lightning | 工具调用、观察、记忆与终止怎样组成可训练轨迹？ | Agent Trajectory Lab | action/observation 交错、失败终止、预算、环境状态与轨迹概率 | 第一版已实现 |
+| 21 | 长程信用分配 | Agent Lightning；HCAPO | 最终结果怎样归因到很早以前的关键决策？ | Credit Assignment Microscope | 终局广播、折扣、过程奖励、分段价值、事后反事实与偏差审计 | 第一版已实现 |
 
 ## 4. 课件章节边界
 
@@ -243,7 +255,7 @@ Part IV 现代策略优化与语言模型
 
 ## 11. 现代部分边界
 
-完整 v1 的现代主线到 PPO-based language-model post-training 为止。DPO、GRPO、Agent RL 和过程奖励属于扩展区，除非它们能回答 PPO 主线无法回答的新问题。
+完整 v1 的现代主线延伸到 Coding RL、Agent MDP 与长程信用分配。后续新方法只有在回答 14–21 章尚未覆盖的独立主问题时才进入正文，否则作为章节来源或机制补充。
 
 现代章节必须同时讲清：
 

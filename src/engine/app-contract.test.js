@@ -20,6 +20,7 @@ test('the learning experience stays stateless and performs no remote compute cal
     read('components/PpoLab.jsx'),
     read('components/SystemLab.jsx'),
     read('components/TokenMdpLab.jsx'),
+    read('components/ModernExtensionLab.jsx'),
     read('interaction/stepMicroscope.js'),
   ].join('\n')
   ;['localStorage', 'sessionStorage', 'document.cookie', 'fetch(', 'XMLHttpRequest', 'WebSocket'].forEach((forbidden) => {
@@ -40,15 +41,15 @@ test('the header exposes only the public GitHub repository metadata request', ()
 
 test('Chinese and English expose the same complete Part I–III chapter nodes plus modern chapters', async () => {
   const { copy } = await import('../content.js')
-  assert.deepEqual(copy.zh.chapters.map((item) => item.id), ['mdp', 'returns', 'bellman', 'optimality', 'planning', 'montecarlo', 'approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic', 'ppo', 'tokenmdp', 'rlhf'])
+  assert.deepEqual(copy.zh.chapters.map((item) => item.id), ['mdp', 'returns', 'bellman', 'optimality', 'planning', 'montecarlo', 'approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic', 'ppo', 'tokenmdp', 'rlhf', 'dpo', 'grpo', 'codingrl', 'agentmdp', 'credit'])
   assert.deepEqual(copy.en.chapters.map((item) => item.id), copy.zh.chapters.map((item) => item.id))
   assert.ok(copy.zh.bellman.intro.length > 50)
   assert.ok(copy.en.bellman.intro.length > 50)
 })
 
-test('all five MVP capability slices are wired into the reading shell', () => {
+test('all chapter-specific capability slices are wired into the reading shell', () => {
   const app = read('App.jsx')
-  ;['ChapterShell', 'CourseWorldExplorer', 'ReturnObservatory', 'BellmanLab', 'OptimalitySwitch', 'PlanningLab', 'PpoLab', 'TokenMdpLab', 'SystemLab', 'RightRail'].forEach((name) => {
+  ;['ChapterShell', 'CourseWorldExplorer', 'ReturnObservatory', 'BellmanLab', 'OptimalitySwitch', 'PlanningLab', 'PpoLab', 'TokenMdpLab', 'SystemLab', 'ModernExtensionLab', 'RightRail'].forEach((name) => {
     assert.match(app, new RegExp(name))
   })
 })
