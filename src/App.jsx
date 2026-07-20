@@ -281,7 +281,7 @@ export default function App() {
           <DepthBand lang={lang} active={active} content={content} />
           {active === 'mdp' && (
             <>
-              <MdpNarrative sections={text.mdp.learningPath} />
+              <MdpNarrative sections={text.mdp.learningPath} overview={text.mdp.overview} />
               <ChapterDeepening sections={text.mdp.deepening} lang={lang} />
               <p className="article-copy chapter-transition">{text.mdp.experimentIntro}</p>
               <CourseWorldExplorer lang={lang} content={text.mdp} />

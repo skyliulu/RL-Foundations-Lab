@@ -30,6 +30,29 @@ const explorer = {
   },
 }
 
+const overview = {
+  zh: {
+    eyebrow: '先看图，再命名',
+    title: '这就是后续章节反复使用的决策世界',
+    caption: '智能体从左上角出发，在 25 个可访问格子之间移动。黄色格是可进入但会受罚的禁区，蓝色格是目标；地图外侧全部属于边界。',
+    map: '环境地图', statePrefix: 's', start: '起点', forbidden: '禁区 −1', target: '目标 +1',
+    locationTitle: '先看当前位置', locationBody: '每个格子都有编号，后面会把“此刻位于哪个格子”正式命名。',
+    choiceTitle: '再看可选方向', choiceBody: '每一步都可以选择上、右、下、左或停留。',
+    responseTitle: '最后看世界回应', responseBody: '选择之后，位置可能变化，同时得到 −1、0 或 +1。',
+    boundary: '越界并不会离开地图：智能体留在原格，并收到 −1。禁区也不是墙，进入后同样收到 −1。',
+  },
+  en: {
+    eyebrow: 'See the scene before naming it',
+    title: 'This is the decision world reused throughout the chapters',
+    caption: 'The agent begins in the upper-left and moves among 25 accessible cells. Yellow cells are accessible but penalized, the blue cell is the target, and everything outside the map is boundary.',
+    map: 'Environment map', statePrefix: 's', start: 'Start', forbidden: 'Forbidden −1', target: 'Target +1',
+    locationTitle: 'Begin with location', locationBody: 'Every cell has an id. The next section formally names what it means to occupy one of them.',
+    choiceTitle: 'Then inspect the choices', choiceBody: 'At every step the agent may move up, right, down, left, or stay.',
+    responseTitle: 'Finally observe the response', responseBody: 'After a choice, location may change and the world returns −1, 0, or +1.',
+    boundary: 'A boundary attempt does not leave the map: the agent stays in place and receives −1. Forbidden cells are not walls; entering one also gives −1.',
+  },
+}
+
 const mdpZhPath = [
   {
     id: 'problem-setting',
@@ -232,6 +255,7 @@ export const mdpChapter = assertFoundationChapterDefinition({
     instruction: '先选状态，再选动作；沿一个转移分支向前走，记录连续几步交互',
     question: '当你只改变动作时，哪些量由策略决定，哪些量由环境决定？',
     learningPath: mdpZhPath,
+    overview: overview.zh,
     deepening: mdpDeepeningZh,
     prelude: mdpZhPath.slice(0, 2),
     sections: mdpZhPath.slice(6),
@@ -251,6 +275,7 @@ export const mdpChapter = assertFoundationChapterDefinition({
     instruction: 'Choose a state and action, then follow a transition branch and record several interactions',
     question: 'When only the action changes, which quantities belong to the policy and which belong to the environment?',
     learningPath: mdpEnPath,
+    overview: overview.en,
     deepening: mdpDeepeningEn,
     prelude: mdpEnPath.slice(0, 2),
     sections: mdpEnPath.slice(6),

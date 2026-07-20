@@ -92,6 +92,28 @@ test('ordinary MDP sections use article headings instead of numbered timeline ca
   assert.doesNotMatch(source, /narrative-index|padStart\(/)
 })
 
+test('chapter one introduces the shared course world before formal definitions', () => {
+  const narrative = read('components/MdpNarrative.jsx')
+  const overview = read('components/CourseWorldOverview.jsx')
+  const styles = read('styles.css')
+  assert.match(narrative, /CourseWorldOverview/)
+  assert.match(narrative, /section\.id === 'problem-setting'/)
+  assert.match(overview, /from '\.\.\/engine\/gridworld'/)
+  ;['allStates', 'isForbidden', 'isGoal', 'START'].forEach((contract) => {
+    assert.match(overview, new RegExp(contract))
+  })
+  assert.match(styles, /\.course-world-overview\s*\{/)
+  assert.match(styles, /\.overview-world-grid\s*\{/)
+})
+
+test('ordinary chapter-one formulas use the shared display treatment', () => {
+  const narrative = read('components/MdpNarrative.jsx')
+  const styles = read('styles.css')
+  assert.match(narrative, /<MathFormula block latex=\{formula\}/)
+  assert.match(styles, /\.narrative-formulas\s*\{[^}]*border-left:\s*2px solid var\(--navy\)/)
+  assert.match(styles, /\.narrative-formulas\s*\{[^}]*background:\s*rgba\(23,79,130,\.035\)/)
+})
+
 test('the homepage explains the learning path and gives readers an actionable chapter rhythm', () => {
   const source = read('components/HomePage.jsx')
   assert.match(source, /home-reading-guide/)
@@ -101,6 +123,13 @@ test('the homepage explains the learning path and gives readers an actionable ch
   assert.match(source, /reading-guide-cycle/)
   assert.match(source, /迭代进入下一章/)
   assert.doesNotMatch(source, /home-principles|Why 先于 How/)
+})
+
+test('the homepage progression line passes through every desktop step marker', () => {
+  const styles = read('styles.css')
+  assert.match(styles, /\.reading-guide-steps::before\s*\{[^}]*linear-gradient/)
+  assert.match(styles, /\.reading-step-number\s*\{[^}]*margin-inline:\s*auto/)
+  assert.match(styles, /\.reading-guide-steps li:last-child \.reading-step-number\s*\{[^}]*background:\s*var\(--teal\)/)
 })
 
 test('language defaults are regional and update document metadata without persistence', () => {

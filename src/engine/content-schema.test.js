@@ -41,6 +41,12 @@ test('the MDP foundation chapter is bilingual, structured, and source-traceable'
   assert.deepEqual(mdpChapter.zh.learningPath.map((step) => step.id), mdpChapter.en.learningPath.map((step) => step.id))
   assert.equal(mdpChapter.zh.learningPath[0].id, 'problem-setting')
   assert.match(mdpChapter.zh.learningPath[0].paragraphs.join(' '), /5×5.*目标.*禁区.*边界/)
+  assert.match(mdpChapter.zh.overview.caption, /25.*禁区.*目标/)
+  assert.match(mdpChapter.en.overview.caption, /25.*penalized.*target/i)
+  ;['locationTitle', 'choiceTitle', 'responseTitle'].forEach((field) => {
+    assert.ok(mdpChapter.zh.overview[field])
+    assert.ok(mdpChapter.en.overview[field])
+  })
   assert.equal(mdpChapter.zh.learningPath[1].id, 'state-space')
   assert.match(mdpChapter.zh.learningPath[1].formulas[1], /s_\{25\}/)
   assert.equal(mdpChapter.zh.learningPath.at(-1).id, 'mdp-definition')
