@@ -1,40 +1,99 @@
-# 强化学习数学基础 · 交互原型
+# RL Foundations Lab
 
-一个面向具备概率、微积分与基础优化知识读者的无状态强化学习学习网站。产品沿用 *Mathematical Foundations of Reinforcement Learning* 的概念主线，把需要在代码中运行的参数实验嵌入章节阅读，并延伸到 Actor–Critic、PPO 与语言模型后训练。
+简体中文 · [English](./README.en.md)
 
-## 当前已实现
+**强化学习原理实验室：从网格世界到 PPO 与语言模型后训练。**
 
-- Part I 完整阅读路径：01 MDP、02 Return/State Value、03 Bellman 期望方程、04 Bellman 最优方程、05 Value/Policy Iteration。
-- 五个章节画布：Course World Explorer、Return Observatory、Bellman Microscope、Optimality Switch 与 Planning Arena，共用课件一致的 5×5 Grid World。
-- 可复现实验：精确 value 与固定 seed 采样、单步 backup/undo、`expectation → max` 动作竞争，以及 VI、Truncated PI、PI 在累计 backups 轴上的公平比较。
-- Actor–Critic / PPO：从 critic、advantage 过渡到 PPO-Clip，在样本平面上直接观察哪些更新被裁剪。
-- PPO 后训练系统：算法视图与工程视图共享同一个 rollout batch、seed、reward、advantage、ratio 与 KL 约束。
-- 完整中英文切换；刷新页面即恢复默认值，不使用账号、远端 API 或浏览器持久化存储。
+RL Foundations Lab 是一门面向具备概率、微积分和基础优化知识学习者的双语交互式强化学习课程。它沿着 *Mathematical Foundations of Reinforcement Learning* 的理论主线展开，但不把内容压缩成知识卡片：定义、推导、算法动机、伪代码与局限仍然保留在连续正文中，交互实验则把原本需要写代码才能观察的中间状态直接嵌入章节。
+
+项目希望回答的不只是“算法怎么做”，还包括：前一种方法为什么不够、新机制改变了什么、公式为什么成立，以及参数变化如何沿着算法链路影响最终结果。
+
+## 学习路径
+
+课程共 16 章，默认中文，并可随时切换英文。
+
+### 第一部分 · 数学基础与动态规划
+
+- **01 网格世界与交互基础**：状态、动作、奖励、策略、环境模型与 Markov 性。
+- **02 Return 与 State Value**：从奖励序列、折扣回报到状态价值。
+- **03 Bellman 方程**：从价值定义逐步推导一步递归关系。
+- **04 Bellman 最优方程**：让动作价值竞争，并理解最优策略的来源。
+- **05 更新顺序与收敛**：比较 Value Iteration、Policy Iteration 与 Truncated Policy Iteration。
+
+### 第二部分 · 无模型学习
+
+- **06 Monte Carlo Learning**：从完整 episode 到 Basic MC、Exploring Starts 与 ε-greedy control。
+- **07 随机逼近与步长**：理解增量均值、噪声、步长条件与收敛权衡。
+- **08 TD Prediction**：通过 bootstrap 在 episode 结束前更新价值。
+- **09 Sarsa 与 Q-learning**：比较 on-policy 与 off-policy control 的目标和行为。
+
+### 第三部分 · 函数近似与策略学习
+
+- **10 Value Function Approximation**：用参数共享把一次样本推广到相似状态。
+- **11 Deep Q-learning**：理解 replay buffer、target network 与训练稳定性。
+- **12 Policy Gradient**：直接优化策略，并解释梯度估计的来源与方差。
+- **13 Actor–Critic**：用 Critic 的价值估计改善 Actor 的策略更新。
+
+### 第四部分 · PPO 与语言模型后训练
+
+- **14 PPO**：从 advantage、importance ratio 到 clipped surrogate objective。
+- **15 Token MDP**：把 prompt、token、response 与序列奖励映射到强化学习对象。
+- **16 PPO 系统视图**：把 policy、reference、reward、value model 与 rollout batch 放进同一条训练链路。
+
+## 交互式学习
+
+交互不是正文之外的演示动画，而是论证的一部分。当前课程包含：
+
+- 贯穿经典章节的同一套 5×5 Course World，可观察状态、动作、奖励、策略与价值如何共同变化；
+- Return Observatory、Bellman Microscope、Optimality Switch 与 Planning Arena，用于追踪回报、单步 backup、动作竞争和算法收敛；
+- Monte Carlo episode tape、动作价值表与策略更新，用同一条轨迹比较不同 MC control 方法；
+- 随机逼近、TD、Sarsa/Q-learning、函数近似、DQN、Policy Gradient 与 Actor–Critic 的章节内参数实验；
+- PPO Clip Plane，用样本级 ratio 与 advantage 直接显示哪些更新被裁剪；
+- Token Trajectory Lab 与 PPO 系统视图，让同一批 rollout 在算法公式和工程组件间保持可追溯。
+
+公式推导保留完整的等式链。每一步都可以被选中，并在右侧工作台中查看使用的规则、假设、符号含义和当前数值解释。
+
+## 产品原则
+
+- **先解释 why，再呈现 how**：每个机制都从上一种方法的不足开始。
+- **数学主线不缩水**：交互用于增强理解，不替代必要的定义、证明与推导。
+- **实验与公式共享状态**：画布、表格、曲线和公式数值来自同一份运行数据。
+- **无状态、浏览器端运行**：不需要账号，不保存学习进度或实验参数，不请求远端计算 API。
+- **中英文结构等价**：两种语言共享章节结构、公式、实验和参考资料。
 
 ## 本地运行
 
-```powershell
+需要 Node.js 与 npm。
+
+```bash
 npm install
 npm run dev
 ```
 
-打开终端输出的本地地址。生产构建与验证：
+验证测试与生产构建：
 
-```powershell
+```bash
 npm test
 npm run build
 ```
 
-## 实现边界
+## 当前状态与边界
 
-算法核心位于 `src/engine/`，与 React 渲染层分离。Grid World 使用浏览器端精确动态规划；PPO 使用固定、可复现的教学样本，展示 clipped surrogate objective 的真实数值变化。MVP 不训练真实神经网络，也不请求后端计算资源。
+01–16 章均已形成可运行的双语学习路径，经典基础、无模型方法、函数近似、PPO 和语言模型后训练已经连成一条连续主线。部分中段章节的交互仍在从参数实验继续加强为更细粒度的算法内部状态可视化。
 
-## 产品与实施文档
+项目是教学工具，不是通用 RL 训练框架：所有实验在浏览器内运行；Grid World 使用精确或可复现的教学计算；PPO 与语言模型章节不训练真实神经网络，也不需要后端算力。
 
-- [产品蓝图](./PRODUCT_BLUEPRINT.md)：产品边界、体验原则与正式范围。
-- [完整课程地图](./CURRICULUM_MAP.md)：L1-L10 页码映射、16 个网站章节、交互语法与完成定义。
-- [实施路线图](./EXECUTION_ROADMAP.md)：从当前样张到 Bellman 黄金章节和完整 v1 的里程碑。
-- [Bellman 黄金章节 Storyboard](./BELLMAN_GOLDEN_CHAPTER.md)：L2 推导节奏、交互场景、实验状态和章节验收。
-- [M2 黄金章节验收](./M2_ACCEPTANCE.md)：数值、内容、交互、响应式和迁移条件的逐项证据。
-- [Part I 验收](./PART_I_ACCEPTANCE.md)：01–05 的内容、数值、交互、双语与响应式证据。
-- [Step Microscope 契约](./STEP_MICROSCOPE_CONTRACT.md)：后续算法章节共享的 phase、step outcome 与 undo/reset 协议。
+## 参考资料
+
+- [Mathematical Foundations of Reinforcement Learning](https://github.com/MathFoundationRL/Book-Mathematical-Foundation-of-Reinforcement-Learning)
+- [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
+- [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155)
+
+每章末尾还会列出与该章定义、推导和算法直接对应的来源。
+
+## 项目文档
+
+- [产品蓝图](./PRODUCT_BLUEPRINT.md)
+- [课程地图](./CURRICULUM_MAP.md)
+- [章节重构审计](./CHAPTER_REBUILD_AUDIT.md)
+- [实施路线图](./EXECUTION_ROADMAP.md)

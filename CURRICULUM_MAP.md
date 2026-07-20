@@ -2,7 +2,7 @@
 
 - 文档版本：`v0.1`
 - 日期：`2026-07-19`
-- 状态：执行基线
+- 状态：全课程内容 Source Coverage 复审完成；专用交互与数值证据硬化中
 - 适用范围：完整 v1 课程、黄金章节和后续章节排期
 
 ## 1. 这份地图解决什么
@@ -51,22 +51,22 @@ Part IV 现代策略优化与语言模型
 
 | ID | 网站章节 | 课件或论文依据 | 唯一主问题 | 核心画布 | 必须看见的证据 | 当前状态 |
 |---|---|---|---|---|---|---|
-| 01 | MDP 与课件 Grid World | L1 pp.4-27 | state、action、transition、reward 与 policy 怎样组成一个 MDP？ | Course World Explorer | 当前状态、五种动作、边界反弹、禁区/目标奖励、轨迹与转移概率 | 已完成 |
-| 02 | Return、折扣与 State Value | L1 pp.19-25；L2 pp.6-20 | 为什么即时奖励不能代表一个状态的长期好坏？ | Return Observatory + Value Lens | 每一步 reward 对 return 的贡献、不同 `gamma` 的权重、样本均值与精确 value 的差距 | 已完成 |
-| 03 | Bellman 期望方程 | L2 pp.21-53 | 为什么长期价值可以由一步奖励和后继价值递归表达？ | Bellman Microscope | 一次精确 backup、公式逐项代入、更新前后值、残差与信息传播 | 黄金章节；已完成 |
-| 04 | 最优策略与 Bellman 最优方程 | L3 pp.6-45 | 从评价当前策略到寻找最优策略，方程右侧改变了什么？ | Optimality Switch | 同一状态各动作的 `q(s,a)` 竞争、`expectation → max`、策略随奖励和 `gamma` 改变 | 已完成 |
-| 05 | Value Iteration 与 Policy Iteration | L4 pp.5-38 | 不同求解调度如何到达同一个最优不动点？ | Planning Arena | policy change、backup 数、逐状态残差和 value 传播；不能只显示最终值 | 已完成 |
-| 06 | Monte Carlo Learning | L5 pp.5-47 | 没有环境模型时，如何从完整 episode 估计 value？ | Episode Tape + MC Lab | first/every visit、return 样本分布、访问次数、估计误差和探索覆盖 | 待实现 |
-| 07 | 随机逼近与步长 | L6 pp.7-60 | 为什么带噪声的增量更新能够逼近期望，步长又决定什么？ | Stochastic Approximation Lab | 固定/衰减步长下的收敛、震荡、偏差和多 seed 波动带 | 待实现 |
-| 08 | TD Prediction | L7 pp.6-23 | 为什么不等待 episode 结束也能学习？ | Target Comparator | MC target、TD(0) target 与 n-step target 的信用跨度、bias/variance 和 TD error | 待实现 |
-| 09 | Sarsa、Q-learning 与 Control | L7 pp.25-54 | on-policy 与 off-policy 为什么会学出不同的风险行为？ | Control Arena | 行为策略/目标策略、实际访问热力图、更新目标、危险状态频率与累计回报 | 待实现 |
-| 10 | Value Function Approximation | L8 pp.5-160 | value 表无法枚举时，参数怎样在状态之间共享？ | Function Studio | 特征、参数更新、预测曲面、状态间干扰、近似误差和 stationary distribution | 待实现 |
-| 11 | Deep Q-learning | L8 pp.162-226 | target network 与 replay 分别缓解了什么不稳定性？ | DQN System Lab | online/target 网络、replay 抽样、target 漂移、样本相关性和训练曲线 | 待实现 |
-| 12 | Policy Gradient | L9 pp.6-41 | 怎样直接提高高回报动作的概率？ | Policy Gradient Studio | softmax 概率、trajectory contribution、梯度方向、方差和 average value/reward 指标 | 待实现 |
-| 13 | Actor-Critic | L10 pp.6-54 | Critic 怎样给 Actor 提供更及时且低方差的学习信号？ | Actor-Critic Loop | value、TD error、advantage、actor/critic 两次更新及 importance sampling | 已有结构样张 |
-| 14 | PPO | PPO 论文；承接 L10 pp.13-43 | 如何复用 rollout，又不让新策略一次偏离旧策略过远？ | PPO Update Lab | ratio、advantage、clipped/unclipped objective、KL、epochs 与 value loss | 已有局部原型 |
+| 01 | MDP 与课件 Grid World | L1 pp.4-27 | state、action、transition、reward 与 policy 怎样组成一个 MDP？ | Course World Explorer | 当前状态、五种动作、边界反弹、禁区/目标奖励、轨迹与转移概率 | 待按新标准复审 |
+| 02 | Return、折扣与 State Value | L1 pp.19-25；L2 pp.6-20 | 为什么即时奖励不能代表一个状态的长期好坏？ | Return Observatory + Value Lens | 每一步 reward 对 return 的贡献、不同 `gamma` 的权重、样本均值与精确 value 的差距 | 待按新标准复审 |
+| 03 | Bellman 期望方程 | L2 pp.21-53 | 为什么长期价值可以由一步奖励和后继价值递归表达？ | Bellman Microscope | 一次精确 backup、公式逐项代入、更新前后值、残差与信息传播 | 待补矩阵/手算主线 |
+| 04 | 最优策略与 Bellman 最优方程 | L3 pp.6-45 | 从评价当前策略到寻找最优策略，方程右侧改变了什么？ | Optimality Switch | 同一状态各动作的 `q(s,a)` 竞争、`expectation → max`、策略随奖励和 `gamma` 改变 | 待补 contraction 主线 |
+| 05 | Value Iteration 与 Policy Iteration | L4 pp.5-38 | 不同求解调度如何到达同一个最优不动点？ | Planning Arena | policy change、backup 数、逐状态残差和 value 传播；不能只显示最终值 | 待补完整算法例程 |
+| 06 | Monte Carlo Learning | L5 pp.5-47 | 没有环境模型时，如何从完整 episode 估计 value？ | Episode Tape + MC Lab | first/every visit、return 样本分布、访问次数、估计误差和探索覆盖 | 新标准样板已完成 |
+| 07 | 随机逼近与步长 | L6 pp.7-60 | 为什么带噪声的增量更新能够逼近期望，步长又决定什么？ | Stochastic Approximation Lab | 固定/衰减步长下的收敛、震荡、偏差和多 seed 波动带 | 待按新标准重构 |
+| 08 | TD Prediction | L7 pp.6-23 | 为什么不等待 episode 结束也能学习？ | Target Comparator | MC target、TD(0) target 与 n-step target 的信用跨度、bias/variance 和 TD error | 待按新标准重构 |
+| 09 | Sarsa、Q-learning 与 Control | L7 pp.25-54 | on-policy 与 off-policy 为什么会学出不同的风险行为？ | Control Arena | 行为策略/目标策略、实际访问热力图、更新目标、危险状态频率与累计回报 | 待按新标准重构 |
+| 10 | Value Function Approximation | L8 pp.5-160 | value 表无法枚举时，参数怎样在状态之间共享？ | Function Studio | 特征、参数更新、预测曲面、状态间干扰、近似误差和 stationary distribution | 待按新标准重构 |
+| 11 | Deep Q-learning | L8 pp.162-226 | target network 与 replay 分别缓解了什么不稳定性？ | DQN System Lab | online/target 网络、replay 抽样、target 漂移、样本相关性和训练曲线 | 待按新标准重构 |
+| 12 | Policy Gradient | L9 pp.6-41 | 怎样直接提高高回报动作的概率？ | Policy Gradient Studio | softmax 概率、trajectory contribution、梯度方向、方差和 average value/reward 指标 | 待按新标准重构 |
+| 13 | Actor-Critic | L10 pp.6-54 | Critic 怎样给 Actor 提供更及时且低方差的学习信号？ | Actor-Critic Loop | value、TD error、advantage、actor/critic 两次更新及 importance sampling | 待按新标准重构 |
+| 14 | PPO | PPO 论文；承接 L10 pp.13-43 | 如何复用 rollout，又不让新策略一次偏离旧策略过远？ | PPO Update Lab | ratio、advantage、clipped/unclipped objective、KL、epochs 与 value loss | 待按新标准复审 |
 | 15 | Token MDP Bridge | L1-L10 抽象对象；现代扩展 | 经典 RL 的 state/action/trajectory 如何变成 token 生成对象？ | Representation Morph | prompt + prefix、next token、EOS、sequence reward 与 token-level credit 的逐步映射 | 待实现 |
-| 16 | 语言模型 PPO 后训练系统 | PPO；RLHF 系统资料 | PPO 的数学对象如何成为 policy/reference/reward/value/rollout 的工程生命周期？ | Shared-batch System Map | 同一 batch 的模型调用、reward、KL、advantage、ratio、minibatch 和参数更新 | 已有系统样张 |
+| 16 | 语言模型 PPO 后训练系统 | PPO；RLHF 系统资料 | PPO 的数学对象如何成为 policy/reference/reward/value/rollout 的工程生命周期？ | Shared-batch System Map | 同一 batch 的模型调用、reward、KL、advantage、ratio、minibatch 和参数更新 | 待按新标准复审 |
 
 ## 4. 课件章节边界
 

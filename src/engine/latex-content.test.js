@@ -31,7 +31,7 @@ function collectReaderStrings(node, output = []) {
 
 test('every chapter formula is valid LaTeX', () => {
   for (const locale of ['zh', 'en']) {
-    for (const chapterId of ['mdp', 'returns', 'bellman', 'optimality', 'planning']) {
+    for (const chapterId of copy[locale].chapters.map((chapter) => chapter.id)) {
       const formulas = collectLatex(copy[locale][chapterId])
       assert.ok(formulas.length > 0, `${locale}.${chapterId} should expose formulas`)
       formulas.forEach((latex) => {
@@ -61,7 +61,7 @@ test('JSX does not hand-build mathematical notation with sub or sup tags', () =>
 
 test('chapter copy does not expose source-production references', () => {
   for (const locale of ['zh', 'en']) {
-    for (const chapterId of ['mdp', 'returns', 'bellman', 'optimality', 'planning']) {
+    for (const chapterId of copy[locale].chapters.map((chapter) => chapter.id)) {
       const readerCopy = collectReaderStrings(copy[locale][chapterId]).join('\n')
       assert.doesNotMatch(readerCopy, /课件|课程|幻灯片|\bcourse\b|\b(?:slide|lecture)\s*(?:\d|page)/i, `${locale}.${chapterId}`)
     }

@@ -122,6 +122,52 @@ const bellmanDerivationEn = [
   { id: 'bellman-equation', rule: 'Substitute back to obtain the Bellman expectation equation', latex: String.raw`\boxed{V^{\pi}(s)=\sum_a\pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V^{\pi}(s')\right]}`, short: 'Long-term value becomes a probability-weighted one-step reward plus successor value.', detail: 'Substitute V^π(s′) into the total-expectation expansion. The result is the fixed-point relation that every state must satisfy under policy π.', assumptions: [String.raw`0\le\gamma<1`, 'State and action spaces are finite or the expectations exist'], symbols: [[String.raw`r+\gamma V^{\pi}(s')`, 'Bellman target for one transition']] },
 ]
 
+const bellmanDeepeningZh = [
+  {
+    id: 'four-state-worked-system', kicker: '贯穿手算 · 四状态链', title: 'Bellman 方程不是一条公式，而是一组相互依赖的方程',
+    paragraphs: ['先看一个可完全手算的 episodic 链：固定策略依次把 s₁ 带到 s₂、s₃、s₄；只有从 s₃ 进入终止状态 s₄ 时得到 +1，其余奖励为 0，γ=0.9。终止状态之后没有未来奖励，因此 V(s₄)=0。', '从最后一个非终止状态向前代入，可得到 V(s₃)=1、V(s₂)=0.9、V(s₁)=0.81。这些数不是分别定义出来的，而是同时满足四条 Bellman 方程的唯一解。'],
+    formulas: [String.raw`V(s_4)=0,\quad V(s_3)=1+0.9V(s_4)=1`, String.raw`V(s_2)=0+0.9V(s_3)=0.9,\quad V(s_1)=0+0.9V(s_2)=0.81`],
+    example: { title: '从终点向前解方程', caption: '每个状态的 value 都由本步奖励和后继 value 决定。', headers: ['状态', 'Bellman 方程', '解'], rows: [['s₄', 'V₄ = 0', '0'], ['s₃', 'V₃ = 1 + 0.9V₄', '1.00'], ['s₂', 'V₂ = 0 + 0.9V₃', '0.90'], ['s₁', 'V₁ = 0 + 0.9V₂', '0.81']] },
+    handoff: '小链可以反向代入；带循环的网格无法按拓扑顺序一次解完，需要联立方程或迭代求解。',
+  },
+  {
+    id: 'matrix-and-iteration', kicker: '两种求解路径', title: '直接线性求解与反复 policy evaluation 为什么得到同一个答案？',
+    paragraphs: ['把所有状态方程排列成向量，得到 (I−γPπ)vπ=rπ。若矩阵可逆，可以一次线性求解；也可以从任意 v₀ 开始，反复执行 vₖ₊₁=rπ+γPπvₖ。', '迭代式每一轮只把更远一层的奖励信息传播进来。因为 γPπ 的作用会把误差至多缩小 γ 倍，迭代极限满足与直接解相同的方程。直接解和迭代解不是两套 value 定义，只是两种计算策略。'],
+    formulas: [String.raw`(I-\gamma P^{\pi})\mathbf v^{\pi}=\mathbf r^{\pi},\qquad \mathbf v^{\pi}=(I-\gamma P^{\pi})^{-1}\mathbf r^{\pi}`, String.raw`\mathbf v_{k+1}=\mathbf r^{\pi}+\gamma P^{\pi}\mathbf v_k,\qquad \|\mathbf v_{k+1}-\mathbf v^{\pi}\|_{\infty}\le\gamma\|\mathbf v_k-\mathbf v^{\pi}\|_{\infty}`],
+    theorem: { claim: '当 0≤γ<1 且 Pπ 是随机矩阵时，policy evaluation 的不动点唯一，迭代从任意有界初值收敛。', why: 'Pπ 的每一行是概率分布，不会放大最大范数；再乘 γ 后成为压缩。', conditions: [String.raw`0\le\gamma<1`, String.raw`\sum_{s'}P^{\pi}_{ss'}=1`] },
+    pseudocodeTitle: '迭代 Policy Evaluation', pseudocode: ['初始化 V(s)，例如所有状态置 0', '重复：', '  Δ ← 0', '  对每个状态 s：', '    old ← V(s)', '    V(s) ← Σₐπ(a|s)Σₛ′,ᵣp(s′,r|s,a)[r+γV(s′)]', '    Δ ← max(Δ, |old−V(s)|)', '直到 Δ 小于停止阈值；返回 V'],
+  },
+  {
+    id: 'state-to-action-value', kicker: '固定第一步', title: 'Action value 只比 state value 多回答一个问题',
+    paragraphs: ['Vπ(s) 在第一步就按策略 π 对动作取平均，因此不能直接告诉我们某个具体动作会怎样。Qπ(s,a) 固定第一步动作 a，再从后继状态开始遵循 π。', '把 Qπ 重新按 π(a|s) 加权，就回到 Vπ；反过来，比较同一状态的 Qπ(s,a) 才能做策略改善。'],
+    formulas: [String.raw`Q^{\pi}(s,a)=\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V^{\pi}(s')\right]`, String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`],
+    handoff: '下一章不再只评价给定 π，而是让同一状态中的动作价值竞争，并证明选择最大动作如何产生最优方程。',
+  },
+]
+
+const bellmanDeepeningEn = [
+  {
+    id: 'four-state-worked-system', kicker: 'Worked system · Four-state chain', title: 'A Bellman equation is a coupled system, not one isolated formula',
+    paragraphs: ['Consider an episodic chain under a fixed policy: s₁→s₂→s₃→s₄. Only entering terminal s₄ from s₃ gives +1; all other rewards are zero and γ=0.9. Terminal value is zero.', 'Backward substitution gives V(s₃)=1, V(s₂)=0.9, and V(s₁)=0.81. These values are not separate definitions; they are the simultaneous solution of the Bellman system.'],
+    formulas: [String.raw`V(s_4)=0,\quad V(s_3)=1+0.9V(s_4)=1`, String.raw`V(s_2)=0+0.9V(s_3)=0.9,\quad V(s_1)=0+0.9V(s_2)=0.81`],
+    example: { title: 'Solve backward from the terminal state', caption: 'Each value combines immediate reward and successor value.', headers: ['State', 'Bellman equation', 'Solution'], rows: [['s₄', 'V₄ = 0', '0'], ['s₃', 'V₃ = 1 + 0.9V₄', '1.00'], ['s₂', 'V₂ = 0 + 0.9V₃', '0.90'], ['s₁', 'V₁ = 0 + 0.9V₂', '0.81']] },
+    handoff: 'A chain can be solved backward. A cyclic grid requires a simultaneous linear solve or iterative evaluation.',
+  },
+  {
+    id: 'matrix-and-iteration', kicker: 'Two solution routes', title: 'Why do a direct linear solve and iterative policy evaluation agree?',
+    paragraphs: ['Stacking state equations gives (I−γPπ)vπ=rπ. An invertible matrix gives a direct solve; alternatively begin with any v₀ and repeat vₖ₊₁=rπ+γPπvₖ.', 'Each iteration propagates rewards one layer farther. Because γPπ contracts error by at most γ, the limit satisfies the same equation as the direct solution.'],
+    formulas: [String.raw`(I-\gamma P^{\pi})\mathbf v^{\pi}=\mathbf r^{\pi},\qquad \mathbf v^{\pi}=(I-\gamma P^{\pi})^{-1}\mathbf r^{\pi}`, String.raw`\mathbf v_{k+1}=\mathbf r^{\pi}+\gamma P^{\pi}\mathbf v_k,\qquad \|\mathbf v_{k+1}-\mathbf v^{\pi}\|_{\infty}\le\gamma\|\mathbf v_k-\mathbf v^{\pi}\|_{\infty}`],
+    theorem: { claim: 'For 0≤γ<1 and stochastic Pπ, policy evaluation has one fixed point and iteration converges from any bounded start.', why: 'A stochastic matrix does not expand the maximum norm; multiplying by γ makes the map a contraction.', conditions: [String.raw`0\le\gamma<1`, String.raw`\sum_{s'}P^{\pi}_{ss'}=1`] },
+    pseudocodeTitle: 'Iterative Policy Evaluation', pseudocode: ['Initialize V(s), for example to zero', 'Repeat:', '  Δ ← 0', '  For every state s:', '    old ← V(s)', '    V(s) ← Σₐπ(a|s)Σₛ′,ᵣp(s′,r|s,a)[r+γV(s′)]', '    Δ ← max(Δ, |old−V(s)|)', 'Until Δ is below tolerance; return V'],
+  },
+  {
+    id: 'state-to-action-value', kicker: 'Fix the first action', title: 'Action value answers one question that state value averages away',
+    paragraphs: ['Vπ(s) averages the first action under π. Qπ(s,a) instead fixes that first action and follows π afterward.', 'Weighting Qπ by π(a|s) recovers Vπ. Comparing Qπ(s,a) values at one state enables policy improvement.'],
+    formulas: [String.raw`Q^{\pi}(s,a)=\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V^{\pi}(s')\right]`, String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`],
+    handoff: 'The next chapter lets actions compete and proves why selecting the largest action value produces the optimal equation.',
+  },
+]
+
 export const bellmanChapter = assertChapterDefinition({
   id: 'bellman',
   prerequisiteIds: ['mdp', 'discounted-return', 'conditional-expectation'],
@@ -132,10 +178,13 @@ export const bellmanChapter = assertChapterDefinition({
     title: '为什么一步更新能够表达长期价值？',
     intro: '状态价值不是对眼前奖励的评分，而是从当前状态出发，沿策略产生的全部未来回报的期望。Bellman 方程把这条无限长的时间链切成“下一步奖励”与“下一状态的价值”。',
     bridge: '下面继续使用同一个 5×5 网格环境：进入黄色禁区或尝试越界奖励 −1，进入蓝色目标奖励 +1，其余移动奖励 0；目标状态不会终止任务。点击状态、调整参数并执行一次更新，观察数值如何从同一套环境模型中产生。',
+    experimentIntro: '下面在已经定义的 5×5 环境中执行一次 Bellman backup。先选择状态，再逐项核对策略动作、后继分支、即时奖励和折扣后继价值，最后才写回新的状态价值。',
+    interpretation: '一次 backup 只改一个估计值，不会立刻求出整张价值表。连续更新时，新信息通过后继价值逐步向外传播；残差下降表示估计更接近同一组 Bellman 方程的解。',
     figure: '交互图 3.1 · 一次 Bellman backup 的显微镜',
     instruction: '点击任意状态，观察一次 Bellman 更新如何改变价值估计',
     exact: '已知模型 · 精确期望',
     derivation: bellmanDerivationZh,
+    deepening: bellmanDeepeningZh,
     microscope: {
       presetLabel: '教学预设',
       observationLabel: '观察目标',
@@ -234,10 +283,13 @@ export const bellmanChapter = assertChapterDefinition({
     title: 'Why can a one-step update express long-term value?',
     intro: 'A state value is not a score for the immediate reward. It is the expected future return under a policy. The Bellman equation cuts that infinite chain into the next reward and the value of the next state.',
     bridge: 'The canvas continues with the same 5×5 grid environment: entering a yellow forbidden cell or attempting to cross the boundary yields −1, entering the blue target yields +1, and every other move yields 0. The target is non-terminal. Select a state, adjust parameters, and see the values emerge from the same model.',
+    experimentIntro: 'Perform one Bellman backup in the defined 5×5 environment. Select a state, inspect policy action, successor branches, immediate reward, and discounted successor value, and only then write back the new estimate.',
+    interpretation: 'One backup changes one estimate; it does not solve the whole table. Repeated updates propagate information through successor values, and falling residual means the estimates are approaching the same Bellman-system solution.',
     figure: 'Interactive Figure 3.1 · Microscope for one Bellman backup',
     instruction: 'Select any state to see how one Bellman update changes its estimate',
     exact: 'Known model · exact expectation',
     derivation: bellmanDerivationEn,
+    deepening: bellmanDeepeningEn,
     microscope: {
       presetLabel: 'Teaching presets',
       observationLabel: 'What to notice',

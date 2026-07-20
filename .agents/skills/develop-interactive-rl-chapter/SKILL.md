@@ -42,6 +42,29 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Do not use a generic card grid as the main container for required explanations or mathematics.
 - Reject a chapter if removing the cards would leave no coherent article to read from top to bottom.
 
+## Source Completeness Contract
+
+- Build a source-coverage matrix before drafting. Enumerate every core definition, named algorithm, algorithm variant, pseudocode loop, theorem or convergence condition, comparison, and worked example in the assigned source range.
+- Classify each source item as main-path required, optional deepening, or intentionally out of scope. Required items must map to a visible article block, derivation, algorithm block, worked example, or experiment; they may not disappear into a summary sentence.
+- Preserve algorithm families and their evolution. Do not collapse MC Basic, data-efficient MC, Exploring Starts, soft-policy control, and epsilon-greedy control into one generic "Monte Carlo" paragraph; apply the same rule to every chapter.
+- Preserve the source's useful repetition when it changes the reader's understanding: a definition, a step-by-step execution, a failure case, and a theorem are different teaching functions even when they reuse one equation.
+- Treat a chapter as incomplete when its formulas are present but its algorithm variants, pseudocode, assumptions, convergence meaning, or worked examples are missing.
+
+## Know-Why Contract
+
+- Every major transition must explicitly answer five questions in the main article: what limitation remains, what new mechanism is introduced, why the mechanism is mathematically valid, what the running example does differently, and what tradeoff or new failure mode appears.
+- Do not present an algorithm as a finished recipe before motivating the problem that forces each of its steps.
+- Connect formulas through causal prose. The reader should be able to explain why the next line or algorithm exists, not only recognize its final form.
+- Keep "know how" artifacts such as pseudocode, controls, and execution traces, but pair them with "know why" explanations and counterfactual comparisons.
+- Surpass the source through interaction, not subtraction: retain the source's conceptual and mathematical completeness, then add synchronized state, parameter manipulation, counterexamples, step replay, and contextual explanations.
+
+## Algorithm and Worked-Example Contract
+
+- Render complete pseudocode for every required named algorithm, including initialization, sampling/data requirements, update timing, policy improvement, termination or repetition conditions, and returned object.
+- Walk at least one source-aligned example through the algorithm state. Show the exact episode or transition, derived target or return, value before and after, policy before and after, and why the next algorithmic decision changes.
+- Use a dedicated experiment model when chapters manipulate different mathematical objects. A generic curve with renamed labels is not an acceptable substitute for an episode tape, value table, policy map, replay buffer, target network, or actor-critic update loop.
+- Let interactions expose the algorithm's internal evidence and counterfactuals: what would change under another variant, target, step size, exploration rule, or update schedule.
+
 ## Mathematical Content
 
 - Store every mathematical expression as valid LaTeX source, preferably with `String.raw` for backslash-heavy strings.
@@ -102,4 +125,7 @@ Use this shape for derivation data:
 - Inspect desktop and mobile renders at actual reading size.
 - List the first occurrence of every chapter-specific technical term and confirm that occurrence includes a definition or local explanation.
 - Confirm required teaching content forms a coherent article without relying on generic card grids.
+- Compare the completed chapter against its source-coverage matrix and fail it if any required algorithm, variant, theorem condition, comparison, pseudocode stage, or worked example lacks a visible destination.
+- For every named algorithm, confirm that the reader can identify the limitation that motivated it, its complete execution loop, why its update is valid, and its tradeoff relative to the previous method.
+- Reject generic experiments whose visible state does not correspond to the chapter's actual algorithm state and data flow.
 - Measure the rendered left and right edges of the opening, representative prose, experiment entry, post-experiment interpretation, summary, and references. Confirm they use the same chapter grid and text column rather than unrelated widths.

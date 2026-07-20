@@ -31,6 +31,37 @@ function sameIds(left, right) {
   return left.length === right.length && left.every((item, index) => item.id === right[index].id)
 }
 
+function validateDeepening(locale, content, errors) {
+  if (!content.deepening) return
+  if (!Array.isArray(content.deepening) || content.deepening.length === 0) {
+    errors.push(`${locale}.deepening must be a non-empty array`)
+    return
+  }
+
+  content.deepening.forEach((section) => {
+    if (!section.id || !section.kicker || !section.title || !Array.isArray(section.paragraphs) || section.paragraphs.length === 0) {
+      errors.push(`${locale} deepening section ${section.id || '[missing id]'} is incomplete`)
+    }
+    if (section.formulas && !Array.isArray(section.formulas)) {
+      errors.push(`${locale} deepening section ${section.id} formulas must be an array`)
+    }
+    if (section.theorem && (!section.theorem.claim || !section.theorem.why || !Array.isArray(section.theorem.conditions))) {
+      errors.push(`${locale} deepening theorem ${section.id} is incomplete`)
+    }
+    if (section.pseudocode && (!Array.isArray(section.pseudocode) || section.pseudocode.length < 3)) {
+      errors.push(`${locale} deepening pseudocode ${section.id} must contain at least three steps`)
+    }
+    if (section.example) {
+      const { headers, rows } = section.example
+      if (!section.example.title || !section.example.caption || !Array.isArray(headers) || headers.length < 2 || !Array.isArray(rows) || rows.length === 0) {
+        errors.push(`${locale} deepening example ${section.id} is incomplete`)
+      } else if (rows.some((row) => !Array.isArray(row) || row.length !== headers.length)) {
+        errors.push(`${locale} deepening example ${section.id} rows must match its headers`)
+      }
+    }
+  })
+}
+
 function validateLocale(locale, content, errors) {
   requiredLocaleStrings.forEach((field) => {
     if (typeof content[field] !== 'string' || !content[field].trim()) {
@@ -80,6 +111,7 @@ function validateLocale(locale, content, errors) {
       })
     }
   }
+  validateDeepening(locale, content, errors)
 }
 
 export function validateChapterDefinition(chapter) {
@@ -100,6 +132,9 @@ export function validateChapterDefinition(chapter) {
   if (!sameIds(chapter.zh.microscope?.pseudocode || [], chapter.en.microscope?.pseudocode || [])) errors.push('microscope pseudocode ids must match across locales')
   if (chapter.zh.derivation || chapter.en.derivation) {
     if (!chapter.zh.derivation || !chapter.en.derivation || !sameIds(chapter.zh.derivation, chapter.en.derivation)) errors.push('derivation ids must match across locales')
+  }
+  if (chapter.zh.deepening || chapter.en.deepening) {
+    if (!chapter.zh.deepening || !chapter.en.deepening || !sameIds(chapter.zh.deepening, chapter.en.deepening)) errors.push('deepening ids must match across locales')
   }
 
   chapter.termIds.forEach((termId) => {
@@ -181,6 +216,7 @@ export function validateFoundationChapterDefinition(chapter) {
         })
       }
     }
+    validateDeepening(locale, content, errors)
   }
 
   if (!sameIds(chapter.zh.prelude, chapter.en.prelude)) errors.push('prelude ids must match across locales')
@@ -190,6 +226,9 @@ export function validateFoundationChapterDefinition(chapter) {
   }
   if (chapter.zh.derivation || chapter.en.derivation) {
     if (!chapter.zh.derivation || !chapter.en.derivation || !sameIds(chapter.zh.derivation, chapter.en.derivation)) errors.push('derivation ids must match across locales')
+  }
+  if (chapter.zh.deepening || chapter.en.deepening) {
+    if (!chapter.zh.deepening || !chapter.en.deepening || !sameIds(chapter.zh.deepening, chapter.en.deepening)) errors.push('deepening ids must match across locales')
   }
 
   chapter.sources.forEach((source) => {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
+import MathFormula from './MathFormula'
 
 const nodeDetail = {
   prompt: ['state s₀', 'UTF-8 text', 'batch item'],
@@ -58,7 +59,7 @@ export default function SystemLab({ lang, text }) {
             <div><small>{c.advantage}</small><strong>Âₜ = {selected.advantage.toFixed(2)}</strong></div>
             <div className={selected.clipped ? 'warn' : ''}><small>clip(rₜ)</small><strong>{selected.clippedRatio.toFixed(3)}</strong></div>
           </div>
-          <div className="shared-equation">L = min(rₜÂₜ, clip(rₜ)Âₜ) − β KL(πθ || πref) <strong>{selected.surrogate.toFixed(3)} − {klBeta.toFixed(2)} × {selected.approxKl.toFixed(3)}</strong></div>
+          <div className="shared-equation"><MathFormula block latex={String.raw`L_t=\min\!\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)-\beta D_{\mathrm{KL}}\!\left(\pi_\theta\,\|\,\pi_{\mathrm{ref}}\right)`} /><strong>{selected.surrogate.toFixed(3)} − {klBeta.toFixed(2)} × {selected.approxKl.toFixed(3)}</strong></div>
         </div>
       ) : (
         <div className="system-view">

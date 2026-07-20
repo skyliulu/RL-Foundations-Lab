@@ -3,11 +3,15 @@ import { mdpChapter } from './content/mdp.js'
 import { returnChapter } from './content/returns.js'
 import { optimalityChapter } from './content/optimality.js'
 import { planningChapter } from './content/planning.js'
+import { ppoChapter } from './content/ppo.js'
+import { rlhfChapter } from './content/rlhf.js'
+import { tokenMdpChapter } from './content/token-mdp.js'
+import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from './content/part23.js'
 
 export const copy = {
   zh: {
-    brand: '强化学习数学基础',
-    lab: '交互原型',
+    brand: '强化学习原理实验室',
+    lab: '从网格世界到 PPO',
     toc: '学习地图',
     chapters: [
       { id: 'mdp', number: '01', kicker: '经典基础', title: '网格世界与交互基础', subtitle: '从具体场景逐步建立完整决策模型' },
@@ -15,8 +19,17 @@ export const copy = {
       { id: 'bellman', number: '03', kicker: '价值基础', title: 'Bellman 方程', subtitle: '从一步更新理解长期价值' },
       { id: 'optimality', number: '04', kicker: '最优控制', title: 'Bellman 最优方程', subtitle: '让五个动作在同一状态竞争' },
       { id: 'planning', number: '05', kicker: '规划与学习', title: '更新顺序与收敛', subtitle: '在同一世界公平比较算法' },
-      { id: 'ppo', number: '13', kicker: '现代策略优化', title: 'Actor–Critic 与 PPO', subtitle: '从 advantage 到稳定更新' },
-      { id: 'rlhf', number: '14', kicker: '语言模型后训练', title: 'PPO 系统视图', subtitle: '让算法与工程共享同一批 rollout' },
+      { id: 'montecarlo', number: '06', kicker: '经验估计', title: 'Monte Carlo Learning', subtitle: '从完整 episode 估计动作价值' },
+      { id: 'approximation', number: '07', kicker: '增量学习', title: '随机逼近与步长', subtitle: '在噪声中逼近期望方程的根' },
+      { id: 'td', number: '08', kicker: '及时预测', title: 'TD Prediction', subtitle: '不等待终点的一步学习' },
+      { id: 'control', number: '09', kicker: 'Model-free 控制', title: 'Sarsa 与 Q-learning', subtitle: '区分 on-policy 与 off-policy' },
+      { id: 'vfa', number: '10', kicker: '参数共享', title: 'Value Function Approximation', subtitle: '让一次样本影响相似状态' },
+      { id: 'dqn', number: '11', kicker: '深度价值学习', title: 'Deep Q-learning', subtitle: '用 target network 与 replay 稳定训练' },
+      { id: 'policygradient', number: '12', kicker: '直接优化策略', title: 'Policy Gradient', subtitle: '提高高回报动作的概率' },
+      { id: 'actorcritic', number: '13', kicker: '策略与价值协作', title: 'Actor–Critic', subtitle: '用 TD error 连接 Actor 与 Critic' },
+      { id: 'ppo', number: '14', kicker: '现代策略优化', title: 'PPO', subtitle: '从 advantage 到稳定更新' },
+      { id: 'tokenmdp', number: '15', kicker: '语言模型决策过程', title: 'Token MDP', subtitle: '把 response 定义为 token 轨迹' },
+      { id: 'rlhf', number: '16', kicker: '语言模型后训练', title: 'PPO 系统视图', subtitle: '让算法与工程共享同一批 rollout' },
     ],
     prerequisites: '前置：状态、动作、奖励与回报',
     mdp: { ...mdpChapter.zh, sources: mdpChapter.sources },
@@ -24,17 +37,17 @@ export const copy = {
     bellman: { ...bellmanChapter.zh, sources: bellmanChapter.sources },
     optimality: { ...optimalityChapter.zh, sources: optimalityChapter.sources },
     planning: { ...planningChapter.zh, sources: planningChapter.sources },
-    ppo: {
-      eyebrow: '第 10 章之后 · 从 Actor–Critic 到 PPO',
-      title: '怎样重复利用 rollout，又不让策略一步走得太远？',
-      intro: 'Actor 用 advantage 决定提高或降低动作概率，Critic 估计价值并提供更低方差的学习信号。PPO 进一步约束新旧策略概率比，让同一批样本能够进行多轮小步更新。',
-      acBridge: 'Actor–Critic 的核心接口没有消失：Critic 仍然估计 V(s)，advantage 仍然决定策略更新方向；PPO 只是在这个更新接口外增加“近端”约束。',
-    },
-    rlhf: {
-      eyebrow: '现代扩展 · 语言模型后训练',
-      title: 'PPO 算法怎样嵌入语言模型训练系统？',
-      intro: '在语言模型中，状态成为 prompt 与已生成 token 的前缀，动作成为下一个 token，轨迹成为完整 response。下面两个视图共享同一组 rollout：切换视角不会换一套示例数据。',
-    },
+    montecarlo: { ...monteCarloChapter.zh, sources: monteCarloChapter.sources },
+    approximation: { ...approximationChapter.zh, sources: approximationChapter.sources },
+    td: { ...tdChapter.zh, sources: tdChapter.sources },
+    control: { ...controlChapter.zh, sources: controlChapter.sources },
+    vfa: { ...vfaChapter.zh, sources: vfaChapter.sources },
+    dqn: { ...dqnChapter.zh, sources: dqnChapter.sources },
+    policygradient: { ...policyGradientChapter.zh, sources: policyGradientChapter.sources },
+    actorcritic: { ...actorCriticChapter.zh, sources: actorCriticChapter.sources },
+    ppo: { ...ppoChapter.zh, sources: ppoChapter.sources, acBridge: 'Actor–Critic 的核心接口没有消失：Critic 仍估计状态价值，advantage 仍决定策略更新方向；PPO 只改造 Actor 如何复用旧策略采集的数据。' },
+    tokenmdp: { ...tokenMdpChapter.zh, sources: tokenMdpChapter.sources },
+    rlhf: { ...rlhfChapter.zh, sources: rlhfChapter.sources },
     common: {
       gamma: '折扣因子 γ', noise: '动作随机性（扩展）', policy: '策略', fixed: '示例固定策略', greedy: '贪心策略',
       previous: '上一步', step: '单步更新', play: '连续播放', pause: '暂停', reset: '重置',
@@ -50,8 +63,8 @@ export const copy = {
     },
   },
   en: {
-    brand: 'Mathematical Foundations of RL',
-    lab: 'Interactive prototype',
+    brand: 'RL Foundations Lab',
+    lab: 'From Grid Worlds to PPO',
     toc: 'Learning map',
     chapters: [
       { id: 'mdp', number: '01', kicker: 'Classical foundation', title: 'Grid World & Interaction Basics', subtitle: 'Build a complete decision model from one concrete scene' },
@@ -59,8 +72,17 @@ export const copy = {
       { id: 'bellman', number: '03', kicker: 'Value foundation', title: 'Bellman Equation', subtitle: 'Long-term value from one-step updates' },
       { id: 'optimality', number: '04', kicker: 'Optimal control', title: 'Bellman Optimality', subtitle: 'Let five actions compete in one state' },
       { id: 'planning', number: '05', kicker: 'Planning & learning', title: 'Update Order & Convergence', subtitle: 'Compare algorithms in one world' },
-      { id: 'ppo', number: '13', kicker: 'Modern policy optimization', title: 'Actor–Critic & PPO', subtitle: 'From advantage to stable updates' },
-      { id: 'rlhf', number: '14', kicker: 'Language-model post-training', title: 'PPO System View', subtitle: 'One rollout batch across algorithm and engineering' },
+      { id: 'montecarlo', number: '06', kicker: 'Experience estimates', title: 'Monte Carlo Learning', subtitle: 'Estimate action value from complete episodes' },
+      { id: 'approximation', number: '07', kicker: 'Incremental learning', title: 'Stochastic Approximation', subtitle: 'Approach expectation-defined roots through noise' },
+      { id: 'td', number: '08', kicker: 'Timely prediction', title: 'TD Prediction', subtitle: 'Learn one step before termination' },
+      { id: 'control', number: '09', kicker: 'Model-free control', title: 'Sarsa & Q-learning', subtitle: 'Separate on-policy and off-policy targets' },
+      { id: 'vfa', number: '10', kicker: 'Parameter sharing', title: 'Value Function Approximation', subtitle: 'Let one sample affect similar states' },
+      { id: 'dqn', number: '11', kicker: 'Deep value learning', title: 'Deep Q-learning', subtitle: 'Stabilize with target networks and replay' },
+      { id: 'policygradient', number: '12', kicker: 'Direct policy optimization', title: 'Policy Gradient', subtitle: 'Raise the probability of high-return actions' },
+      { id: 'actorcritic', number: '13', kicker: 'Policy and value cooperate', title: 'Actor–Critic', subtitle: 'Connect actor and critic through TD error' },
+      { id: 'ppo', number: '14', kicker: 'Modern policy optimization', title: 'PPO', subtitle: 'From advantage to stable updates' },
+      { id: 'tokenmdp', number: '15', kicker: 'Language-model decision process', title: 'Token MDP', subtitle: 'Define a response as a token trajectory' },
+      { id: 'rlhf', number: '16', kicker: 'Language-model post-training', title: 'PPO System View', subtitle: 'One rollout batch across algorithm and engineering' },
     ],
     prerequisites: 'Prerequisites: states, actions, rewards, and returns',
     mdp: { ...mdpChapter.en, sources: mdpChapter.sources },
@@ -68,17 +90,17 @@ export const copy = {
     bellman: { ...bellmanChapter.en, sources: bellmanChapter.sources },
     optimality: { ...optimalityChapter.en, sources: optimalityChapter.sources },
     planning: { ...planningChapter.en, sources: planningChapter.sources },
-    ppo: {
-      eyebrow: 'Beyond Chapter 10 · From Actor–Critic to PPO',
-      title: 'How can we reuse a rollout without moving the policy too far?',
-      intro: 'The actor raises or lowers action probabilities using advantage, while the critic estimates value to reduce variance. PPO adds a constraint on the new-to-old probability ratio, enabling several small updates on one batch.',
-      acBridge: 'The Actor–Critic interface remains: the critic estimates V(s), advantage sets the update direction, and PPO wraps that interface in a proximal constraint.',
-    },
-    rlhf: {
-      eyebrow: 'Modern extension · Language-model post-training',
-      title: 'How does PPO fit into a language-model training system?',
-      intro: 'For language models, a state is the prompt plus generated prefix, an action is the next token, and a trajectory is a complete response. Both views below share the same rollout batch; switching views never swaps the evidence.',
-    },
+    montecarlo: { ...monteCarloChapter.en, sources: monteCarloChapter.sources },
+    approximation: { ...approximationChapter.en, sources: approximationChapter.sources },
+    td: { ...tdChapter.en, sources: tdChapter.sources },
+    control: { ...controlChapter.en, sources: controlChapter.sources },
+    vfa: { ...vfaChapter.en, sources: vfaChapter.sources },
+    dqn: { ...dqnChapter.en, sources: dqnChapter.sources },
+    policygradient: { ...policyGradientChapter.en, sources: policyGradientChapter.sources },
+    actorcritic: { ...actorCriticChapter.en, sources: actorCriticChapter.sources },
+    ppo: { ...ppoChapter.en, sources: ppoChapter.sources, acBridge: 'The Actor–Critic interface remains: the critic estimates state value and advantage sets direction. PPO changes how the actor reuses data sampled by an old policy.' },
+    tokenmdp: { ...tokenMdpChapter.en, sources: tokenMdpChapter.sources },
+    rlhf: { ...rlhfChapter.en, sources: rlhfChapter.sources },
     common: {
       gamma: 'Discount γ', noise: 'Action randomness (extension)', policy: 'Policy', fixed: 'Example fixed policy', greedy: 'Greedy policy',
       previous: 'Undo', step: 'Single update', play: 'Play', pause: 'Pause', reset: 'Reset',

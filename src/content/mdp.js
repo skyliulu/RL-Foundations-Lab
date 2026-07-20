@@ -184,6 +184,38 @@ const mdpEnPath = [
   },
 ]
 
+const mdpDeepeningZh = [
+  {
+    id: 'state-sufficiency-counterexample', kicker: '边界案例 · 状态充分性', title: '同一个位置不一定是同一个可预测状态',
+    paragraphs: ['设想网格中还存在“风向”，但状态只记录位置。智能体两次都位于 s₈ 并选择向右：顺风时大概率到 s₉，逆风时却可能留在原地。位置相同、动作相同，后继分布仍依赖更早观察到的风向，说明“位置”不是充分状态。', '修复方式不是取消历史，而是把预测所需的历史信息压缩进当前状态，例如把状态改成“位置 × 风向”。一旦扩展后的状态足够，早期历史对下一步不再提供额外预测信息。'],
+    formulas: [String.raw`p(S_{t+1}\mid X_t,A_t,H_{t-1})\ne p(S_{t+1}\mid X_t,A_t)`, String.raw`S_t=(X_t,W_t)\quad\Longrightarrow\quad p(S_{t+1}\mid S_t,A_t,H_{t-1})=p(S_{t+1}\mid S_t,A_t)`],
+    theorem: { claim: 'Markov 性是对状态表示的信息要求，不是对世界是否记忆历史的要求。', why: '只要当前状态包含一步预测和决策需要的信息，环境完全可以由具有惯性或隐藏机制的物理过程产生。', conditions: [String.raw`S_t\ \text{is sufficient for predicting}\ (R_{t+1},S_{t+1})`] },
+    handoff: '有了充分状态，策略才能只根据当前状态选动作，后续价值函数也才能写成 V(s) 而不必把整段历史作为自变量。',
+  },
+  {
+    id: 'termination-counterfactual', kicker: '反事实 · 目标是否终止', title: '同一个目标格，终止规则会改变长期问题',
+    paragraphs: ['若进入目标后 episode 结束，目标之后没有奖励，终止状态的后继价值按零处理。若目标只是普通状态，智能体还能离开并再次进入；一次 +1 只是未来奖励序列中的一项。', '因此“目标”描述偏好，“terminal”描述数据边界，两者不能互换。把 continuing 世界误写成 episodic 世界，会系统性低估目标附近能够反复获得的价值。'],
+    formulas: [String.raw`G_t^{\mathrm{episodic}}=\sum_{k=0}^{T-t-1}\gamma^kR_{t+k+1}`, String.raw`G_t^{\mathrm{continuing}}=\sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`],
+    example: { title: '进入目标后的两种解释', caption: '相同的第一次 +1，在不同任务边界下产生不同未来。', headers: ['规则', '进入目标后', '后继价值'], rows: [['Episodic', '停止', '0'], ['Continuing', '仍可离开与再次进入', '继续计算']] },
+  },
+]
+
+const mdpDeepeningEn = [
+  {
+    id: 'state-sufficiency-counterexample', kicker: 'Boundary case · State sufficiency', title: 'The same location need not be the same predictive state',
+    paragraphs: ['Suppose the grid also has wind direction, but state records location only. Two visits to s₈ followed by “right” can have different successor distributions under tailwind and headwind. The same recorded location and action still depend on earlier wind information, so location alone is not sufficient.', 'The repair is not to erase history but to compress the relevant part into the current state—for example, location × wind. Once the augmented state is sufficient, older history adds no one-step predictive information.'],
+    formulas: [String.raw`p(S_{t+1}\mid X_t,A_t,H_{t-1})\ne p(S_{t+1}\mid X_t,A_t)`, String.raw`S_t=(X_t,W_t)\quad\Longrightarrow\quad p(S_{t+1}\mid S_t,A_t,H_{t-1})=p(S_{t+1}\mid S_t,A_t)`],
+    theorem: { claim: 'The Markov property constrains the information in the state representation, not whether the physical world has a history.', why: 'A process may have inertia or hidden mechanisms; the current state must summarize what one-step prediction and control require.', conditions: [String.raw`S_t\ \text{is sufficient for predicting}\ (R_{t+1},S_{t+1})`] },
+    handoff: 'A sufficient state lets policy depend on the current state and lets value be written as V(s) rather than as a function of the complete history.',
+  },
+  {
+    id: 'termination-counterfactual', kicker: 'Counterfactual · Does the target terminate?', title: 'One target cell creates different long-term problems under different boundaries',
+    paragraphs: ['If entering the target ends an episode, there are no later rewards and terminal successor value is zero. If the target is an ordinary state, the agent may leave and re-enter; the first +1 is only one term in an ongoing reward sequence.', 'Target describes preference, while terminal describes a data boundary. Treating a continuing world as episodic systematically removes future opportunities near the target.'],
+    formulas: [String.raw`G_t^{\mathrm{episodic}}=\sum_{k=0}^{T-t-1}\gamma^kR_{t+k+1}`, String.raw`G_t^{\mathrm{continuing}}=\sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`],
+    example: { title: 'Two meanings after entering the target', caption: 'The same first +1 leads to different futures.', headers: ['Rule', 'After target entry', 'Successor value'], rows: [['Episodic', 'Stop', '0'], ['Continuing', 'May leave and re-enter', 'Continue evaluating']] },
+  },
+]
+
 export const mdpChapter = assertFoundationChapterDefinition({
   id: 'mdp',
   sources,
@@ -200,6 +232,7 @@ export const mdpChapter = assertFoundationChapterDefinition({
     instruction: '先选状态，再选动作；沿一个转移分支向前走，记录连续几步交互',
     question: '当你只改变动作时，哪些量由策略决定，哪些量由环境决定？',
     learningPath: mdpZhPath,
+    deepening: mdpDeepeningZh,
     prelude: mdpZhPath.slice(0, 2),
     sections: mdpZhPath.slice(6),
     summary: ['网格世界先给出具体问题，状态、动作、奖励、转移概率与策略再把它形式化为 MDP。', '策略 π(a|s) 属于智能体；转移 p(s′|s,a) 与奖励 p(r|s,a) 属于环境。', '目标状态不会终止交互，因此比较路径时必须处理它之后仍会发生的奖励。'],
@@ -218,6 +251,7 @@ export const mdpChapter = assertFoundationChapterDefinition({
     instruction: 'Choose a state and action, then follow a transition branch and record several interactions',
     question: 'When only the action changes, which quantities belong to the policy and which belong to the environment?',
     learningPath: mdpEnPath,
+    deepening: mdpDeepeningEn,
     prelude: mdpEnPath.slice(0, 2),
     sections: mdpEnPath.slice(6),
     summary: ['The grid world poses the concrete problem; states, actions, rewards, transition probabilities, and policy then formalize it as an MDP.', 'Policy π(a|s) belongs to the agent; transition p(s′|s,a) and reward p(r|s,a) belong to the environment.', 'The target does not terminate interaction, so path comparison must include rewards that occur after reaching it.'],

@@ -6,6 +6,10 @@ import { mdpChapter } from '../content/mdp.js'
 import { returnChapter, returnPresetConfigs } from '../content/returns.js'
 import { optimalityChapter, optimalityPresetConfigs } from '../content/optimality.js'
 import { planningChapter, planningPresetConfigs } from '../content/planning.js'
+import { ppoChapter } from '../content/ppo.js'
+import { rlhfChapter } from '../content/rlhf.js'
+import { tokenMdpChapter } from '../content/token-mdp.js'
+import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from '../content/part23.js'
 import { glossary } from '../content/glossary.js'
 import { validateChapterDefinition, validateFoundationChapterDefinition } from '../content/schema.js'
 import { copy } from '../content.js'
@@ -74,6 +78,84 @@ test('the Planning chapter compares VI, TPI, and PI under one content contract',
   assert.deepEqual(Object.keys(planningPresetConfigs), Object.keys(planningChapter.zh.explorer.presetItems))
   assert.match(planningChapter.zh.sections[0].formula, /j=1/)
   assert.match(planningChapter.en.bridge, /backups/)
+})
+
+test('every implemented chapter has a complete reading-to-experiment arc', () => {
+  const chapters = [mdpChapter, returnChapter, bellmanChapter, optimalityChapter, planningChapter, monteCarloChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter, ppoChapter, tokenMdpChapter, rlhfChapter]
+  chapters.forEach((chapter) => {
+    for (const locale of ['zh', 'en']) {
+      const content = chapter[locale]
+      assert.ok(content.intro.length > 40, `${chapter.id}.${locale}.intro`)
+      assert.ok(content.experimentIntro.length > 40, `${chapter.id}.${locale}.experimentIntro`)
+      assert.ok(content.interpretation.length > 40, `${chapter.id}.${locale}.interpretation`)
+      assert.ok((content.derivation || content.learningPath).length >= 5, `${chapter.id}.${locale}.derivation`)
+      assert.ok(content.sections.length >= 2, `${chapter.id}.${locale}.sections`)
+      assert.ok(content.summary.length >= 3, `${chapter.id}.${locale}.summary`)
+    }
+  })
+})
+
+test('Part II and Part III preserve one bilingual derivation and experiment contract per chapter', () => {
+  const chapters = [monteCarloChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter]
+  chapters.forEach((chapter) => {
+    assert.deepEqual(validateFoundationChapterDefinition(chapter), [])
+    assert.deepEqual(chapter.zh.derivation.map((step) => step.id), chapter.en.derivation.map((step) => step.id))
+    assert.ok(chapter.zh.derivation.length >= 5, chapter.id)
+    assert.ok(chapter.zh.sections.length >= 3, chapter.id)
+  })
+  assert.match(monteCarloChapter.zh.derivation[2].latex, /widehat q_N/)
+  assert.match(approximationChapter.zh.derivation.at(-1).latex, /sum/)
+  assert.match(tdChapter.zh.derivation.at(-1).latex, /G_t\^\{\(n\)\}/)
+  assert.match(controlChapter.zh.derivation[2].latex, /max_a/)
+  assert.match(vfaChapter.zh.derivation.at(-1).latex, /boldsymbol/)
+  assert.match(dqnChapter.zh.derivation[2].latex, /bar\\theta/)
+  assert.match(policyGradientChapter.zh.derivation[2].latex, /log/)
+  assert.match(actorCriticChapter.zh.derivation[3].latex, /delta_t/)
+})
+
+test('the Monte Carlo chapter preserves the complete source algorithm family and its why-chain', () => {
+  for (const locale of ['zh', 'en']) {
+    const content = monteCarloChapter[locale]
+    assert.deepEqual(content.reasoningPath.map((item) => item.id), ['planning-limit', 'sample-evidence', 'control-loop'])
+    assert.deepEqual(content.algorithms.map((item) => item.id), ['basic', 'exploring', 'epsilon'])
+    content.algorithms.forEach((algorithm) => {
+      assert.ok(algorithm.premise.length > 8)
+      assert.ok(algorithm.solves.length > 8)
+      assert.ok(algorithm.limitation.length > 8)
+      assert.ok(algorithm.pseudocode.length >= 8)
+    })
+    assert.ok(content.sections.some((item) => item.id === 'coverage'))
+    assert.ok(content.sections.some((item) => item.id === 'optimality'))
+    assert.ok(content.sections.some((item) => item.id === 'consistency'))
+  }
+  assert.deepEqual(monteCarloChapter.zh.algorithms.map((item) => item.id), monteCarloChapter.en.algorithms.map((item) => item.id))
+})
+
+test('modern chapters keep bilingual derivations and explicit model roles', () => {
+  for (const chapter of [ppoChapter, tokenMdpChapter, rlhfChapter]) {
+    assert.deepEqual(validateFoundationChapterDefinition(chapter), [])
+    assert.deepEqual(chapter.zh.derivation.map((step) => step.id), chapter.en.derivation.map((step) => step.id))
+  }
+  assert.match(ppoChapter.zh.derivation.at(-1).latex, /CLIP/)
+  assert.match(tokenMdpChapter.zh.derivation[0].latex, /y_\{<t\}/)
+  assert.match(rlhfChapter.zh.sections[0].formula, /pi_\{\\mathrm\{old\}\}/)
+  assert.match(rlhfChapter.zh.derivation.at(-1).latex, /remain frozen/)
+})
+
+test('source-coverage review preserves bilingual why chains and complete algorithm blocks', () => {
+  const reviewed = [mdpChapter, returnChapter, bellmanChapter, optimalityChapter, planningChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter, ppoChapter, tokenMdpChapter, rlhfChapter]
+  reviewed.forEach((chapter) => {
+    assert.ok(chapter.zh.deepening.length >= 2, `${chapter.id}.zh.deepening`)
+    assert.deepEqual(chapter.zh.deepening.map((item) => item.id), chapter.en.deepening.map((item) => item.id), chapter.id)
+    chapter.zh.deepening.forEach((item) => {
+      assert.ok(item.paragraphs.join('').length > 60, `${chapter.id}.${item.id}.why`)
+      if (item.pseudocode) assert.ok(item.pseudocode.length >= 6, `${chapter.id}.${item.id}.pseudocode`)
+    })
+  })
+  assert.ok(controlChapter.zh.deepening.some((item) => item.id === 'q-learning-off-policy'))
+  assert.ok(dqnChapter.zh.deepening.some((item) => item.id === 'dqn-complete'))
+  assert.ok(ppoChapter.zh.deepening.some((item) => item.id === 'ppo-complete-loop'))
+  assert.ok(rlhfChapter.zh.deepening.some((item) => item.id === 'batch-contract-and-failures'))
 })
 
 test('chapter sources are public and traceable to precise PDF pages', () => {

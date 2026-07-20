@@ -143,7 +143,7 @@ function ReadingShell() {
       </div>
 
       <div className={`reading-shell ${focus ? 'focus' : ''}`}>
-        <header><div className="mini-brand"><b>RL</b><span>强化学习数学基础<small>交互原理</small></span></div><span>第 3 章 · Bellman 方程</span><button>中 / EN</button></header>
+        <header><div className="mini-brand"><b>RL</b><span>强化学习原理实验室<small>RL Foundations Lab</small></span></div><span>第 3 章 · Bellman 方程</span><button>中 / EN</button></header>
         {!focus && <nav className="compact-rail">{chapters.map(([number, label]) => <button className={activeChapter === number ? 'active' : ''} onClick={() => setActiveChapter(number)} key={number}><b>{number}</b><span>{label}</span></button>)}</nav>}
         {!focus && leftOpen && <nav className="expanded-rail"><small>学习地图</small>{chapters.map(([number, label]) => <button className={activeChapter === number ? 'active' : ''} onClick={() => setActiveChapter(number)} key={number}><b>{number}</b><span>{label}<em>{number === '03' ? '从一步更新理解长期价值' : '章节学习路径'}</em></span></button>)}</nav>}
 

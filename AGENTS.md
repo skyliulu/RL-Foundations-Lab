@@ -1,4 +1,4 @@
-# RL Foundations repository guidance
+# RL Foundations Lab repository guidance
 
 Use `.agents/skills/develop-interactive-rl-chapter/SKILL.md` whenever creating, modifying, correcting, refactoring, or validating a learning chapter.
 
@@ -15,6 +15,10 @@ Use `.agents/skills/develop-interactive-rl-chapter/SKILL.md` whenever creating, 
 - Use cards only for genuinely parallel or optional material such as comparisons, presets, warnings, glossaries, and controls.
 - Connect abstract definitions to the shared grid world where appropriate.
 - Maintain equivalent Chinese and English structures.
+- Preserve source completeness: core named algorithms, variants, pseudocode, theorem assumptions, convergence meaning, comparisons, and worked examples must each have a visible destination in the chapter.
+- Make every major transition answer why the previous method is insufficient, what the new mechanism changes, why it is valid, how the running example changes, and what tradeoff remains.
+- Surpass the source through synchronized interaction and counterfactual exploration, never by shortening away its conceptual or mathematical spine.
+- Reject generic renamed charts when the chapter requires dedicated algorithm state such as an episode tape, Q table, policy map, replay buffer, target network, or actor-critic loop.
 
 ## Mathematical rendering
 
@@ -36,5 +40,7 @@ When a chapter changes, update together:
 During rendered QA, compare the left and right edges of the chapter opening, prose, derivation, experiment entry, post-experiment interpretation, summary, and references. Reject accidental width changes, narrow-wide-narrow component rhythms, decorative gutters, oversized display math, or spacing that makes one continuous chapter look like unrelated cards.
 
 During content QA, record the first reader-visible occurrence of chapter-specific terminology. Reject unexplained references to concepts introduced only in later chapters and reject chapters whose required knowledge exists mainly as cards rather than a readable argument.
+
+Also maintain a source-coverage matrix. Every required source item must map to prose, a derivation, complete pseudocode, a worked example, or an experiment; formulas alone do not count as coverage of an algorithm.
 
 Run `npm test` and `npm run build`, then inspect the affected chapter at desktop and mobile widths with zero console errors.

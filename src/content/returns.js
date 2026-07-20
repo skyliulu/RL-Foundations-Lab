@@ -114,6 +114,40 @@ const returnDerivationEn = [
   { id: 'state-value', rule: 'Average all possible futures conditionally', latex: String.raw`V^{\pi}(s) \coloneqq \mathbb{E}_{\pi,p}\!\left[G_t\mid S_t=s\right]`, short: 'State value is the conditional expectation of G_t, not one observation.', detail: 'From the same state, policy π may sample different actions and environment p may produce different rewards and successors. V^π(s) averages the resulting random returns.', assumptions: ['Future actions follow π', 'Transitions and rewards follow p'], symbols: [[String.raw`V^{\pi}(s)`, 'value of state s under π'], [String.raw`\mathbb{E}_{\pi,p}`, 'expectation over policy and environment randomness']] },
 ]
 
+const returnDeepeningZh = [
+  {
+    id: 'two-return-calculations', kicker: '同一对象，两种算法', title: '按定义累加与从后向前递推必须得到同一个 return',
+    paragraphs: ['考虑一条有限 episode，其奖励依次为 0、−1、0、+1，折扣 γ=0.9。按定义可以从起点把每项乘上相应幂次后相加；也可以从终点令 G₃=1，再用 G_t=R_{t+1}+γG_{t+1} 逐步向前递推。', '第二种写法没有改变 return，只是复用了已经算出的后缀回报。这个递归结构使后续 Bellman 方程和逐步学习成为可能。'],
+    formulas: [String.raw`G_0=0+0.9(-1)+0.9^2(0)+0.9^3(1)=-0.171`, String.raw`G_3=1,\quad G_2=0+0.9G_3=0.9,\quad G_1=-1+0.9G_2=-0.19,\quad G_0=0+0.9G_1=-0.171`],
+    example: { title: '同一条 episode 的反向 return 表', caption: '每行的 Gₜ 都完整包含该时刻之后的奖励。', headers: ['t', 'Rₜ₊₁', '递推', 'Gₜ'], rows: [['3', '+1', '1 + 0', '1.000'], ['2', '0', '0 + 0.9×1', '0.900'], ['1', '−1', '−1 + 0.9×0.9', '−0.190'], ['0', '0', '0 + 0.9×(−0.19)', '−0.171']] },
+    handoff: 'return 的递推仍依赖这条 episode 的真实未来；要评价一个状态，还必须把所有可能未来的概率纳入。',
+  },
+  {
+    id: 'return-distribution', kicker: '从确定性到随机性', title: 'State value 是 return 分布的加权中心，而不是“典型轨迹”',
+    paragraphs: ['假设从同一状态出发有 0.7 的概率得到 G=2，有 0.3 的概率得到 G=−4。两条 return 都可能发生，但状态价值只有一个：按各自概率加权后的期望 0.2。', '样本均值是在不知道完整分布时估计这个期望的方法；若模型和概率已知，则可以直接求精确期望。二者评价的是同一数学对象，证据来源不同。'],
+    formulas: [String.raw`V^{\pi}(s)=0.7\times2+0.3\times(-4)=0.2`, String.raw`\widehat V_n^{\pi}(s)=\frac{1}{n}\sum_{i=1}^{n}G^{(i)}\xrightarrow[n\to\infty]{}V^{\pi}(s)`],
+    theorem: { claim: '确定性条件下 return 与 value 数值相同，是“分布退化为一个点”的特殊情况。', why: '若所有概率质量都落在同一条未来上，随机变量 Gₜ 没有方差，其期望就等于唯一实现值。', conditions: [String.raw`\Pr(G_t=g\mid S_t=s)=1\quad\Longrightarrow\quad V^{\pi}(s)=g`] },
+    handoff: '定义已经清楚，但直接枚举所有轨迹会指数增长。下一章将用一步条件期望替代对完整未来树的枚举。',
+  },
+]
+
+const returnDeepeningEn = [
+  {
+    id: 'two-return-calculations', kicker: 'One object, two procedures', title: 'Definition-based summation and backward recursion must produce the same return',
+    paragraphs: ['Consider a finite episode with rewards 0, −1, 0, +1 and γ=0.9. The definition weights each reward from the start. The backward procedure begins with G₃=1 and repeatedly applies G_t=R_{t+1}+γG_{t+1}.', 'Backward recursion does not redefine return; it reuses an already computed suffix. That structure makes Bellman equations and incremental learning possible.'],
+    formulas: [String.raw`G_0=0+0.9(-1)+0.9^2(0)+0.9^3(1)=-0.171`, String.raw`G_3=1,\quad G_2=0+0.9G_3=0.9,\quad G_1=-1+0.9G_2=-0.19,\quad G_0=0+0.9G_1=-0.171`],
+    example: { title: 'Backward return table for one episode', caption: 'Each Gₜ contains every reward after that time.', headers: ['t', 'Rₜ₊₁', 'Recursion', 'Gₜ'], rows: [['3', '+1', '1 + 0', '1.000'], ['2', '0', '0 + 0.9×1', '0.900'], ['1', '−1', '−1 + 0.9×0.9', '−0.190'], ['0', '0', '0 + 0.9×(−0.19)', '−0.171']] },
+    handoff: 'Return recursion still uses one realized future. Evaluating a state requires probabilities over every possible future.',
+  },
+  {
+    id: 'return-distribution', kicker: 'Deterministic to stochastic', title: 'State value is the probability-weighted center of a return distribution',
+    paragraphs: ['Suppose one state yields G=2 with probability 0.7 and G=−4 with probability 0.3. Both returns are possible, but their probability-weighted expectation is the single state value 0.2.', 'A sample mean estimates this expectation when the full distribution is unavailable. A known model computes it exactly. The mathematical object is the same; the evidence source differs.'],
+    formulas: [String.raw`V^{\pi}(s)=0.7\times2+0.3\times(-4)=0.2`, String.raw`\widehat V_n^{\pi}(s)=\frac{1}{n}\sum_{i=1}^{n}G^{(i)}\xrightarrow[n\to\infty]{}V^{\pi}(s)`],
+    theorem: { claim: 'Return and value coincide under deterministic conditions only because the distribution collapses to one point.', why: 'If all probability mass lies on one future, Gₜ has zero variance and its expectation equals its only realization.', conditions: [String.raw`\Pr(G_t=g\mid S_t=s)=1\quad\Longrightarrow\quad V^{\pi}(s)=g`] },
+    handoff: 'The definition is complete, but enumerating full trajectories grows exponentially. The next chapter replaces the future tree with a one-step conditional expectation.',
+  },
+]
+
 export const returnChapter = assertFoundationChapterDefinition({
   id: 'returns',
   sources,
@@ -124,10 +158,13 @@ export const returnChapter = assertFoundationChapterDefinition({
     title: '为什么一次即时奖励不能说明一个状态的长期好坏？',
     intro: '奖励只描述一次转移，return 才把一条轨迹上的未来奖励合在一起；当策略或环境带有随机性，同一起点会产生许多不同 return，它们的条件期望才是状态价值 Vπ(s)。',
     bridge: '下面继续使用第 01 章的 5×5 网格世界与固定策略。先把一条轨迹的每个奖励乘上 γ 的时间权重，再切换到 Value Lens，观察样本均值如何逼近同一环境模型计算出的精确期望。',
+    experimentIntro: '下面沿用已经定义的 5×5 网格世界与固定策略。先逐项查看一条轨迹的折扣贡献，再切换到价值视图，把单次 return 与多条轨迹的样本均值分开。',
+    interpretation: '确定性条件下，一条起始状态只对应一条未来，所以 return 与 value 数值相同；加入动作随机性后，单条轨迹只是一个样本，只有运行均值才在逼近期望。',
     figure: '交互图 2.1 · Return Observatory',
     instruction: '改变 γ、随机性和样本数；先看一条轨迹，再看多条未来的平均',
     question: '同一个起始状态，为什么会同时对应许多 return，却只有一个 Vπ(s)？',
     derivation: returnDerivationZh,
+    deepening: returnDeepeningZh,
     prelude: [
       { id: 'reward-to-return', kicker: '沿时间累加', title: '即时奖励只回答“刚才发生了什么”', paragraphs: ['一条策略可能先绕行、受罚，随后长期得到正奖励。只看第一步 rₜ₊₁ 无法比较这两种未来。', 'Return Gₜ 把从当前时刻之后的奖励放在同一条时间轴上；γᵏ 是第 k 步奖励抵达当前时刻时的权重。'], formulas: [String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`] },
       { id: 'return-to-value', kicker: '从样本到期望', title: '一条 return 是结果，state value 是分布的均值', paragraphs: ['当 π(a|s) 或环境转移带有随机性，从同一状态出发会得到不同轨迹与不同 Gₜ。', 'Vπ(s) 对这些可能回报取条件期望。确定性世界里只有一条未来，因此 return 与 value 才会数值相同。'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
@@ -147,10 +184,13 @@ export const returnChapter = assertFoundationChapterDefinition({
     title: 'Why can one immediate reward not describe the long-term quality of a state?',
     intro: 'A reward describes one transition. Return combines the future rewards along one trajectory. When the policy or environment is stochastic, one start can produce many returns; their conditional expectation is the state value Vπ(s).',
     bridge: 'The observatory reuses the 5×5 grid world and fixed policy from Chapter 1. First weight every reward on one trajectory by its temporal power of γ. Then switch to the Value Lens and watch the sample mean approach the exact expectation computed from the same environment model.',
+    experimentIntro: 'Reuse the defined 5×5 grid and fixed policy. First inspect discounted contributions along one trajectory, then switch to the value view and separate one return from the mean over many trajectories.',
+    interpretation: 'Under deterministic dynamics, one start has one future, so return and value coincide numerically. With action randomness, one trajectory is only a sample and the running mean is what approaches expectation.',
     figure: 'Interactive figure 2.1 · Return Observatory',
     instruction: 'Change γ, randomness, and sample count; inspect one trajectory before averaging many futures',
     question: 'Why can one start state have many returns but only one Vπ(s)?',
     derivation: returnDerivationEn,
+    deepening: returnDeepeningEn,
     prelude: [
       { id: 'reward-to-return', kicker: 'Accumulate through time', title: 'Immediate reward only answers what just happened', paragraphs: ['A policy may detour or suffer a penalty before receiving positive rewards for a long time. The first rₜ₊₁ cannot compare those futures.', 'Return Gₜ puts future rewards on one timeline; γᵏ is the weight with which the reward k steps away reaches the present.'], formulas: [String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`] },
       { id: 'return-to-value', kicker: 'Samples to expectation', title: 'A return is an outcome; state value is the mean of a distribution', paragraphs: ['When π(a|s) or the transition is stochastic, the same state produces different trajectories and different Gₜ values.', 'Vπ(s) takes the conditional expectation over those possible returns. Return equals value only in a deterministic world with one possible future.'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
