@@ -38,12 +38,20 @@ test('inline pseudo-math is normalized to valid LaTeX', () => {
 test('every formula-like run in chapter copy normalizes to valid LaTeX', () => {
   for (const locale of ['zh', 'en']) {
     collectStrings(copy[locale]).filter((source) => !source.includes('\\')).forEach((source) => {
-      splitMathText(source).filter((segment) => segment.type === 'math').forEach((segment) => {
+      const formulas = isStandaloneFormula(source)
+        ? [normalizeMathText(source)]
+        : splitMathText(source).filter((segment) => segment.type === 'math').map((segment) => segment.value)
+      formulas.forEach((formula) => {
         assert.doesNotThrow(
-          () => katex.renderToString(segment.value, { throwOnError: true, strict: 'error' }),
-          `${locale}: ${source} -> ${segment.value}`,
+          () => katex.renderToString(formula, { throwOnError: true, strict: 'error' }),
+          `${locale}: ${source} -> ${formula}`,
         )
       })
     })
   }
+})
+
+test('full-width prose punctuation cannot turn a mixed pseudocode line into one formula', () => {
+  assert.equal(isStandaloneFormula('Δ ← max(Δ, |new−V(s)|)；V(s) ← new'), false)
+  assert.equal(isStandaloneFormula('π(a|s) ← ε/|A|，a≠a*'), false)
 })

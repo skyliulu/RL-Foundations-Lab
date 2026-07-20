@@ -64,5 +64,6 @@ export function splitMathText(source) {
 
 export function isStandaloneFormula(source) {
   const text = String(source ?? '').trim()
-  return Boolean(text && distinctiveMathPattern.test(text) && !/[\u3400-\u9fff]/.test(text) && !proseWordPattern.test(text))
+  const hasFullWidthProsePunctuation = /[，。；：！？、]/.test(text)
+  return Boolean(text && distinctiveMathPattern.test(text) && !/[\u3400-\u9fff]/.test(text) && !hasFullWidthProsePunctuation && !proseWordPattern.test(text))
 }

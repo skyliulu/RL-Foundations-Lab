@@ -53,7 +53,7 @@ const planningDeepeningZh = [
     id: 'vi-complete-loop', kicker: '算法一 · Value Iteration', title: '一次 VI sweep 必须同时完成动作比较与价值写回',
     paragraphs: ['对每个状态，先用旧价值快照计算全部动作的一步 target，得到 q_k(s,a)；再把最大值写成 V_{k+1}(s)，并记录达到最大值的动作作为当前贪心策略。', '若只展示 V 的变化，就会隐藏“哪个动作竞争获胜”这一控制步骤。同步更新要求整轮都读取 V_k；原地更新则可立即复用本轮新值，但两者求解同一个不动点。'],
     formulas: [String.raw`q_k(s,a)=\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V_k(s')\right]`, String.raw`V_{k+1}(s)=\max_a q_k(s,a),\qquad \pi_{k+1}(s)\in\operatorname*{arg\,max}_a q_k(s,a)`],
-    pseudocodeTitle: 'Value Iteration', pseudocode: ['初始化 V₀(s)，例如全部置 0', '重复每个 sweep：', '  Δ ← 0', '  对每个状态 s：', '    对每个动作 a 计算 q(s,a) ← Σₛ′,ᵣp(s′,r|s,a)[r+γV(s′)]', '    new ← maxₐ q(s,a)', '    Δ ← max(Δ, |new−V(s)|)；V(s) ← new', '直到 Δ 小于阈值', '返回 V 与逐状态贪心策略 arg maxₐ q(s,a)'],
+    pseudocodeTitle: 'Value Iteration', pseudocode: ['初始化 V₀(s)，例如全部置 0', '重复每个 sweep：', '  Δ ← 0', '  对每个状态 s：', '    对每个动作 a 计算 q(s,a) ← Σₛ′,ᵣp(s′,r|s,a)[r+γV(s′)]', '    new ← maxₐ q(s,a)', '    Δ ← max(Δ, |new−V(s)|); V(s) ← new', '直到 Δ 小于阈值', '返回 V 与逐状态贪心策略 arg maxₐ q(s,a)'],
     example: { title: '一个状态的两轮 q 比较', caption: '后继 value 传播后，最大动作可能改变。', headers: ['轮次', 'q(上)', 'q(右)', 'q(下)', '贪心动作', 'V'], rows: [['k=0', '−1.00', '0.00', '0.00', '右/下', '0.00'], ['k=1', '−1.00', '0.90', '0.00', '右', '0.90']] },
   },
   {

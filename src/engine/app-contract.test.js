@@ -151,6 +151,16 @@ test('interactive structural selectors cannot restyle nested MathText or KaTeX s
   assert.match(styles, /\.learning-lab-question > span\s*\{/)
   assert.match(styles, /\.modern-extension-lab > header > span\s*\{/)
   assert.match(styles, /\.response-group button > b, \.response-group button > span, \.response-group button > small/)
+  assert.match(styles, /\.mdp-interface-strip > div > span\s*\{/)
+  assert.match(styles, /\.return-step-table > div > span\s*\{/)
+  assert.match(styles, /\.operator-formula > span\s*\{/)
+  assert.match(styles, /\.optimality-step-actions > span\s*\{/)
+  assert.match(styles, /\.mc-update-list > div > span/)
+  assert.doesNotMatch(styles, /\.mdp-interface-strip span\s*\{/)
+  assert.doesNotMatch(styles, /\.return-step-table span\s*\{/)
+  assert.doesNotMatch(styles, /\.operator-formula span\s*\{/)
+  assert.doesNotMatch(styles, /\.optimality-step-actions span\s*\{/)
+  assert.doesNotMatch(styles, /\.mc-update-list span\s*[,\{]/)
 })
 
 test('token diagrams use isolated layout classes and responsive overflow ownership', () => {

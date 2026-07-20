@@ -44,6 +44,8 @@ During rendered QA, compare the left and right edges of the chapter opening, pro
 
 For interaction CSS, scope structural rules to direct children or dedicated classes. Do not target generic descendant `span`, `small`, or `strong` nodes inside components that can contain `MathText` or KaTeX. Keep flex/grid children shrinkable with `min-width: 0`, isolate intentional horizontal scrolling to a named inner surface, and reject any chapter experiment whose outer root overflows in either language at mobile, tablet, or desktop widths.
 
+For mathematical QA, run formula-like copy through the same `MathText` branch and strict KaTeX renderer used in production. Full-width prose punctuation must not be swallowed as part of one standalone formula. Across every interaction in both languages, reject `.katex-error`, visible raw LaTeX commands, formulas rendered below 12 px, and any structural selector that reaches into KaTeX's internal spans. Review the complete interaction at rendered size, including dense tables and scroll surfaces.
+
 During content QA, record the first reader-visible occurrence of chapter-specific terminology. Reject unexplained references to concepts introduced only in later chapters and reject chapters whose required knowledge exists mainly as cards rather than a readable argument.
 
 Also maintain a source-coverage matrix. Every required source item must map to prose, a derivation, complete pseudocode, a worked example, or an experiment; formulas alone do not count as coverage of an algorithm.
