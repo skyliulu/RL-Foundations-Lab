@@ -105,7 +105,7 @@ export default function MonteCarloLab({ lang, content }) {
 
         <aside className="mc-update-panel">
           <header><span><MathText>{zh ? '该 episode 的 Q 更新' : 'Q updates in this episode'}</MathText></span><small>{sample.updates.length} {zh ? '次更新' : 'updates'}</small></header>
-          <MathFormula block latex={String.raw`Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\frac{1}{N(S_t,A_t)}\left(G_t-Q(S_t,A_t)\right)`} />
+          <MathFormula block latex={String.raw`\begin{aligned}Q(S_t,A_t)&\leftarrow Q(S_t,A_t)\\&\quad+\frac{1}{N(S_t,A_t)}\\&\qquad\cdot\left(G_t-Q(S_t,A_t)\right)\end{aligned}`} />
           <div className="mc-update-list">
             {sample.updates.slice(0, 7).map((update) => <div key={`${update.time}-${update.state}-${update.action}`}><span>{update.state} · {ACTIONS[update.action].arrow}</span><strong><MathFormula latex={String.raw`${format(update.before)}\rightarrow${format(update.after)}`} /></strong><small><MathFormula latex={String.raw`G=${format(update.returnValue)}\;\cdot\;N=${update.visits}`} /></small></div>)}
           </div>

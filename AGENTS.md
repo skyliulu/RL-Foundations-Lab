@@ -37,6 +37,12 @@ Use `.agents/skills/develop-interactive-rl-chapter/SKILL.md` whenever creating, 
 - Scope typography rules to a component root's direct child or a dedicated semantic class. A label rule must never resize a nested `MathText` or KaTeX span.
 - Before release, traverse every chapter in Chinese and English at desktop and mobile widths. Zero reader-visible elements below 12 px is required; ignore KaTeX's internal layout spans but measure each `.math-formula` wrapper.
 
+## Width and reflow
+
+- Use the shared 920 px reading-column token whenever the desktop chapter frame has room, and allow it to contract naturally at narrower viewports. Do not introduce smaller per-section desktop widths for headers, prose, derivations, summaries, or references.
+- A long primary equation must be split into meaningful `aligned` rows before it receives horizontal scrolling. Desktop article derivations and core experiment equations must not overflow because of avoidable narrow grids.
+- Keep horizontal scrolling only for intrinsically wide evidence surfaces such as trajectory ledgers and multi-column tables. Measure the actual overflow owner in every chapter rather than assuming every scrollbar is intentional.
+
 ## Required synchronization
 
 When a chapter changes, update together:

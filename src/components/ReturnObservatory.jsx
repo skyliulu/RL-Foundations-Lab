@@ -68,7 +68,9 @@ export default function ReturnObservatory({ lang, content }) {
   const visibleSteps = sample.steps.slice(0, 14)
   const maxContribution = Math.max(...visibleSteps.map((step) => Math.abs(step.contribution)), 0.001)
   const error = result.mean - result.exact
-  const visibleReturnLatex = String.raw`G_0=${visibleSteps.map((step) => `${step.discount.toFixed(2)}\\times(${step.reward})`).join('+')}+\cdots`
+  const visibleReturnTerms = visibleSteps.map((step) => `${step.discount.toFixed(2)}\\times(${step.reward})`)
+  const visibleReturnRows = Array.from({ length: Math.ceil(visibleReturnTerms.length / 4) }, (_, index) => visibleReturnTerms.slice(index * 4, index * 4 + 4).join('+'))
+  const visibleReturnLatex = String.raw`\begin{aligned}G_0&=${visibleReturnRows.join(String.raw`\\&\quad+`)}+\cdots\end{aligned}`
 
   function applyPreset(id) {
     const preset = returnPresetConfigs[id]

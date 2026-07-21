@@ -69,12 +69,27 @@ test('the chapter shell keeps prose on one reading column and experiments on one
   assert.match(shell, /className="chapter-shell"/)
   assert.match(app, /<ChapterShell>/)
   assert.match(styles, /--chapter-frame:\s*1240px/)
-  assert.match(styles, /--reading-column:\s*780px/)
+  assert.match(styles, /--reading-column:\s*920px/)
   assert.match(styles, /\.chapter-shell\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
   ;['derivation-sequence', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources'].forEach((className) => {
     assert.match(styles, new RegExp(`\\.${className}\\s*\\{[^}]*max-width:\\s*var\\(--reading-column\\)`), className)
   })
   assert.match(styles, /\.world-explorer\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
+})
+
+test('desktop reading width and long equations avoid unnecessary inner scrollbars', () => {
+  const styles = read('styles.css')
+  const returns = read('components/ReturnObservatory.jsx')
+  const monteCarlo = read('components/MonteCarloLab.jsx')
+  assert.match(styles, /\.clickable-derivation > header\s*\{[^}]*max-width:\s*none/)
+  assert.match(styles, /\.learning-lab-stage\s*\{[^}]*minmax\(410px,\.82fr\)/)
+  assert.match(styles, /\.mc-stage\s*\{[^}]*minmax\(250px,\.85fr\)/)
+  assert.doesNotMatch(styles, /\.return-formula-live\s*\{[^}]*white-space:\s*nowrap/)
+  assert.match(styles, /\.math-formula \.katex-display\s*\{[^}]*overflow:\s*visible/)
+  assert.match(styles, /div\.math-formula\s*\{[^}]*overflow-x:\s*auto/)
+  assert.match(returns, /visibleReturnTerms\.length \/ 4/)
+  assert.match(returns, /\\begin\{aligned\}G_0&=/)
+  assert.match(monteCarlo, /\\begin\{aligned\}Q\(S_t,A_t\)&\\leftarrow/)
 })
 
 test('all chapter explanations use continuous article sections rather than a card grid', () => {

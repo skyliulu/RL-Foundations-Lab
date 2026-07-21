@@ -113,9 +113,11 @@ Use this shape for derivation data:
 
 - Define one chapter shell and alignment grid for the header, article sections, derivations, transitions, experiments, summary, and references.
 - Keep the same readable text column from the chapter opening through the closing summary and references. Do not alternate among unrelated centered widths.
+- Keep the desktop reading column broad enough for technical prose and derivations. In this product, use the shared 920 px reading-column token when the chapter frame has room; let it contract responsively instead of assigning narrower per-section widths.
 - Place experiments as intentional wide regions inside the same chapter shell. Their outer edges must follow the shared grid, and entry/exit copy must return to the same text column.
 - Do not create a narrow-wide-narrow rhythm merely because components have different `max-width` values.
 - Render supporting equations compactly near the prose. Use display math only when the equation needs its own reading step; do not enlarge every formula or force each short expression onto a separate row.
+- Split genuinely long equations into semantic `aligned` rows before adding horizontal scrolling. At desktop width, article derivations and primary experiment equations must not show an inner scrollbar merely because a container was made too narrow.
 - Inspect adjacent block edges and vertical rhythm in rendered desktop and mobile output, not only individual components.
 
 ## Readability and Reference Contract
