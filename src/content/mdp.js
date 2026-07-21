@@ -32,7 +32,7 @@ const explorer = {
 
 const overview = {
   zh: {
-    eyebrow: '先看图，再命名',
+    eyebrow: '共同环境 · 5×5 网格世界',
     title: '这就是后续章节反复使用的决策世界',
     caption: '智能体从左上角出发，在 25 个可访问格子之间移动。黄色格是可进入但会受罚的禁区，蓝色格是目标；地图外侧全部属于边界。',
     map: '环境地图', statePrefix: 's', start: '起点', forbidden: '禁区 −1', target: '目标 +1',
@@ -42,7 +42,7 @@ const overview = {
     boundary: '越界并不会离开地图：智能体留在原格，并收到 −1。禁区也不是墙，进入后同样收到 −1。',
   },
   en: {
-    eyebrow: 'See the scene before naming it',
+    eyebrow: 'Shared environment · 5×5 grid world',
     title: 'This is the decision world reused throughout the chapters',
     caption: 'The agent begins in the upper-left and moves among 25 accessible cells. Yellow cells are accessible but penalized, the blue cell is the target, and everything outside the map is boundary.',
     map: 'Environment map', statePrefix: 's', start: 'Start', forbidden: 'Forbidden −1', target: 'Target +1',

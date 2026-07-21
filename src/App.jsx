@@ -266,7 +266,7 @@ export default function App() {
         <div className="nav-head"><span className="nav-label">{text.toc}</span><button type="button" className="nav-collapse" aria-expanded={!navCompact} onClick={() => setNavCompact((value) => !value)}>{navCompact ? (lang === 'zh' ? '展开' : 'Expand') : (lang === 'zh' ? '缩进' : 'Collapse')}</button></div>
         <nav>
           <button type="button" className={`home-nav-item ${active === 'home' ? 'active' : ''}`} onClick={() => setActive('home')}>
-            <span className="nav-number">⌂</span><span className="nav-copy"><small>{lang === 'zh' ? '课程入口' : 'Course entry'}</small><strong>{lang === 'zh' ? '学习全景' : 'Learning map'}</strong><em>{lang === 'zh' ? '五部分 · 二十一章' : 'Five parts · twenty-one chapters'}</em></span>
+            <span className="nav-number">⌂</span><span className="nav-copy"><small>{lang === 'zh' ? '课程入口' : 'Course entry'}</small><strong>{lang === 'zh' ? '学习全景' : 'Learning map'}</strong><em>{lang === 'zh' ? '从网格世界到大语言模型后训练' : 'From grid worlds to LLM post-training'}</em></span>
           </button>
           {text.chapters.map((item) => (
             <button type="button" key={item.id} className={active === item.id ? 'active' : ''} onClick={() => setActive(item.id)}>

@@ -187,7 +187,11 @@ test('every chapter ends with one source section and no duplicate concept-source
 })
 
 test('the homepage explains the learning path and gives readers an actionable chapter rhythm', () => {
+  const app = read('App.jsx')
   const source = read('components/HomePage.jsx')
+  assert.match(app, /从网格世界到大语言模型后训练/)
+  assert.match(app, /From grid worlds to LLM post-training/)
+  assert.doesNotMatch(app, /五部分 · 二十一章|Five parts · twenty-one chapters/)
   assert.match(source, /home-reading-guide/)
   assert.match(source, /reading-guide-steps/)
   assert.match(source, /找到问题/)

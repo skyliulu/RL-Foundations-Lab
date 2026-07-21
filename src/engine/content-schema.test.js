@@ -43,6 +43,8 @@ test('the MDP foundation chapter is bilingual, structured, and source-traceable'
   assert.match(mdpChapter.zh.learningPath[0].paragraphs.join(' '), /5×5.*目标.*禁区.*边界/)
   assert.match(mdpChapter.zh.overview.caption, /25.*禁区.*目标/)
   assert.match(mdpChapter.en.overview.caption, /25.*penalized.*target/i)
+  assert.equal(mdpChapter.zh.overview.eyebrow, '共同环境 · 5×5 网格世界')
+  assert.equal(mdpChapter.en.overview.eyebrow, 'Shared environment · 5×5 grid world')
   ;['locationTitle', 'choiceTitle', 'responseTitle'].forEach((field) => {
     assert.ok(mdpChapter.zh.overview[field])
     assert.ok(mdpChapter.en.overview[field])
