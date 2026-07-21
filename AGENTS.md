@@ -30,6 +30,13 @@ Use `.agents/skills/develop-interactive-rl-chapter/SKILL.md` whenever creating, 
 - Keep a complete derivation chain visible in the article. Make each transformation line selectable and send its explanation, rule, assumptions, symbols, and before/after LaTeX to the right workbench.
 - Do not add standalone Derivation Explorer interfaces that hide or duplicate the article derivation.
 
+## Typography and readability
+
+- Use the shared semantic typography tokens. Reader-facing text must never be smaller than 12 px; controls and ordinary UI copy must be at least 13 px; article prose, explanations, pseudocode, code, and worked-example table cells must be at least 14 px.
+- Do not add a `font-size` or `font` shorthand below 12 px, including values inside `clamp()`. Let bilingual copy wrap, give it more space, or move overflow to a named inner scroll surface instead of shrinking it.
+- Scope typography rules to a component root's direct child or a dedicated semantic class. A label rule must never resize a nested `MathText` or KaTeX span.
+- Before release, traverse every chapter in Chinese and English at desktop and mobile widths. Zero reader-visible elements below 12 px is required; ignore KaTeX's internal layout spans but measure each `.math-formula` wrapper.
+
 ## Required synchronization
 
 When a chapter changes, update together:

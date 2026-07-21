@@ -127,11 +127,24 @@ test('right-workbench notation is rendered through MathFormula', () => {
 
 test('algorithms, tables, experiments, and the right workbench share a readable type floor', () => {
   const styles = read('styles.css')
+  assert.match(styles, /--font-floor:\s*\.75rem/)
   assert.match(styles, /--font-dense:\s*\.75rem/)
-  assert.match(styles, /--font-support:\s*\.82rem/)
+  assert.match(styles, /--font-support:\s*\.875rem/)
+  assert.match(styles, /--font-ui:\s*\.8125rem/)
+  assert.match(styles, /--font-table:\s*\.875rem/)
+  assert.match(styles, /small\s*\{\s*font-size:\s*inherit/)
   assert.match(styles, /\.deepening-pseudocode code\s*\{[^}]*var\(--font-code\)/)
-  assert.match(styles, /\.deepening-example-table > span\s*\{[^}]*var\(--font-support\)/)
+  assert.match(styles, /\.deepening-example-table > span\s*\{[^}]*var\(--font-table\)/)
+  assert.match(styles, /\.deepening-handoff > \.deepening-handoff-label\s*\{[^}]*var\(--font-ui\)/)
+  assert.match(styles, /\.deepening-handoff > \.deepening-handoff-copy\s*\{[^}]*var\(--font-support\)/)
+  assert.doesNotMatch(styles, /\.deepening-handoff span\s*\{/)
   assert.match(styles, /Readability floor for algorithms, evidence tables, and interactive workbenches/)
+
+  const undersized = [...styles.matchAll(/\b(?:font-size|font)\s*:\s*([^;{}]+)/g)]
+    .flatMap((declaration) => [...declaration[1].matchAll(/(?<![\w-])(\d*\.?\d+)(rem|px)\b/g)])
+    .map((match) => ({ token: match[0], pixels: Number(match[1]) * (match[2] === 'rem' ? 16 : 1) }))
+    .filter(({ pixels }) => pixels < 12)
+  assert.deepEqual(undersized, [], 'reader-facing font declarations must not fall below 12 px')
 })
 
 test('article prose, algorithms, and worked tables share the inline-math renderer', () => {

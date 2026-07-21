@@ -120,12 +120,13 @@ Use this shape for derivation data:
 
 ## Readability and Reference Contract
 
-- Set an explicit typography floor instead of shrinking text to fit dense interfaces. At the normal desktop viewport, keep article prose at least 14 px, supporting labels and explanations at least 12 px, and dense code or table cells at least 11 px.
-- Apply the floor to pseudocode, algorithm comparisons, worked-example tables, ledgers, controls, chart labels, inspectors, and the right workbench. If larger text no longer fits, add wrapping, scrolling, or a responsive layout instead of reducing the type again.
-- Inspect representative long Chinese and English labels at desktop and mobile widths. Do not approve a component from CSS values alone.
+- Use the shared semantic typography tokens as the only source of reader-facing small type: `--font-floor` and `--font-dense` are at least 12 px, `--font-ui` is at least 13 px, and explanatory copy, pseudocode, worked-example tables, and code use at least 14 px. Article prose remains at least 14 px.
+- Never author a reader-facing `font-size` or `font` shorthand below 12 px (`.75rem` at the 16 px root), including inside `clamp()`. Decorative geometry may be smaller only when it contains no text.
+- Apply the floor to pseudocode, algorithm comparisons, worked-example tables, transition/handoff explanations, ledgers, controls, chart labels, inspectors, navigation, and the right workbench. If larger text no longer fits, add wrapping, scrolling, or a responsive layout instead of reducing the type again.
+- Traverse every chapter in Chinese and English at desktop and mobile widths and inspect computed font sizes. Zero reader-visible elements below 12 px is the release condition; do not approve a component from CSS declarations or representative samples alone.
 - Keep interaction CSS structurally scoped. Never use a broad descendant selector such as `.component span` for a step badge, label, or token when `MathText` or KaTeX may add nested spans; target a direct child or a dedicated class instead.
 - Treat every `MathFormula` boundary as third-party nested markup: structural rules must stop at the wrapper, and no component rule may position, size, pad, grid, or flex arbitrary descendant `span` nodes inside it.
-- Keep rendered formulas inside interactions at least 12 px at normal reading size. Formula tables, operator summaries, update ledgers, and control labels must wrap or own an explicit inner horizontal scroll surface instead of shrinking below that floor.
+- Keep rendered formulas inside interactions at least 12 px at normal reading size. Formula tables, operator summaries, update ledgers, and control labels must wrap or own an explicit inner horizontal scroll surface instead of shrinking below that floor. Exclude KaTeX's internal layout spans from the audit, but measure the `.math-formula` wrapper itself.
 - Give semantically different diagrams distinct class names even when their visible nouns overlap. A token strip and a token ledger, for example, must not share one layout class.
 - Put `min-width: 0` on flex/grid children that contain bilingual text, let labels wrap before shrinking type, and make only the designated formula/table/trajectory surface own horizontal scrolling.
 - Render one final `Sources and further reading` section per chapter. Put source-specific and conceptual references in that section; do not append a second global concept-source footer beneath it.
