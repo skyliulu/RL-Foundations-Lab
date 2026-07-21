@@ -37,8 +37,8 @@ function ChapterHeader({ chapter, content, prerequisites }) {
 
 function MdpRail({ lang }) {
   const labels = lang === 'zh'
-    ? { loop: '交互闭环', agent: '智能体', environment: '环境', and: '与', markov: 'Markov 性', markovText: '给定当前状态与动作，下一步与更早历史条件独立。' }
-    : { loop: 'Interaction loop', agent: 'Agent', environment: 'Environment', and: 'and', markov: 'Markov property', markovText: 'Given the current state and action, the next step is conditionally independent of earlier history.' }
+    ? { loop: '交互闭环', agent: '智能体', environment: '环境', and: '与', markov: 'Markov 性', markovText: '给定当前状态与动作后，完整历史不再增加对下一状态和奖励的预测信息。' }
+    : { loop: 'Interaction loop', agent: 'Agent', environment: 'Environment', and: 'and', markov: 'Markov property', markovText: 'Given current state and action, complete history adds no predictive information about the next state and reward.' }
   return (
     <>
       <section className="rail-section">
@@ -46,7 +46,7 @@ function MdpRail({ lang }) {
         <MathFormula block className="mdp-loop-formula" latex={String.raw`S_t \xrightarrow{A_t} (R_{t+1},S_{t+1})`} />
         <dl className="mapping-list"><div><dt>{labels.agent}</dt><dd><MathFormula latex={String.raw`\pi(a\mid s)`} /></dd></div><div><dt>{labels.environment}</dt><dd className="rail-math-pair"><MathFormula latex={String.raw`p(s'\mid s,a)`} /><span>{labels.and}</span><MathFormula latex={String.raw`p(r\mid s,a)`} /></dd></div></dl>
       </section>
-      <section className="rail-section"><span className="rail-kicker">{labels.markov}</span><MathFormula block className="rail-formula compact mdp-markov-formula" latex={String.raw`p(s'\mid s,a,h)=p(s'\mid s,a)`} /><p><MathText>{labels.markovText}</MathText></p></section>
+      <section className="rail-section"><span className="rail-kicker">{labels.markov}</span><MathFormula block className="rail-formula compact mdp-markov-formula" latex={String.raw`p(s',r\mid H_t,a)=p(s',r\mid S_t,a)`} /><p><MathText>{labels.markovText}</MathText></p></section>
     </>
   )
 }

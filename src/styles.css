@@ -229,6 +229,7 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .narrative-body h2 { margin: 8px 0 0; font-size: 1.42rem; line-height: 1.48; font-weight: 500; }
 .narrative-body p { margin: 0 0 11px; color: #55584f; font-size: .94rem; line-height: 1.92; }
 .narrative-formulas { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(250px,100%),1fr)); gap: 10px 24px; margin: 17px 0 0; padding: 15px 18px; border-left: 2px solid var(--navy); background: rgba(23,79,130,.035); color: var(--navy); font-size: .9rem; line-height: 1.55; overflow-x: auto; overflow-y: hidden; }
+.narrative-formulas.is-stacked { grid-template-columns: minmax(0,1fr); gap: 8px; }
 .narrative-formulas .math-formula { min-width: 0; text-align: center; }
 .narrative-formulas .katex-display { margin: .25em 0; }
 .course-world-overview { margin: 24px 0 31px; padding: 22px 24px 24px; border-block: 1px solid var(--line-strong); background: rgba(251,248,240,.62); }

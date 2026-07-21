@@ -110,13 +110,15 @@ test('ordinary chapter-one formulas use the shared display treatment', () => {
   const narrative = read('components/MdpNarrative.jsx')
   const styles = read('styles.css')
   assert.match(narrative, /<MathFormula block latex=\{formula\}/)
+  assert.match(narrative, /layout === 'stacked'/)
   assert.match(styles, /\.narrative-formulas\s*\{[^}]*border-left:\s*2px solid var\(--navy\)/)
   assert.match(styles, /\.narrative-formulas\s*\{[^}]*background:\s*rgba\(23,79,130,\.035\)/)
+  assert.match(styles, /\.narrative-formulas\.is-stacked\s*\{[^}]*grid-template-columns:\s*minmax\(0,1fr\)/)
 })
 
 test('right-workbench notation is rendered through MathFormula', () => {
   const app = read('App.jsx')
-  assert.match(app, /latex=\{String\.raw`p\(s'\\mid s,a,h\)=p\(s'\\mid s,a\)`\}/)
+  assert.match(app, /latex=\{String\.raw`p\(s',r\\mid H_t,a\)=p\(s',r\\mid S_t,a\)`\}/)
   assert.match(app, /latex=\{String\.raw`G_t`\}/)
   assert.match(app, /latex=\{String\.raw`V\^\{\\pi\}\(s\)`\}/)
   assert.doesNotMatch(app, />p\(s′\|s,a,history\) = p\(s′\|s,a\)</)

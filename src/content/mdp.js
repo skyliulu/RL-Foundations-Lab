@@ -143,17 +143,20 @@ const mdpZhPath = [
   {
     id: 'mdp-definition',
     kicker: '形式化 · MDP 与 Markov 性',
-    title: '现在才正式得到 Markov 决策过程',
+    title: 'Markov 性回答的是：当前状态是否已经足够预测下一步',
     paragraphs: [
       '一个 MDP 汇集前面逐一建立的对象：状态集合、每个状态可用的动作集合、奖励集合或奖励分布、状态转移分布，以及智能体采用的策略。环境模型由转移与奖励分布组成；策略仍是智能体侧的选择规则。',
-      'Markov 性不是“没有历史”，而是当前状态已经概括了预测下一步所需的历史信息。给定 Sₜ 与 Aₜ 后，再附加更早历史不会改变下一状态和奖励的条件分布。',
+      'Markov 性先提出一个具体的预测问题：动作 Aₜ 已经选定时，若要预测下一状态 Sₜ₊₁ 和奖励 Rₜ₊₁，除了当前状态 Sₜ，还需不需要回看从起点到现在的完整历史？下面用 Hₜ 表示这段历史。',
+      '如果在给定 Sₜ 与 Aₜ 后，完整历史 Hₜ 不再改变下一状态和奖励的条件分布，那么 Sₜ 就是对这段历史的充分概括。所谓“无记忆”指的是预测时不必额外读取过去，而不是世界真的没有过去。',
+      '回到网格世界：若下一步只由当前格子和动作决定，格子编号就是充分状态；若风向具有惯性却没有被记录，同一格子执行同一动作仍可能产生不同后继分布，此时“位置”就不满足 Markov 性。把风向并入状态可以恢复充分性，但也会扩大状态空间。',
     ],
+    formulaLayout: 'stacked',
     formulas: [
-      String.raw`\operatorname{MDP}=\langle \mathcal{S},\mathcal{A},p(s'\mid s,a),p(r\mid s,a)\rangle,\qquad A_t\sim\pi(a\mid S_t)`,
-      String.raw`p(S_{t+1}\mid A_t,S_t,\ldots,A_0,S_0)=p(S_{t+1}\mid A_t,S_t)`,
-      String.raw`p(R_{t+1}\mid A_t,S_t,\ldots,A_0,S_0)=p(R_{t+1}\mid A_t,S_t)`,
+      String.raw`\operatorname{MDP}=\langle \mathcal{S},\mathcal{A},p(s'\mid s,a),p(r\mid s,a)\rangle`,
+      String.raw`p(S_{t+1}\mid H_t,A_t)=p(S_{t+1}\mid S_t,A_t)`,
+      String.raw`p(R_{t+1}\mid H_t,A_t)=p(R_{t+1}\mid S_t,A_t)`,
     ],
-    note: '网格世界只是 MDP 的一种可视化。抽掉方格后，状态成为节点，带概率的转移成为有向边。',
+    note: '读这两条等式时，比较的是左边的“完整历史”与右边的“当前状态”：二者预测一致，才说明状态足够。网格只是 MDP 的一种可视化；抽掉方格后，状态成为节点，带概率的转移成为有向边。',
   },
 ]
 
@@ -200,10 +203,20 @@ const mdpEnPath = [
     formulas: [String.raw`\text{episodic: }S_0,A_0,R_1,\ldots,S_T`, String.raw`\text{continuing: }S_0,A_0,R_1,S_1,A_1,R_2,\ldots`],
   },
   {
-    id: 'mdp-definition', kicker: 'Formalization · MDP and the Markov property', title: 'Only now do we arrive at a Markov decision process',
-    paragraphs: ['An MDP gathers the objects established above: states, available actions, reward sets or distributions, transition distributions, and the policy used by the agent. Transition and reward form the environment model; policy remains the agent’s choice rule.', 'Markov does not mean history does not exist. It means the current state summarizes the historical information needed for one-step prediction.'],
-    formulas: [String.raw`\operatorname{MDP}=\langle\mathcal{S},\mathcal{A},p(s'\mid s,a),p(r\mid s,a)\rangle,\qquad A_t\sim\pi(a\mid S_t)`, String.raw`p(S_{t+1}\mid A_t,S_t,\ldots,A_0,S_0)=p(S_{t+1}\mid A_t,S_t)`, String.raw`p(R_{t+1}\mid A_t,S_t,\ldots,A_0,S_0)=p(R_{t+1}\mid A_t,S_t)`],
-    note: 'The grid is only one visualization of an MDP. Remove it and states become graph nodes connected by probabilistic directed edges.',
+    id: 'mdp-definition', kicker: 'Formalization · MDP and the Markov property', title: 'The Markov property asks whether the current state is enough to predict the next step',
+    paragraphs: [
+      'An MDP gathers the objects established above: states, available actions, reward sets or distributions, transition distributions, and the policy used by the agent. Transition and reward form the environment model; policy remains the agent’s choice rule.',
+      'The Markov property begins with a concrete prediction question. Once action Aₜ has been selected, does predicting successor Sₜ₊₁ and reward Rₜ₊₁ require the complete history from the start, or is current state Sₜ enough? Let Hₜ denote that complete history.',
+      'If adding Hₜ after conditioning on Sₜ and Aₜ does not change either conditional distribution, then Sₜ is a sufficient summary of the history. “Memoryless” means that prediction need not reread the past; it does not mean the world has no past.',
+      'In the grid world, cell identity is sufficient when the next step depends only on the current cell and action. If persistent wind is omitted, the same cell and action can produce different successor distributions; location is then non-Markov. Adding wind to state restores sufficiency at the cost of a larger state space.',
+    ],
+    formulaLayout: 'stacked',
+    formulas: [
+      String.raw`\operatorname{MDP}=\langle\mathcal{S},\mathcal{A},p(s'\mid s,a),p(r\mid s,a)\rangle`,
+      String.raw`p(S_{t+1}\mid H_t,A_t)=p(S_{t+1}\mid S_t,A_t)`,
+      String.raw`p(R_{t+1}\mid H_t,A_t)=p(R_{t+1}\mid S_t,A_t)`,
+    ],
+    note: 'Read each equality by comparing the complete history on the left with the current state on the right. Equal predictions are the evidence that state is sufficient. The grid is only one visualization of an MDP; without it, states become graph nodes connected by probabilistic directed edges.',
   },
 ]
 
@@ -259,7 +272,7 @@ export const mdpChapter = assertFoundationChapterDefinition({
     deepening: mdpDeepeningZh,
     prelude: mdpZhPath.slice(0, 2),
     sections: mdpZhPath.slice(6),
-    summary: ['网格世界先给出具体问题，状态、动作、奖励、转移概率与策略再把它形式化为 MDP。', '策略 π(a|s) 属于智能体；转移 p(s′|s,a) 与奖励 p(r|s,a) 属于环境。', '目标状态不会终止交互，因此比较路径时必须处理它之后仍会发生的奖励。'],
+    summary: ['网格世界先给出具体问题，状态、动作、奖励、转移概率与策略再把它形式化为 MDP。', '策略 π(a|s) 属于智能体；转移 p(s′|s,a) 与奖励 p(r|s,a) 属于环境。', 'Markov 性要求当前状态充分概括预测下一步所需的历史信息；遗漏风向等关键变量会破坏这一性质。', '目标状态不会终止交互，因此比较路径时必须处理它之后仍会发生的奖励。'],
     explorer: explorer.zh,
   },
   en: {
@@ -279,7 +292,7 @@ export const mdpChapter = assertFoundationChapterDefinition({
     deepening: mdpDeepeningEn,
     prelude: mdpEnPath.slice(0, 2),
     sections: mdpEnPath.slice(6),
-    summary: ['The grid world poses the concrete problem; states, actions, rewards, transition probabilities, and policy then formalize it as an MDP.', 'Policy π(a|s) belongs to the agent; transition p(s′|s,a) and reward p(r|s,a) belong to the environment.', 'The target does not terminate interaction, so path comparison must include rewards that occur after reaching it.'],
+    summary: ['The grid world poses the concrete problem; states, actions, rewards, transition probabilities, and policy then formalize it as an MDP.', 'Policy π(a|s) belongs to the agent; transition p(s′|s,a) and reward p(r|s,a) belong to the environment.', 'The Markov property requires the current state to summarize all history needed for next-step prediction; omitting a variable such as persistent wind can break it.', 'The target does not terminate interaction, so path comparison must include rewards that occur after reaching it.'],
     explorer: explorer.en,
   },
 })
