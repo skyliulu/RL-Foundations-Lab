@@ -18,10 +18,14 @@ import TokenMdpLab from './components/TokenMdpLab'
 import GitHubRepoBadge from './components/GitHubRepoBadge'
 import HomePage from './components/HomePage'
 import ModernExtensionLab from './components/ModernExtensionLab'
+import ArticleFlow from './components/ArticleFlow'
+import StochasticApproximationLab from './components/StochasticApproximationLab'
+import RichContent from './components/RichContent'
 import { copy } from './content'
+import { chapterTransitions, coursePhases, getChapterPhase } from './content/storyline.js'
 import { detectBrowserLanguage, pageMetadata } from './i18n'
 
-const part23Ids = ['approximation', 'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
+const part23Ids = ['td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
 const modernExtensionIds = ['dpo', 'grpo', 'codingrl', 'agentmdp', 'credit']
 
 function ChapterHeader({ chapter, content, prerequisites }) {
@@ -32,6 +36,32 @@ function ChapterHeader({ chapter, content, prerequisites }) {
       <p className="chapter-intro"><MathText>{content.intro}</MathText></p>
       <span className="prerequisite">↳ <MathText>{prerequisites}</MathText></span>
     </header>
+  )
+}
+
+function ChapterContinuity({ active, chapters, lang }) {
+  const phaseMatch = getChapterPhase(active)
+  if (!phaseMatch) return null
+  const phase = coursePhases[lang][phaseMatch.phaseIndex]
+  const chapterById = Object.fromEntries(chapters.map((item) => [item.id, item]))
+  return (
+    <section className="chapter-continuity" aria-label={lang === 'zh' ? '本章在完整主线中的位置' : 'This chapter in the complete storyline'}>
+      <header>
+        <span>Part {phase.number}</span>
+        <strong>{phase.title}</strong>
+      </header>
+      <p><MathText>{chapterTransitions[lang][active]}</MathText></p>
+      <div className="chapter-phase-chain" aria-label={phase.question}>
+        {phaseMatch.ids.map((id, index) => {
+          const item = chapterById[id]
+          return (
+            <span className={id === active ? 'is-current' : ''} key={id}>
+              <b>{item.number}</b>{item.title}{index < phaseMatch.ids.length - 1 && <i aria-hidden="true">→</i>}
+            </span>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
@@ -132,10 +162,10 @@ function FormulaContextRail({ context, lang }) {
     <section className="rail-section formula-context-rail">
       <span className="rail-kicker">{lang === 'zh' ? '公式上下文' : 'Formula context'}</span>
       <h2>{context.title}</h2>
-      <p><MathText>{context.body}</MathText></p>
+      <p><RichContent value={context.body} /></p>
       {context.latex && <><span className="context-label">{labels.selected}</span><MathFormula block className="context-formula" latex={context.latex} /></>}
       {context.beforeLatex && <><span className="context-label">{labels.before}</span><MathFormula block className="context-formula before" latex={context.beforeLatex} /></>}
-      {context.detail && <div className="context-detail"><span className="context-label">{labels.detail}</span><p><MathText>{context.detail}</MathText></p></div>}
+      {context.detail && <div className="context-detail"><span className="context-label">{labels.detail}</span><p><RichContent value={context.detail} /></p></div>}
       {context.assumptions?.length > 0 && <div className="context-detail"><span className="context-label">{labels.assumptions}</span><ul>{context.assumptions.map((item) => <li key={item}>{/\\|[=<>^{}]/.test(item) && !/[\u3400-\u9fff]/.test(item) ? <MathFormula latex={item} /> : <MathText>{item}</MathText>}</li>)}</ul></div>}
       {context.symbols?.length > 0 && <><span className="context-label">{labels.symbols}</span><dl className="mapping-list">{context.symbols.map(([term, value]) => <div key={term}><dt><MathFormula latex={term} /></dt><dd><MathText>{value}</MathText></dd></div>)}</dl></>}
       {context.rows && <dl className="mapping-list">{context.rows.map(([term, value]) => <div key={term}><dt><MathText>{term}</MathText></dt><dd><MathText>{value}</MathText></dd></div>)}</dl>}
@@ -169,33 +199,29 @@ function RightRail({ active, lang, open, onToggle, context, content }) {
   )
 }
 
-function DepthBand({ lang, active, content }) {
-  const items = lang === 'zh'
-    ? { mdp: ['场景：先认识网格、目标与禁区', '机制：一次选择怎样引起世界回应', '形式化：何时只看当前信息就足够'], returns: ['先定义：怎样把一串奖励合成长期回报', '再区分：一次结果与所有可能结果的平均', '最后实验：折扣与随机性怎样改变观察'], bellman: ['先回顾：长期回报怎样拆出第一步', '再推导：对可能动作和环境响应取平均', '最后实验：一次更新怎样传播价值信息'], optimality: ['先区分：评价当前策略与寻找最好策略', '再推导：为什么概率加权可化为动作最大值', '最后实验：同一状态中的动作怎样竞争'], planning: ['先求解：把最优方程写成反复更新', '再比较：评估深度如何连接三种算法', '最后实验：用相同计算口径观察收敛'], ppo: ['先建立：Actor、Critic 与优势的分工', '再推导：旧策略概率比与裁剪目标', '最后实验：优势符号怎样改变裁剪方向'], rlhf: ['先映射：token 生成怎样成为序列决策', '再组织：奖励、参考、价值与旧策略角色', '最后实验：同一 batch 怎样穿过完整生命周期'] }
-    : { mdp: ['Scene: meet the grid, target, and forbidden cells', 'Mechanism: how one choice makes the world respond', 'Formalize: when current information is sufficient'], returns: ['Define: combine a reward sequence into long-term return', 'Distinguish: one outcome from the average of all outcomes', 'Experiment: vary discount and randomness'], bellman: ['Recall: split the first step from long-term return', 'Derive: average over actions and environment responses', 'Experiment: propagate value with one update'], optimality: ['Separate: evaluating a policy from finding the best one', 'Derive: reduce policy weighting to an action maximum', 'Experiment: let actions compete in one state'], planning: ['Solve: turn the optimal equation into repeated updates', 'Compare: connect three algorithms through evaluation depth', 'Experiment: observe convergence with one compute metric'], ppo: ['Establish: actor, critic, and advantage roles', 'Derive: old-policy ratios and clipping', 'Experiment: see advantage sign change clipping direction'], rlhf: ['Map: token generation to sequential decision making', 'Organize: reward, reference, value, and old-policy roles', 'Experiment: trace one batch through the lifecycle'] }
-  const selected = items[active] || [content.prelude[0].title, content.derivation[Math.min(2, content.derivation.length - 1)].rule, content.question]
-  return <div className="depth-band">{selected.map((item, index) => <span key={item}><b>{['I', 'II', 'III'][index]}</b>{item}</span>)}</div>
-}
-
 function ChapterPrelude({ content }) {
   return (
-    <section className="derivation-sequence" aria-label={content.title}>
-      {content.prelude.map((step, index) => (
-        <article className="derivation-step" key={step.id}>
-          <header><span>{String(index + 1).padStart(2, '0')}</span><small><MathText>{step.kicker}</MathText></small></header>
+    <section className="chapter-article-sections chapter-prelude" aria-label={content.title}>
+      {content.prelude.map((step) => (
+        <article className="chapter-article-section chapter-prelude-section" key={step.id}>
+          <span><MathText>{step.kicker}</MathText></span>
           <h2><MathText>{step.title}</MathText></h2>
           {step.paragraphs.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
-          {step.formulas && <div className="derivation-formulas">{step.formulas.map((formula) => <MathFormula block latex={formula} key={formula} />)}</div>}
+          {step.formulas && <div className="chapter-section-formulas">{step.formulas.map((formula) => <MathFormula block latex={formula} key={formula} />)}</div>}
         </article>
       ))}
     </section>
   )
 }
 
-function ChapterSections({ content }) {
+const postExperimentSectionIds = new Set(['forward', 'next'])
+
+function ChapterSections({ content, placement = 'all' }) {
+  const sections = content.sections.filter((section) => placement === 'all' || (placement === 'after') === postExperimentSectionIds.has(section.id))
+  if (!sections.length) return null
   return (
-    <section className="chapter-article-sections">
-      {content.sections.map((section) => (
+    <section className={`chapter-article-sections${placement === 'after' ? ' is-post-experiment' : ''}`}>
+      {sections.map((section) => (
         <article key={section.id} className={`chapter-article-section section-${section.id}`}>
           <span><MathText>{section.kicker}</MathText></span>
           <h2><MathText>{section.title}</MathText></h2>
@@ -250,6 +276,16 @@ export default function App() {
 
   const content = text[active]
 
+  function handleDerivationSelect(context) {
+    const isSameSelection = rightOpen && rightContext?.selectionId === context.selectionId
+    if (isSameSelection) {
+      setRightOpen(false)
+      return
+    }
+    setRightContext(context)
+    setRightOpen(true)
+  }
+
   return (
     <div className={`app-shell ${navCompact ? 'nav-compact' : ''} ${rightOpen ? 'rail-open' : ''}`}>
       <header className="site-header">
@@ -280,7 +316,7 @@ export default function App() {
         {active === 'home' ? <HomePage lang={lang} chapters={text.chapters} onSelect={setActive} /> : (
         <ChapterShell>
           <ChapterHeader chapter={chapter} content={content} prerequisites={content.prerequisite || text.prerequisites} />
-          <DepthBand lang={lang} active={active} content={content} />
+          <ChapterContinuity active={active} chapters={text.chapters} lang={lang} />
           {active === 'mdp' && (
             <>
               <MdpNarrative sections={text.mdp.learningPath} overview={text.mdp.overview} />
@@ -294,72 +330,80 @@ export default function App() {
           )}
         {active === 'returns' && (
           <>
+            <ChapterPrelude content={text.returns} />
             <ClickableDerivation
               eyebrow={lang === 'zh' ? '完整定义与推导' : 'Complete definition and derivation'}
               title={lang === 'zh' ? '从奖励序列到状态价值' : 'From a reward sequence to state value'}
               intro={lang === 'zh' ? '所有推导行始终保留在正文中。点击任意一行，右侧工作台会解释这一步用了什么变换、为什么成立以及每个符号的含义。' : 'Every derivation line remains in the article. Select one to inspect the transformation, justification, assumptions, and symbols in the right workspace.'}
               steps={text.returns.derivation}
-              onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
+              onSelect={handleDerivationSelect}
             />
             <ChapterDeepening sections={text.returns.deepening} lang={lang} />
+            <ChapterSections content={text.returns} placement="before" />
             <p className="article-copy chapter-transition"><MathText>{text.returns.experimentIntro || text.returns.bridge}</MathText></p>
             <ReturnObservatory lang={lang} content={text.returns} />
             {text.returns.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.returns.interpretation}</MathText></p>}
-            <ChapterSections content={text.returns} />
+            <ChapterSections content={text.returns} placement="after" />
             <ChapterSummary content={text.returns} lang={lang} />
             <ChapterSources sources={text.returns.sources} lang={lang} />
           </>
         )}
         {active === 'bellman' && (
           <>
+            <ChapterPrelude content={text.bellman} />
             <ClickableDerivation
               eyebrow={lang === 'zh' ? '完整公式推导' : 'Complete mathematical derivation'}
               title={lang === 'zh' ? '从状态价值定义到 Bellman 期望方程' : 'From state-value definition to the Bellman expectation equation'}
               intro={lang === 'zh' ? '等式链完整写在正文中；选择一行只会打开右侧解释，不会隐藏或替换其他推导步骤。' : 'The full equality chain stays in the article. Selecting a line opens its explanation without hiding or replacing any other step.'}
               steps={text.bellman.derivation}
-              onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
+              onSelect={handleDerivationSelect}
             />
             <ChapterDeepening sections={text.bellman.deepening} lang={lang} />
+            <ChapterSections content={text.bellman} placement="before" />
             <p className="article-copy chapter-transition"><MathText>{text.bellman.experimentIntro || text.bellman.bridge}</MathText></p>
             <BellmanLab lang={lang} text={text} />
             {text.bellman.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.bellman.interpretation}</MathText></p>}
-            <ChapterSections content={text.bellman} />
+            <ChapterSections content={text.bellman} placement="after" />
             <ChapterSummary content={text.bellman} lang={lang} />
             <ChapterSources sources={text.bellman.sources} lang={lang} />
           </>
         )}
         {active === 'optimality' && (
           <>
+            <ChapterPrelude content={text.optimality} />
             <ClickableDerivation
               eyebrow={lang === 'zh' ? '完整公式推导' : 'Complete mathematical derivation'}
               title={lang === 'zh' ? '从策略加权到 Bellman 最优方程' : 'From policy weighting to the Bellman optimality equation'}
               intro={lang === 'zh' ? '先区分“评价给定策略”和“寻找最好策略”，再逐行说明为什么对策略的最大化可以化成对动作的最大化。' : 'First separate evaluating a given policy from finding the best policy, then derive why maximizing over policies reduces to maximizing over actions.'}
               steps={text.optimality.derivation}
-              onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
+              onSelect={handleDerivationSelect}
             />
             <ChapterDeepening sections={text.optimality.deepening} lang={lang} />
+            <ChapterSections content={text.optimality} placement="before" />
             <p className="article-copy chapter-transition"><MathText>{text.optimality.experimentIntro || text.optimality.bridge}</MathText></p>
             <OptimalitySwitch content={text.optimality} />
             {text.optimality.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.optimality.interpretation}</MathText></p>}
-            <ChapterSections content={text.optimality} />
+            <ChapterSections content={text.optimality} placement="after" />
             <ChapterSummary content={text.optimality} lang={lang} />
             <ChapterSources sources={text.optimality.sources} lang={lang} />
           </>
         )}
         {active === 'planning' && (
           <>
+            <ChapterPrelude content={text.planning} />
             <ClickableDerivation
               eyebrow={lang === 'zh' ? '算法从方程中产生' : 'Algorithms from the equation'}
               title={lang === 'zh' ? '从最优不动点到 VI、PI 与 TPI' : 'From the optimal fixed point to VI, PI, and TPI'}
               intro={lang === 'zh' ? '三种算法不是三套互不相关的公式；它们都在交替执行价值评估与策略改善，只是每轮评估的深度不同。' : 'These are not three unrelated formulas. Each alternates value evaluation and policy improvement, with a different evaluation depth per round.'}
               steps={text.planning.derivation}
-              onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
+              onSelect={handleDerivationSelect}
             />
             <ChapterDeepening sections={text.planning.deepening} lang={lang} />
+            <ChapterSections content={text.planning} placement="before" />
             <p className="article-copy chapter-transition"><MathText>{text.planning.experimentIntro || text.planning.bridge}</MathText></p>
             <PlanningLab content={text.planning} />
             {text.planning.interpretation && <p className="article-copy chapter-interpretation"><MathText>{text.planning.interpretation}</MathText></p>}
-            <ChapterSections content={text.planning} />
+            <ChapterSections content={text.planning} placement="after" />
             <ChapterSummary content={text.planning} lang={lang} />
             <ChapterSources sources={text.planning.sources} lang={lang} />
           </>
@@ -369,76 +413,99 @@ export default function App() {
               <MonteCarloChapter
                 content={content}
                 lang={lang}
-                onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
+                onSelect={handleDerivationSelect}
+                beforeExperiment={<ChapterSections content={content} placement="before" />}
               />
               <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
-              <ChapterSections content={content} />
+              <ChapterSections content={content} placement="after" />
+              <ChapterSummary content={content} lang={lang} />
+              <ChapterSources sources={content.sources} lang={lang} />
+            </>
+          )}
+          {active === 'approximation' && (
+            <>
+              <ArticleFlow
+                blocks={content.articleFlow}
+                lang={lang}
+                onSelect={handleDerivationSelect}
+                renderExperiment={() => <><StochasticApproximationLab lang={lang} content={content} /><p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p></>}
+              />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />
             </>
           )}
           {part23Ids.includes(active) && (
             <>
+              <ChapterPrelude content={content} />
               <ClickableDerivation
                 eyebrow={lang === 'zh' ? '完整概念与公式链' : 'Complete conceptual and mathematical chain'}
                 title={content.title}
                 intro={content.bridge}
                 steps={content.derivation}
-                onSelect={(context) => { setRightContext(context); setRightOpen(true) }}
+                onSelect={handleDerivationSelect}
               />
               <ChapterDeepening sections={content.deepening} lang={lang} />
+              <ChapterSections content={content} placement="before" />
               <p className="article-copy chapter-transition"><MathText>{content.experimentIntro}</MathText></p>
               <LearningLab key={active} id={active} lang={lang} content={content} />
               <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
-              <ChapterSections content={content} />
+              <ChapterSections content={content} placement="after" />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />
             </>
           )}
           {active === 'ppo' && (
             <>
-              <ClickableDerivation eyebrow={lang === 'zh' ? '从 Actor–Critic 到 PPO' : 'From Actor–Critic to PPO'} title={lang === 'zh' ? '怎样让一批旧策略样本支持多轮稳定更新？' : 'How can one old-policy batch support stable repeated updates?'} intro={text.ppo.derivationIntro} steps={text.ppo.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ChapterPrelude content={text.ppo} />
+              <ClickableDerivation eyebrow={lang === 'zh' ? '从 Actor–Critic 到 PPO' : 'From Actor–Critic to PPO'} title={lang === 'zh' ? '旧策略样本的多轮稳定更新' : 'Stable repeated updates from old-policy samples'} intro={text.ppo.derivationIntro} steps={text.ppo.derivation} onSelect={handleDerivationSelect} />
               <ChapterDeepening sections={text.ppo.deepening} lang={lang} />
+              <ChapterSections content={text.ppo} placement="before" />
               <p className="article-copy chapter-transition"><MathText>{text.ppo.experimentIntro}</MathText></p>
               <PpoLab lang={lang} text={text} />
               <p className="article-copy chapter-interpretation"><MathText>{text.ppo.interpretation}</MathText></p>
-              <ChapterSections content={text.ppo} />
+              <ChapterSections content={text.ppo} placement="after" />
               <ChapterSummary content={text.ppo} lang={lang} />
               <ChapterSources sources={text.ppo.sources} lang={lang} />
             </>
           )}
           {active === 'tokenmdp' && (
             <>
-              <ClickableDerivation eyebrow={lang === 'zh' ? '从语言生成到 MDP 五要素' : 'From generation to the five MDP elements'} title={lang === 'zh' ? '怎样把一条 response 严格定义为 token 轨迹？' : 'How is a response defined rigorously as a token trajectory?'} intro={text.tokenmdp.derivationIntro} steps={text.tokenmdp.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ChapterPrelude content={text.tokenmdp} />
+              <ClickableDerivation eyebrow={lang === 'zh' ? '从语言生成到 MDP 五要素' : 'From generation to the five MDP elements'} title={lang === 'zh' ? '将一条 response 严格定义为 token 轨迹' : 'A rigorous token-trajectory definition of a response'} intro={text.tokenmdp.derivationIntro} steps={text.tokenmdp.derivation} onSelect={handleDerivationSelect} />
               <ChapterDeepening sections={text.tokenmdp.deepening} lang={lang} />
+              <ChapterSections content={text.tokenmdp} placement="before" />
               <p className="article-copy chapter-transition"><MathText>{text.tokenmdp.experimentIntro}</MathText></p>
               <TokenMdpLab lang={lang} content={text.tokenmdp} />
               <p className="article-copy chapter-interpretation"><MathText>{text.tokenmdp.interpretation}</MathText></p>
-              <ChapterSections content={text.tokenmdp} />
+              <ChapterSections content={text.tokenmdp} placement="after" />
               <ChapterSummary content={text.tokenmdp} lang={lang} />
               <ChapterSources sources={text.tokenmdp.sources} lang={lang} />
             </>
           )}
           {active === 'rlhf' && (
             <>
-              <ClickableDerivation eyebrow={text.rlhf.eyebrow} title={text.rlhf.title} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ChapterPrelude content={text.rlhf} />
+              <ClickableDerivation eyebrow={text.rlhf.eyebrow} title={text.rlhf.title} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={handleDerivationSelect} />
               <ChapterDeepening sections={text.rlhf.deepening} lang={lang} />
+              <ChapterSections content={text.rlhf} placement="before" />
               <p className="article-copy chapter-transition"><MathText>{text.rlhf.experimentIntro}</MathText></p>
               <SystemLab lang={lang} text={text} ppoOnly />
               <p className="article-copy chapter-interpretation"><MathText>{text.rlhf.interpretation}</MathText></p>
-              <ChapterSections content={text.rlhf} />
+              <ChapterSections content={text.rlhf} placement="after" />
               <ChapterSummary content={text.rlhf} lang={lang} />
               <ChapterSources sources={text.rlhf.sources} lang={lang} />
             </>
           )}
           {modernExtensionIds.includes(active) && (
             <>
-              <ClickableDerivation eyebrow={lang === 'zh' ? '完整定义与推导' : 'Complete definition and derivation'} title={content.title} intro={content.derivationIntro || content.bridge} steps={content.derivation} onSelect={(context) => { setRightContext(context); setRightOpen(true) }} />
+              <ChapterPrelude content={content} />
+              <ClickableDerivation eyebrow={lang === 'zh' ? '完整定义与推导' : 'Complete definition and derivation'} title={content.title} intro={content.derivationIntro || content.bridge} steps={content.derivation} onSelect={handleDerivationSelect} />
               <ChapterDeepening sections={content.deepening} lang={lang} />
+              <ChapterSections content={content} placement="before" />
               <p className="article-copy chapter-transition"><MathText>{content.experimentIntro}</MathText></p>
               <ModernExtensionLab id={active} lang={lang} content={content} />
               <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
-              <ChapterSections content={content} />
+              <ChapterSections content={content} placement="after" />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />
             </>

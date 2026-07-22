@@ -58,13 +58,13 @@ const optimalityDeepeningZh = [
     handoff: '压缩性同时给出三个结果：V* 存在、V* 唯一，并且从任意有界初值反复更新都能逼近它。',
   },
   {
-    id: 'greedy-policy-proof', kicker: '从价值恢复策略', title: '为什么对 V* 贪心就一定得到最优策略？',
+    id: 'greedy-policy-proof', kicker: '从价值恢复策略', title: '对 V* 贪心能够恢复最优策略',
     paragraphs: ['令 πg 在每个状态选择使 T*V*(s) 达到最大值的动作。对这套策略，策略算子 Tπg 在 V* 上与 T* 完全相同，因此 V* 也是 Tπg 的不动点。', '固定策略的 Bellman 算子只有一个不动点，所以 Vπg=V*。这一步把“局部逐状态贪心”与“全局长期最优”连接起来。'],
     formulas: [String.raw`T^{\pi_g}V^*=T^*V^*=V^*`, String.raw`V^{\pi_g}=V^*\quad\Longrightarrow\quad \pi_g\ \text{is optimal}`],
     theorem: { claim: '由 V* 提取的任意贪心策略都是最优策略。', why: '该策略让 V* 同时成为自己的 Bellman 不动点，而固定策略的不动点唯一。', conditions: [String.raw`\pi_g(s)\in\operatorname*{arg\,max}_a q_{V^*}(s,a)`] },
   },
   {
-    id: 'reward-transformations', kicker: '反事实 · 奖励变换', title: '哪些奖励变换只改数值，哪些会改最优策略？',
+    id: 'reward-transformations', kicker: '反事实 · 奖励变换', title: '奖励变换对数值与最优策略的不同影响',
     paragraphs: ['把所有奖励乘以正数 c，会把所有 return、V* 和 Q* 同比例缩放，动作排序不变。持续型任务中给每一步都加常数 b，会把所有策略价值平移 b/(1−γ)，动作排序仍不变。', '但只修改禁区、目标或某条路径的奖励并不是全局仿射变换，它会改变动作间相对差异；改变 γ 也会重新权衡短路与远期收益。因此 detour 是否值得必须通过完整 return 比较，而不能只看路径长度。'],
     formulas: [String.raw`r'=cr\ (c>0)\quad\Longrightarrow\quad Q'^*=cQ^*`, String.raw`r'=r+b\quad\Longrightarrow\quad Q'^*=Q^*+\frac{b}{1-\gamma}`],
     example: { title: '策略是否保持', caption: '只有对所有转移一致施加的正比例或常数平移保证排序不变。', headers: ['变化', 'Q* 变化', '最优动作'], rows: [['全部奖励 ×2', '全部 ×2', '保持'], ['每一步全部 +1', '全部 +1/(1−γ)', '保持'], ['仅禁区 −1→−10', '局部改变', '可能改变'], ['γ 0.9→0.5', '远期权重改变', '可能改变']] },
@@ -80,13 +80,13 @@ const optimalityDeepeningEn = [
     handoff: 'Contraction gives existence, uniqueness, and convergence of fixed-point iteration from any bounded start.',
   },
   {
-    id: 'greedy-policy-proof', kicker: 'Recover a policy from value', title: 'Why is a policy greedy with respect to V* globally optimal?',
+    id: 'greedy-policy-proof', kicker: 'Recover a policy from value', title: 'Greediness with respect to V* recovers an optimal policy',
     paragraphs: ['Let πg choose an action attaining T*V*(s) in every state. Its policy operator then agrees with the optimality operator on V*, so V* is also a fixed point of Tπg.', 'A fixed-policy Bellman operator has only one fixed point; therefore Vπg=V*. This links local statewise greediness to global long-term optimality.'],
     formulas: [String.raw`T^{\pi_g}V^*=T^*V^*=V^*`, String.raw`V^{\pi_g}=V^*\quad\Longrightarrow\quad \pi_g\ \text{is optimal}`],
     theorem: { claim: 'Every policy greedy with respect to V* is optimal.', why: 'It makes V* its own Bellman fixed point, and fixed-policy value is unique.', conditions: [String.raw`\pi_g(s)\in\operatorname*{arg\,max}_a q_{V^*}(s,a)`] },
   },
   {
-    id: 'reward-transformations', kicker: 'Counterfactual · Reward transforms', title: 'Which reward changes preserve the policy, and which can reverse it?',
+    id: 'reward-transformations', kicker: 'Counterfactual · Reward transforms', title: 'Reward transformations affect values and optimal policies differently',
     paragraphs: ['Multiplying every reward by c>0 scales every return and action value equally. Adding b to every step in a continuing task shifts all values by b/(1−γ). Both preserve action ordering.', 'Changing only forbidden or target rewards is not a global affine transform and can alter relative action values. Changing γ also reweights detours against delayed gains.'],
     formulas: [String.raw`r'=cr\ (c>0)\quad\Longrightarrow\quad Q'^*=cQ^*`, String.raw`r'=r+b\quad\Longrightarrow\quad Q'^*=Q^*+\frac{b}{1-\gamma}`],
     example: { title: 'Does the policy remain?', caption: 'Only globally uniform positive scaling or shifting guarantees unchanged ordering.', headers: ['Change', 'Q* change', 'Optimal action'], rows: [['All rewards ×2', 'All ×2', 'Preserved'], ['Every step +1', 'All +1/(1−γ)', 'Preserved'], ['Forbidden −1→−10 only', 'Local change', 'May change'], ['γ 0.9→0.5', 'Future reweighted', 'May change']] },
@@ -100,7 +100,7 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     prerequisite: '前置：状态价值、动作价值与 Bellman 期望方程',
     summaryTitle: '最优性不是另一个环境，而是对五个动作进行同场竞争',
     eyebrow: '第 4 章 · Bellman 最优方程与最优策略',
-    title: '从评价当前策略到寻找最优策略，方程右侧改变了什么？',
+    title: '从策略评价到最优控制的算子变化',
     intro: 'Bellman 期望方程假定策略 π 已知，并按 π(a|s) 汇总动作价值；Bellman 最优方程把策略也变成未知量。因为概率权重和为 1，右侧最大化最终等价于选择最大的 q(s,a)。',
     bridge: '下面在同一个 5×5 世界、同一个状态和同一张后继价值快照上计算五个动作的 target。切换算子时，环境模型没有改变；改变的只是“服从当前策略”还是“选择最大动作价值”。',
     experimentIntro: '下面固定环境、状态与后继价值，只切换聚合规则。先检查五个动作各自的一步 target，再比较策略加权结果与最大动作结果。',
@@ -126,7 +126,7 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     prerequisite: 'Prerequisites: state value, action value, and the Bellman expectation equation',
     summaryTitle: 'Optimality is not a new environment; it is a fair competition among five actions',
     eyebrow: 'Chapter 4 · Bellman optimality equation and optimal policy',
-    title: 'What changes on the right-hand side when evaluation becomes optimization?',
+    title: 'The operator change from policy evaluation to optimal control',
     intro: 'The Bellman expectation equation assumes policy π is known and aggregates action values with π(a|s). The Bellman optimality equation makes the policy unknown too. Because the action probabilities sum to one, right-hand maximization reduces to selecting the largest q(s,a).',
     bridge: 'The switch computes all five action targets in the same 5×5 world, at the same state, from the same successor-value snapshot. Toggling the operator does not change the environment; it changes whether the update follows the current policy or selects the maximum action value.',
     experimentIntro: 'Hold the environment, state, and successor values fixed. Inspect all five one-step targets before comparing policy weighting with action maximization.',
@@ -149,3 +149,5 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     explorer: explorer.en,
   },
 })
+
+Object.assign(optimalityChapter.en.deepening[2].example, { title: 'Policy preservation under reward transformations' })

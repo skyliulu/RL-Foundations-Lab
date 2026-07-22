@@ -10,7 +10,7 @@ export const vfaDeepeningZh = [
     handoff: '在线性函数下，可以精确看出一次更新如何传播到相似状态。',
   },
   {
-    id: 'linear-sharing', kicker: '线性特征', title: '线性逼近为什么把“相似”变成特征内积？',
+    id: 'linear-sharing', kicker: '线性特征', title: '线性逼近以特征内积表达状态相似性',
     paragraphs: ['令预测为特征向量与参数的内积，则梯度就是当前状态的特征。更新后，另一个状态的预测变化等于两个状态特征的内积乘本次误差；正交特征互不影响，相似特征共同移动。', 'one-hot 特征使不同状态内积为零，恰好退化为表格方法。tile coding、Fourier 或神经网络的差别，本质上都在重新定义哪些状态共享参数。'],
     formulas: [String.raw`\widehat v(s,w)=x(s)^{\top}w,\qquad\nabla_w\widehat v(s,w)=x(s)`, String.raw`\Delta\widehat v(s')=\alpha\delta\,x(s')^{\top}x(s)`],
     example: example('一次样本怎样影响三个状态', '误差 δ=2、步长 α=0.1；变化大小由特征内积决定。', ['状态关系', '特征内积', '预测变化'], [['同一状态', '1.0', '+0.20'], ['相邻状态', '0.6', '+0.12'], ['无关状态', '0.0', '0']]),
@@ -18,7 +18,7 @@ export const vfaDeepeningZh = [
     handoff: '控制还会让采样策略随 Q 改变，目标与数据分布同时移动。',
   },
   {
-    id: 'approximate-control', kicker: '近似控制', title: '把 Q 写成函数后，控制循环为什么比预测更容易不稳定？',
+    id: 'approximate-control', kicker: '近似控制', title: '函数化 Q 表示增加控制循环的不稳定性',
     paragraphs: ['预测在固定策略下逼近一个固定 value；控制一边用 Q 选动作，一边更新 Q。参数变化会改变行为策略，行为策略又改变训练分布与 bootstrap target。', '函数逼近、bootstrap 与 off-policy 三者同时出现时形成 deadly triad。它不是说一定发散，而是说表格收敛直觉不再自动成立；必须通过目标网络、经验回放、保守更新或梯度 TD 等机制恢复稳定性。'],
     formulas: [String.raw`U_t=R_{t+1}+\gamma\max_a\widehat q(S_{t+1},a,w)`, String.raw`w\leftarrow w+\alpha\left(U_t-\widehat q(S_t,A_t,w)\right)\nabla_w\widehat q(S_t,A_t,w)`],
     pseudocodeTitle: 'Semi-gradient Sarsa with function approximation',
@@ -36,7 +36,7 @@ export const vfaDeepeningEn = [
     handoff: 'Linear functions reveal exactly how one update propagates to related states.',
   },
   {
-    id: 'linear-sharing', kicker: 'Linear features', title: 'Why does linear approximation turn similarity into a feature inner product?',
+    id: 'linear-sharing', kicker: 'Linear features', title: 'Linear approximation represents state similarity through feature inner products',
     paragraphs: ['For an inner-product predictor, the gradient equals the current feature vector. The change at another state is proportional to the feature inner product: orthogonal states do not interact, while similar states move together.', 'One-hot features make all different states orthogonal and recover the tabular method. Other representations redefine which states share parameters.'],
     formulas: [String.raw`\widehat v(s,w)=x(s)^{\top}w,\qquad\nabla_w\widehat v(s,w)=x(s)`, String.raw`\Delta\widehat v(s')=\alpha\delta\,x(s')^{\top}x(s)`],
     example: example('How one sample changes three states', 'Let δ=2 and α=0.1; feature inner products set the propagation.', ['Relation', 'Feature inner product', 'Prediction change'], [['Same state', '1.0', '+0.20'], ['Neighbor', '0.6', '+0.12'], ['Unrelated', '0.0', '0']]),
@@ -44,7 +44,7 @@ export const vfaDeepeningEn = [
     handoff: 'Control also moves the behavior policy, so both target and data distribution change.',
   },
   {
-    id: 'approximate-control', kicker: 'Approximate control', title: 'Why is function-approximated control less stable than prediction?',
+    id: 'approximate-control', kicker: 'Approximate control', title: 'Function-approximated control introduces instability beyond prediction',
     paragraphs: ['Prediction approximates one fixed-policy value. Control uses Q to choose actions while updating Q, so parameter changes alter behavior, which alters the training distribution and targets.', 'Function approximation, bootstrapping, and off-policy learning form the deadly triad. Divergence is not guaranteed, but tabular convergence intuition no longer transfers automatically.'],
     formulas: [String.raw`U_t=R_{t+1}+\gamma\max_a\widehat q(S_{t+1},a,w)`, String.raw`w\leftarrow w+\alpha\left(U_t-\widehat q(S_t,A_t,w)\right)\nabla_w\widehat q(S_t,A_t,w)`],
     pseudocodeTitle: 'Semi-gradient Sarsa with function approximation',
@@ -62,7 +62,7 @@ export const dqnDeepeningZh = [
     handoff: '即使 target 暂时固定，按轨迹顺序训练仍会产生相关梯度，因此还需要 replay。',
   },
   {
-    id: 'replay-why', kicker: '经验回放', title: 'Replay 为什么既打散相关性，又改变每条经验被使用的次数？',
+    id: 'replay-why', kicker: '经验回放', title: 'Replay 同时重排样本相关性并改变经验复用次数',
     paragraphs: ['环境每步产生一条 transition，buffer 保存它们；训练批次从整个窗口随机抽取，使相邻梯度不必来自相邻时间。旧经验还能被多次复用，提高昂贵交互的样本效率。', '但 replay 分布是历史行为策略的混合，不等于当前策略分布。容量太小接近在线相关数据；容量太大可能包含大量过时经验。优先回放进一步改变采样概率，需要用重要性权重控制偏差。'],
     formulas: [String.raw`e_t=(S_t,A_t,R_{t+1},S_{t+1},D_{t+1})`, String.raw`(e_1,\ldots,e_B)\sim\operatorname{Uniform}(\mathcal D)`],
     example: example('两个机制各自控制什么', '关闭一个机制并不能由另一个自动补偿。', ['配置', '标签漂移', '样本相关'], [['在线网络 + 顺序样本', '高', '高'], ['目标网络 + 顺序样本', '较低', '高'], ['在线网络 + replay', '高', '较低'], ['目标网络 + replay', '较低', '较低']]),
@@ -87,7 +87,7 @@ export const dqnDeepeningEn = [
     handoff: 'A fixed target does not remove sequential sample correlation, motivating replay.',
   },
   {
-    id: 'replay-why', kicker: 'Experience replay', title: 'Why does replay both decorrelate data and change reuse counts?',
+    id: 'replay-why', kicker: 'Experience replay', title: 'Replay both decorrelates data and changes experience reuse counts',
     paragraphs: ['Each transition enters a buffer; training batches sample across the window, so adjacent gradients need not come from adjacent time. Old experience can train repeatedly, improving interaction efficiency.', 'The replay distribution mixes historical behavior policies. Small buffers resemble correlated online data; very large buffers can become stale. Prioritized replay changes sampling probabilities and needs importance correction.'],
     formulas: [String.raw`e_t=(S_t,A_t,R_{t+1},S_{t+1},D_{t+1})`, String.raw`(e_1,\ldots,e_B)\sim\operatorname{Uniform}(\mathcal D)`],
     example: example('What each mechanism controls', 'One mechanism cannot automatically replace the other.', ['Configuration', 'Label drift', 'Sample correlation'], [['Online + sequential', 'High', 'High'], ['Target + sequential', 'Lower', 'High'], ['Online + replay', 'High', 'Lower'], ['Target + replay', 'Lower', 'Lower']]),
@@ -105,21 +105,21 @@ export const dqnDeepeningEn = [
 
 export const policyGradientDeepeningZh = [
   {
-    id: 'objectives-and-occupancy', kicker: '先说清优化目标', title: '平均状态价值与平均奖励为什么会导向相似的策略梯度结构？',
+    id: 'objectives-and-occupancy', kicker: '先说清优化目标', title: '平均状态价值与平均奖励导向相似的策略梯度结构',
     paragraphs: ['策略参数不仅改变当前动作概率，还改变未来会访问哪些状态。折扣设定可用起始分布下的期望回报或折扣 occupancy 定义目标；持续型任务常用稳态分布下的平均奖励。', '两种目标的状态权重不同，不能把常数因子和分布直接混用；但 policy gradient theorem 都把长期分布变化吸收到 occupancy 权重中，留下 score function 与 action value 的乘积。'],
     formulas: [String.raw`J_\gamma(\theta)=\mathbb E_{S_0\sim d_0,\pi_\theta}\left[\sum_{t=0}^{\infty}\gamma^tR_{t+1}\right]`, String.raw`J_{\mathrm{avg}}(\theta)=\sum_s d^{\pi_\theta}(s)\sum_a\pi_\theta(a\mid s)r(s,a)`],
     theorem: theorem('策略梯度定理避免显式微分状态访问分布。', '状态分布当然依赖 θ；定理不是忽略这项，而是利用 Markov 链与 value 递推把它重新组织进 occupancy 权重。', [String.raw`\pi_\theta(a\mid s)\ \text{differentiable}`, String.raw`\sum_a\pi_\theta(a\mid s)=1`]),
     handoff: '把概率导数写成概率乘对数概率导数后，这个加权和才可以直接用策略样本估计。',
   },
   {
-    id: 'theorem-to-samples', kicker: '从定理到采样', title: 'log-derivative trick 为什么恰好把求和变成 on-policy 期望？',
+    id: 'theorem-to-samples', kicker: '从定理到采样', title: 'log-derivative trick 将求和改写为 on-policy 期望',
     paragraphs: ['恒等式 ∇π=π∇logπ 把原本缺少采样概率的导数补成 π 加权。于是从当前策略抽到的状态—动作对，可以用 score function 乘价值构成 Monte Carlo 梯度估计。', 'score 的动作期望为零，这既解释了归一化约束，也证明任何不依赖当前动作的 baseline 在期望中消失。baseline 改变方差和单样本方向强度，却不改变期望梯度。'],
     formulas: [String.raw`\nabla_\theta\pi_\theta(a\mid s)=\pi_\theta(a\mid s)\nabla_\theta\log\pi_\theta(a\mid s)`, String.raw`\mathbb E_{A\sim\pi_\theta}[\nabla_\theta\log\pi_\theta(A\mid s)]=\nabla_\theta\sum_a\pi_\theta(a\mid s)=0`, String.raw`\nabla J(\theta)=\mathbb E[\nabla\log\pi_\theta(A_t\mid S_t)q^{\pi}(S_t,A_t)]`],
     example: example('同一正 advantage 在不同概率下的作用', '两动作 softmax 中，被选动作的 score 大小为 1−π。', ['被选动作概率', 'score 大小', '正 advantage 的更新'], [['0.1', '0.9', '较强上调'], ['0.5', '0.5', '中等上调'], ['0.9', '0.1', '较弱上调']]),
     handoff: '用完整 return 替代未知 q^π，就得到 REINFORCE。',
   },
   {
-    id: 'reinforce-complete', kicker: '完整算法', title: 'REINFORCE 为什么必须先收集轨迹，再反向计算每个时刻的 return？',
+    id: 'reinforce-complete', kicker: '完整算法', title: 'REINFORCE 先收集轨迹，再反向计算各时刻的 return',
     paragraphs: ['时刻 t 的动作只能由它之后的奖励评价，因此不能把此前奖励放进权重。整条 episode 结束后反向递推 G，可以在线性时间内得到所有 reward-to-go。', '每个时间步都贡献一项 score × advantage。按 episode 求和后再更新可保持轨迹来自同一旧策略；若中途更新，后半段数据已来自不同策略，估计契约必须相应修改。'],
     formulas: [String.raw`G_t=R_{t+1}+\gamma G_{t+1}`, String.raw`\theta\leftarrow\theta+\alpha\sum_{t=0}^{T-1}\gamma^t\nabla_\theta\log\pi_\theta(A_t\mid S_t)\left(G_t-b(S_t)\right)`],
     pseudocodeTitle: 'Episodic REINFORCE with baseline',
@@ -130,21 +130,21 @@ export const policyGradientDeepeningZh = [
 
 export const policyGradientDeepeningEn = [
   {
-    id: 'objectives-and-occupancy', kicker: 'Define the objective first', title: 'Why do average value and average reward yield similar policy-gradient structure?',
+    id: 'objectives-and-occupancy', kicker: 'Define the objective first', title: 'Average value and average reward yield similar policy-gradient structure',
     paragraphs: ['Policy parameters change immediate action probabilities and the future state occupancy. Discounted tasks use start-distribution return or discounted occupancy, while continuing tasks often use stationary average reward.', 'The state weights differ and should not be mixed. Yet each policy-gradient theorem reorganizes long-run distribution dependence into occupancy weights, leaving score times action value.'],
     formulas: [String.raw`J_\gamma(\theta)=\mathbb E_{S_0\sim d_0,\pi_\theta}\left[\sum_{t=0}^{\infty}\gamma^tR_{t+1}\right]`, String.raw`J_{\mathrm{avg}}(\theta)=\sum_s d^{\pi_\theta}(s)\sum_a\pi_\theta(a\mid s)r(s,a)`],
     theorem: theorem('The policy-gradient theorem avoids explicitly differentiating state occupancy.', 'Occupancy still depends on θ; Markov and value recursions reorganize that derivative into occupancy weights.', [String.raw`\pi_\theta(a\mid s)\ \text{differentiable}`, String.raw`\sum_a\pi_\theta(a\mid s)=1`]),
     handoff: 'The log-derivative identity turns the weighted sum into an expectation that policy samples can estimate.',
   },
   {
-    id: 'theorem-to-samples', kicker: 'Theorem to samples', title: 'Why does the log-derivative trick turn the sum into an on-policy expectation?',
+    id: 'theorem-to-samples', kicker: 'Theorem to samples', title: 'The log-derivative trick turns the sum into an on-policy expectation',
     paragraphs: ['The identity ∇π=π∇logπ supplies exactly the π weighting used by sampling. A state-action pair from the current policy can therefore contribute score times value.', 'The expected score over actions is zero. This reflects normalization and proves that any action-independent baseline vanishes in expectation while changing variance.'],
     formulas: [String.raw`\nabla_\theta\pi_\theta(a\mid s)=\pi_\theta(a\mid s)\nabla_\theta\log\pi_\theta(a\mid s)`, String.raw`\mathbb E_{A\sim\pi_\theta}[\nabla_\theta\log\pi_\theta(A\mid s)]=\nabla_\theta\sum_a\pi_\theta(a\mid s)=0`, String.raw`\nabla J(\theta)=\mathbb E[\nabla\log\pi_\theta(A_t\mid S_t)q^{\pi}(S_t,A_t)]`],
     example: example('The same positive advantage at different probabilities', 'For a two-action softmax, the selected-action score magnitude is 1−π.', ['Selected probability', 'Score magnitude', 'Positive-advantage effect'], [['0.1', '0.9', 'Strong increase'], ['0.5', '0.5', 'Medium increase'], ['0.9', '0.1', 'Small increase']]),
     handoff: 'Replacing unknown q^π with a complete return produces REINFORCE.',
   },
   {
-    id: 'reinforce-complete', kicker: 'Complete algorithm', title: 'Why does REINFORCE collect a trajectory before computing returns backward?',
+    id: 'reinforce-complete', kicker: 'Complete algorithm', title: 'REINFORCE collects a trajectory before computing returns backward',
     paragraphs: ['Action t should be evaluated only by subsequent rewards. After termination, a backward recursion computes every reward-to-go in linear time.', 'Each time step contributes score times advantage. Updating after the episode keeps all data under one old policy; mid-episode updates require a different sampling contract.'],
     formulas: [String.raw`G_t=R_{t+1}+\gamma G_{t+1}`, String.raw`\theta\leftarrow\theta+\alpha\sum_{t=0}^{T-1}\gamma^t\nabla_\theta\log\pi_\theta(A_t\mid S_t)\left(G_t-b(S_t)\right)`],
     pseudocodeTitle: 'Episodic REINFORCE with baseline',
@@ -155,14 +155,14 @@ export const policyGradientDeepeningEn = [
 
 export const actorCriticDeepeningZh = [
   {
-    id: 'qac-to-baseline', kicker: '从 Q Actor–Critic 开始', title: '为什么减去 state baseline 不改变期望梯度，却能显著降低方差？',
+    id: 'qac-to-baseline', kicker: '从 Q Actor–Critic 开始', title: 'State baseline 保持期望梯度并降低方差',
     paragraphs: ['最直接的 Q Actor–Critic 用估计 q(S,A) 加权 score。问题是同一状态下所有动作共享的回报波动也会放大梯度。减去只依赖状态的 b(S)，其 score 乘积在动作期望下严格为零。', '取 b=v^π 后，权重变成 advantage。方差最小的标量 baseline 一般还会按 score 的平方加权，并不总严格等于 v^π；state value 是易学习且通常有效的近似。'],
     formulas: [String.raw`\mathbb E[\nabla\log\pi(A\mid S)b(S)\mid S]=0`, String.raw`A^{\pi}(s,a)=q^{\pi}(s,a)-v^{\pi}(s)`, String.raw`b^*(s)=\frac{\mathbb E[q^{\pi}(s,A)\lVert\nabla\log\pi(A\mid s)\rVert^2]}{\mathbb E[\lVert\nabla\log\pi(A\mid s)\rVert^2]}`],
     theorem: theorem('任何不依赖当前动作的 baseline 都保持策略梯度期望。', '证明只使用策略概率归一化；baseline 可以依赖状态或时间，但若依赖当前动作，消去通常不再成立。', [String.raw`b\perp A_t\mid S_t`, String.raw`\sum_a\pi_\theta(a\mid s)=1`]),
     handoff: '还需要一个及时、可学习的 advantage 样本；一步 TD error 正好满足这一接口。',
   },
   {
-    id: 'a2c-shared-transition', kicker: '同一 transition，两种梯度', title: 'TD error 为什么能同时是 Critic 的残差和 Actor 的 advantage 样本？',
+    id: 'a2c-shared-transition', kicker: '同一 transition，两种梯度', title: 'TD error 同时连接 Critic 残差与 Actor advantage',
     paragraphs: ['Critic 用 δ 衡量当前 value 与一步 bootstrap target 的差，因此沿 ∇V 更新参数。给定状态和动作，如果 V=v^π，那么 δ 的条件期望恰好等于 q^π−v^π，也就是 advantage。', '两次更新共享标量 δ，却绝不能共享梯度对象：Critic 对 value 求导，Actor 对 log policy 求导。实现中把 advantage 对 Actor stop-gradient，可避免 Actor loss 意外反向修改 Critic。'],
     formulas: [String.raw`\delta_t=R_{t+1}+\gamma V_\phi(S_{t+1})-V_\phi(S_t)`, String.raw`\mathbb E[\delta_t\mid S_t=s,A_t=a]=A^{\pi}(s,a)\quad\text{if }V_\phi=v^{\pi}`, String.raw`\Delta\phi\propto\delta_t\nabla_\phi V_\phi(S_t),\qquad\Delta\theta\propto\operatorname{stopgrad}(\delta_t)\nabla_\theta\log\pi_\theta(A_t\mid S_t)`],
     pseudocodeTitle: 'One-step Advantage Actor–Critic',
@@ -180,14 +180,14 @@ export const actorCriticDeepeningZh = [
 
 export const actorCriticDeepeningEn = [
   {
-    id: 'qac-to-baseline', kicker: 'Begin with Q Actor–Critic', title: 'Why does a state baseline preserve expected gradient while reducing variance?',
+    id: 'qac-to-baseline', kicker: 'Begin with Q Actor–Critic', title: 'A state baseline preserves expected gradient while reducing variance',
     paragraphs: ['Basic Q Actor–Critic weights the score by estimated q(S,A), including fluctuations shared by all actions at a state. Subtracting b(S) contributes exactly zero in expectation over actions.', 'With b=v^π the weight becomes advantage. The minimum-variance scalar baseline generally includes score-norm weighting, so state value is an effective learnable approximation rather than a universal exact optimum.'],
     formulas: [String.raw`\mathbb E[\nabla\log\pi(A\mid S)b(S)\mid S]=0`, String.raw`A^{\pi}(s,a)=q^{\pi}(s,a)-v^{\pi}(s)`, String.raw`b^*(s)=\frac{\mathbb E[q^{\pi}(s,A)\lVert\nabla\log\pi(A\mid s)\rVert^2]}{\mathbb E[\lVert\nabla\log\pi(A\mid s)\rVert^2]}`],
     theorem: theorem('Any baseline independent of the current action preserves expected policy gradient.', 'The proof uses only probability normalization. A current-action-dependent baseline generally does not cancel.', [String.raw`b\perp A_t\mid S_t`, String.raw`\sum_a\pi_\theta(a\mid s)=1`]),
     handoff: 'A timely learnable advantage sample is still needed; one-step TD error fits that interface.',
   },
   {
-    id: 'a2c-shared-transition', kicker: 'One transition, two gradients', title: 'Why is TD error both a critic residual and an actor advantage sample?',
+    id: 'a2c-shared-transition', kicker: 'One transition, two gradients', title: 'TD error connects critic residual and actor advantage',
     paragraphs: ['The critic compares its value to a one-step bootstrap target and updates along ∇V. If V equals v^π, the conditional expected TD error given state and action equals q^π−v^π.', 'Both updates share scalar δ but not the differentiated function. The critic differentiates value; the actor differentiates log policy. Stop-gradient on advantage prevents the actor loss from accidentally changing the critic.'],
     formulas: [String.raw`\delta_t=R_{t+1}+\gamma V_\phi(S_{t+1})-V_\phi(S_t)`, String.raw`\mathbb E[\delta_t\mid S_t=s,A_t=a]=A^{\pi}(s,a)\quad\text{if }V_\phi=v^{\pi}`, String.raw`\Delta\phi\propto\delta_t\nabla_\phi V_\phi(S_t),\qquad\Delta\theta\propto\operatorname{stopgrad}(\delta_t)\nabla_\theta\log\pi_\theta(A_t\mid S_t)`],
     pseudocodeTitle: 'One-step Advantage Actor–Critic',
@@ -202,3 +202,6 @@ export const actorCriticDeepeningEn = [
     handoff: 'PPO starts from on-policy Actor–Critic and constrains multiple updates on one old-policy rollout batch.',
   },
 ]
+
+Object.assign(vfaDeepeningEn[1].example, { title: 'The effect of one sample across three states' })
+Object.assign(dqnDeepeningEn[1].example, { title: 'The instability controlled by each mechanism' })

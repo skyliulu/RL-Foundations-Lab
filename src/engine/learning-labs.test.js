@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { compareControl, compareTdTargets, runActorCritic, runDqnStability, runFunctionApproximation, runMonteCarlo, runMonteCarloCourse, runPolicyGradient, runStochasticApproximation } from './learning-labs.js'
+import { compareControl, compareTdTargets, runActorCritic, runDqnStability, runFunctionApproximation, runMonteCarlo, runMonteCarloCourse, runPolicyGradient, runStochasticApproximation, runStochasticApproximationComparison } from './learning-labs.js'
 
 test('Part II lab outputs are deterministic and parameter-sensitive', () => {
   assert.deepEqual(runMonteCarlo(), runMonteCarlo())
@@ -10,6 +10,24 @@ test('Part II lab outputs are deterministic and parameter-sensitive', () => {
   assert.equal(targets.nStep, targets.td)
   const control = compareControl({ epsilon: 0.4 })
   assert.ok(control.qDanger > control.sarsaDanger)
+})
+
+test('stochastic approximation comparison exposes a shared evidence stream and exact update ledger', () => {
+  const result = runStochasticApproximationComparison({ alpha: 0.2, noise: 1.1, batchSize: 5, drifting: true })
+  assert.deepEqual(result, runStochasticApproximationComparison({ alpha: 0.2, noise: 1.1, batchSize: 5, drifting: true }))
+  assert.equal(result.observations.length, 36)
+  assert.equal(result.decaying.ledger.length, result.observations.length)
+  assert.equal(result.constant.ledger.length, result.observations.length)
+  assert.equal(result.sampleCost, 180)
+  result.constant.ledger.forEach((entry, index) => {
+    assert.equal(entry.observation, result.observations[index])
+    assert.ok(Math.abs(entry.before + entry.correction - entry.after) < 1e-12)
+  })
+  result.decaying.weights.forEach(({ initial, samples }) => {
+    assert.ok(Math.abs(initial + samples.reduce((sum, weight) => sum + weight, 0) - 1) < 1e-12)
+  })
+  const late = result.targets.length - 1
+  assert.ok(Math.abs(result.constant.series[late] - result.targets[late]) < Math.abs(result.decaying.series[late] - result.targets[late]))
 })
 
 test('the Monte Carlo family lab reuses the course world and exposes coverage, visit weighting, and policy softness', () => {

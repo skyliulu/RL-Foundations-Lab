@@ -131,7 +131,7 @@ const bellmanDeepeningZh = [
     handoff: '小链可以反向代入；带循环的网格无法按拓扑顺序一次解完，需要联立方程或迭代求解。',
   },
   {
-    id: 'matrix-and-iteration', kicker: '两种求解路径', title: '直接线性求解与反复 policy evaluation 为什么得到同一个答案？',
+    id: 'matrix-and-iteration', kicker: '两种求解路径', title: '直接线性求解与迭代 policy evaluation 共享同一不动点',
     paragraphs: ['把所有状态方程排列成向量，得到 (I−γPπ)vπ=rπ。若矩阵可逆，可以一次线性求解；也可以从任意 v₀ 开始，反复执行 vₖ₊₁=rπ+γPπvₖ。', '迭代式每一轮只把更远一层的奖励信息传播进来。因为 γPπ 的作用会把误差至多缩小 γ 倍，迭代极限满足与直接解相同的方程。直接解和迭代解不是两套 value 定义，只是两种计算策略。'],
     formulas: [String.raw`(I-\gamma P^{\pi})\mathbf v^{\pi}=\mathbf r^{\pi},\qquad \mathbf v^{\pi}=(I-\gamma P^{\pi})^{-1}\mathbf r^{\pi}`, String.raw`\mathbf v_{k+1}=\mathbf r^{\pi}+\gamma P^{\pi}\mathbf v_k,\qquad \|\mathbf v_{k+1}-\mathbf v^{\pi}\|_{\infty}\le\gamma\|\mathbf v_k-\mathbf v^{\pi}\|_{\infty}`],
     theorem: { claim: '当 0≤γ<1 且 Pπ 是随机矩阵时，policy evaluation 的不动点唯一，迭代从任意有界初值收敛。', why: 'Pπ 的每一行是概率分布，不会放大最大范数；再乘 γ 后成为压缩。', conditions: [String.raw`0\le\gamma<1`, String.raw`\sum_{s'}P^{\pi}_{ss'}=1`] },
@@ -154,7 +154,7 @@ const bellmanDeepeningEn = [
     handoff: 'A chain can be solved backward. A cyclic grid requires a simultaneous linear solve or iterative evaluation.',
   },
   {
-    id: 'matrix-and-iteration', kicker: 'Two solution routes', title: 'Why do a direct linear solve and iterative policy evaluation agree?',
+    id: 'matrix-and-iteration', kicker: 'Two solution routes', title: 'Direct linear solution and iterative policy evaluation share one fixed point',
     paragraphs: ['Stacking state equations gives (I−γPπ)vπ=rπ. An invertible matrix gives a direct solve; alternatively begin with any v₀ and repeat vₖ₊₁=rπ+γPπvₖ.', 'Each iteration propagates rewards one layer farther. Because γPπ contracts error by at most γ, the limit satisfies the same equation as the direct solution.'],
     formulas: [String.raw`(I-\gamma P^{\pi})\mathbf v^{\pi}=\mathbf r^{\pi},\qquad \mathbf v^{\pi}=(I-\gamma P^{\pi})^{-1}\mathbf r^{\pi}`, String.raw`\mathbf v_{k+1}=\mathbf r^{\pi}+\gamma P^{\pi}\mathbf v_k,\qquad \|\mathbf v_{k+1}-\mathbf v^{\pi}\|_{\infty}\le\gamma\|\mathbf v_k-\mathbf v^{\pi}\|_{\infty}`],
     theorem: { claim: 'For 0≤γ<1 and stochastic Pπ, policy evaluation has one fixed point and iteration converges from any bounded start.', why: 'A stochastic matrix does not expand the maximum norm; multiplying by γ makes the map a contraction.', conditions: [String.raw`0\le\gamma<1`, String.raw`\sum_{s'}P^{\pi}_{ss'}=1`] },
@@ -175,7 +175,7 @@ export const bellmanChapter = assertChapterDefinition({
   sources,
   zh: {
     eyebrow: '第 3 章 · 状态价值与 Bellman 方程',
-    title: '为什么一步更新能够表达长期价值？',
+    title: '一步递归对长期价值的表达',
     intro: '状态价值不是对眼前奖励的评分，而是从当前状态出发，沿策略产生的全部未来回报的期望。Bellman 方程把这条无限长的时间链切成“下一步奖励”与“下一状态的价值”。',
     bridge: '下面继续使用同一个 5×5 网格环境：进入黄色禁区或尝试越界奖励 −1，进入蓝色目标奖励 +1，其余移动奖励 0；目标状态不会终止任务。点击状态、调整参数并执行一次更新，观察数值如何从同一套环境模型中产生。',
     experimentIntro: '下面在已经定义的 5×5 环境中执行一次 Bellman backup。先选择状态，再逐项核对策略动作、后继分支、即时奖励和折扣后继价值，最后才写回新的状态价值。',
@@ -234,14 +234,14 @@ export const bellmanChapter = assertChapterDefinition({
       {
         id: 'target-anatomy',
         kicker: '观察',
-        title: '目标值由哪两部分组成？',
+        title: '目标值由即时奖励与后继价值组成',
         paragraphs: ['即时奖励给出本步的直接回报；后继状态价值代表未来；γ 决定未来在今天的权重。默认采用确定性动作；提高动作随机性后，目标会对所有可能后继状态进行概率加权。'],
         formula: String.raw`T=\mathbb{E}[R_{t+1}+\gamma V^{\pi}(S_{t+1})\mid S_t=s]`,
       },
       {
         id: 'bootstrapping',
         kicker: '机制',
-        title: 'Bootstrapping 怎样传播信息？',
+        title: 'Bootstrapping 通过后继估计传播信息',
         paragraphs: ['一次 backup 只改写一个状态，但它使用了后继状态的现有估计。后续 backup 再把这个新估计带给其他状态；残差下降时，整张 value table 逐渐靠近同一个 Bellman fixed point。'],
       },
       {
@@ -260,7 +260,7 @@ export const bellmanChapter = assertChapterDefinition({
       {
         id: 'action-value-transfer',
         kicker: '下一步',
-        title: '评价状态以后，怎样比较动作？',
+        title: '从状态评价扩展到动作比较',
         paragraphs: ['Vπ(s) 平均了策略在状态 s 选择的所有动作。要决定哪个动作更好，需要固定第一个动作并计算 Qπ(s,a)。下一章会把动作价值放到同一状态中竞争，从 policy evaluation 进入 Bellman optimality。'],
         formula: String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`,
       },
@@ -280,7 +280,7 @@ export const bellmanChapter = assertChapterDefinition({
   },
   en: {
     eyebrow: 'Chapter 3 · State Value and the Bellman Equation',
-    title: 'Why can a one-step update express long-term value?',
+    title: 'One-step recursion as an expression of long-term value',
     intro: 'A state value is not a score for the immediate reward. It is the expected future return under a policy. The Bellman equation cuts that infinite chain into the next reward and the value of the next state.',
     bridge: 'The canvas continues with the same 5×5 grid environment: entering a yellow forbidden cell or attempting to cross the boundary yields −1, entering the blue target yields +1, and every other move yields 0. The target is non-terminal. Select a state, adjust parameters, and see the values emerge from the same model.',
     experimentIntro: 'Perform one Bellman backup in the defined 5×5 environment. Select a state, inspect policy action, successor branches, immediate reward, and discounted successor value, and only then write back the new estimate.',
@@ -339,14 +339,14 @@ export const bellmanChapter = assertChapterDefinition({
       {
         id: 'target-anatomy',
         kicker: 'Observe',
-        title: 'Which two parts form the target?',
+        title: 'The target combines immediate reward and successor value',
         paragraphs: ['The immediate reward is the direct return from this step; the successor value represents the future; γ controls how much the future matters now. Actions are deterministic by default. With action randomness, the target probability-weights every possible successor.'],
         formula: String.raw`T=\mathbb{E}[R_{t+1}+\gamma V^{\pi}(S_{t+1})\mid S_t=s]`,
       },
       {
         id: 'bootstrapping',
         kicker: 'Mechanism',
-        title: 'How does bootstrapping propagate information?',
+        title: 'Bootstrapping propagates information through successor estimates',
         paragraphs: ['One backup rewrites one state using an existing successor estimate. Later backups carry that new estimate to other states. As the residual falls, the value table approaches one Bellman fixed point.'],
       },
       {
@@ -365,7 +365,7 @@ export const bellmanChapter = assertChapterDefinition({
       {
         id: 'action-value-transfer',
         kicker: 'Next',
-        title: 'After evaluating states, how do we compare actions?',
+        title: 'From state evaluation to action comparison',
         paragraphs: ['Vπ(s) averages over the actions selected by the policy in state s. To decide which action is better, fix the first action and evaluate Qπ(s,a). The next chapter lets action values compete within one state, moving from policy evaluation to Bellman optimality.'],
         formula: String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`,
       },

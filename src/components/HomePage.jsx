@@ -1,28 +1,8 @@
-const phaseIds = [
-  ['mdp', 'returns', 'bellman', 'optimality', 'planning'],
-  ['montecarlo', 'approximation', 'td', 'control'],
-  ['vfa', 'dqn', 'policygradient', 'actorcritic'],
-  ['ppo', 'tokenmdp', 'rlhf', 'dpo', 'grpo'],
-  ['codingrl', 'agentmdp', 'credit'],
-]
+import { coursePhases, phaseIds } from '../content/storyline.js'
 
 export default function HomePage({ lang, chapters, onSelect }) {
   const isZh = lang === 'zh'
-  const phases = isZh
-    ? [
-        { number: 'I', title: '从环境到可计算的最优性', question: '怎样把“与世界互动”变成一组可递推、可求解的数学对象？', transition: '已知环境模型 → 精确规划' },
-        { number: 'II', title: '从模型到经验', question: '不知道转移概率时，怎样只凭采样轨迹估计价值并改进策略？', transition: '完整回合 → 单步自举' },
-        { number: 'III', title: '从表格到参数共享', question: '状态太多无法逐格存储时，怎样泛化、稳定训练并直接优化策略？', transition: '价值控制 → 策略优化' },
-        { number: 'IV', title: '从动作到语言生成', question: '怎样把 token 轨迹、偏好数据和可验证奖励组织成语言模型后训练？', transition: 'PPO → Token MDP → 偏好与可验证奖励' },
-        { number: 'V', title: '从回答到行动轨迹', question: '怎样用执行反馈训练 Coding Agent，并把长程结果归因给关键决策？', transition: '可执行奖励 → 工具轨迹 → 长程信用' },
-      ]
-    : [
-        { number: 'I', title: 'From environment to computable optimality', question: 'How does interaction become mathematical objects that can be recursed and solved?', transition: 'Known model → exact planning' },
-        { number: 'II', title: 'From models to experience', question: 'Without transition probabilities, how can trajectories estimate value and improve behavior?', transition: 'Complete episodes → one-step bootstrap' },
-        { number: 'III', title: 'From tables to shared parameters', question: 'When states no longer fit in a table, how do we generalize, stabilize, and optimize policies directly?', transition: 'Value control → policy optimization' },
-        { number: 'IV', title: 'From actions to language generation', question: 'How do token trajectories, preferences, and verifiable rewards become language-model post-training?', transition: 'PPO → Token MDP → preference and verifiable rewards' },
-        { number: 'V', title: 'From responses to action trajectories', question: 'How does execution feedback train coding agents and assign long-horizon outcomes to key decisions?', transition: 'Executable reward → tool trajectory → long-horizon credit' },
-      ]
+  const phases = coursePhases[lang]
 
   const chapterById = Object.fromEntries(chapters.map((chapter) => [chapter.id, chapter]))
   const readingSteps = isZh

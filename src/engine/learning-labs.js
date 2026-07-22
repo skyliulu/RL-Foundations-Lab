@@ -189,6 +189,81 @@ export function runStochasticApproximation({ alpha = 0.18, decay = true, noise =
   return { series, observations, estimate, target, error: Math.abs(estimate - target) }
 }
 
+function historicalWeights(stepSizes) {
+  const histories = []
+  for (let end = 0; end < stepSizes.length; end += 1) {
+    const weights = []
+    let futureRetention = 1
+    for (let index = end; index >= 0; index -= 1) {
+      weights[index] = stepSizes[index] * futureRetention
+      futureRetention *= 1 - stepSizes[index]
+    }
+    histories.push({ initial: futureRetention, samples: weights })
+  }
+  return histories
+}
+
+function runSchedule(observations, targets, stepAt, initial = -1) {
+  let estimate = initial
+  const series = []
+  const ledger = []
+  const stepSizes = []
+  observations.forEach((observation, index) => {
+    const before = estimate
+    const stepSize = stepAt(index)
+    const residual = observation - before
+    const correction = stepSize * residual
+    estimate = before + correction
+    stepSizes.push(stepSize)
+    series.push(estimate)
+    ledger.push({
+      index: index + 1,
+      target: targets[index],
+      observation,
+      before,
+      residual,
+      stepSize,
+      correction,
+      after: estimate,
+    })
+  })
+  return { estimate, series, ledger, weights: historicalWeights(stepSizes) }
+}
+
+export function runStochasticApproximationComparison({
+  alpha = 0.18,
+  noise = 1.4,
+  batchSize = 1,
+  drifting = false,
+  steps = 36,
+  seed = 20260719,
+} = {}) {
+  const random = lcg(seed)
+  const driftAt = Math.floor(steps / 2)
+  const targets = Array.from({ length: steps }, (_, index) => (drifting && index >= driftAt ? 5 : 3))
+  const observations = targets.map((target) => {
+    let perturbation = 0
+    for (let sample = 0; sample < batchSize; sample += 1) {
+      perturbation += (random() + random() - 1) * noise * 2
+    }
+    return target + perturbation / batchSize
+  })
+  const decaying = runSchedule(observations, targets, (index) => 1 / (index + 1))
+  const constant = runSchedule(observations, targets, () => alpha)
+  return {
+    alpha,
+    noise,
+    batchSize,
+    drifting,
+    driftAt,
+    targets,
+    observations,
+    decaying,
+    constant,
+    sampleCost: steps * batchSize,
+  }
+}
+
 export function compareTdTargets({ gamma = 0.9, n = 3, value = 2.4, nextValue = 3.1 } = {}) {
   const rewards = [0, -1, 0.5, 0, 4]
   const mc = rewards.reduce((total, reward, index) => total + gamma ** index * reward, 0)

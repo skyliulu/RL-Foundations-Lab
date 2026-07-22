@@ -1,6 +1,6 @@
 ---
 name: develop-interactive-rl-chapter
-description: Create, modify, refactor, correct, and validate interactive reinforcement-learning chapters in this repository. Use for chapter prose, mathematical derivations, LaTeX rendering, course-world experiments, bilingual content, source alignment, right-rail explanations, or chapter-level UI and QA.
+description: Create, modify, refactor, correct, audit, and validate interactive reinforcement-learning chapters in this repository. Use for chapter prose, content organization and continuity reviews, mathematical derivations, LaTeX rendering, course-world experiments, bilingual content, source alignment, right-rail explanations, or chapter-level UI and QA.
 ---
 
 # Develop Interactive RL Chapter
@@ -26,6 +26,15 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Introduce every symbol before using it. Explain why a quantity is needed, what it means, and how it connects to the running grid-world example.
 - Preserve important definitions and intermediate algebra from the source; do not compress them into a summary card.
 
+## Expository Tone Contract
+
+- Write the article in a formal, precise, and economical expository style. Prefer declarative headings that name the concept, mechanism, derivation, condition, or conclusion being developed.
+- Do not simulate `know why` by turning every section into a rhetorical question. A sequence of headings beginning with “why”, “how”, “what”, “为什么”, or “怎样” creates a Q&A rhythm and does not by itself establish causality.
+- Make the rationale emerge from the argument itself: state the previous method's limitation in prose, derive the required mechanism, expose its consequence in the running example, and let the experiment supply observable evidence.
+- Reserve direct questions for moments where the reader must make a real prediction, choose between counterfactuals, or confront a genuinely unresolved problem. Use them sparingly and resolve them with the immediately following evidence.
+- Avoid conversational transition labels such as “only now unify”, “finally we can abstract”, “don't just ask”, “现在才进行统一”, “终于可以抽象”, or “别只问”. Replace them with the mathematical or conceptual role of the section.
+- Audit headings separately from prose. If the chapter reads like an FAQ after removing the body text, rewrite the headings even when the underlying causal sequence is correct.
+
 ## Concept First-Use Contract
 
 - Explain a technical concept at its first reader-visible occurrence, or establish it explicitly in an earlier section or prerequisite.
@@ -41,6 +50,52 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Use cards only for genuinely parallel or optional material such as comparison summaries, presets, warnings, glossaries, or controls.
 - Do not use a generic card grid as the main container for required explanations or mathematics.
 - Reject a chapter if removing the cards would leave no coherent article to read from top to bottom.
+
+## Continuous-Argument Contract
+
+- Define one unresolved teaching problem for the chapter and write a causal spine before choosing components. Every required block must advance that spine rather than restart the topic from a new label.
+- Prefer the sequence concrete problem, failed or insufficient approach, required mechanism, derivation or justification, worked consequence, experiment, interpretation, and remaining limitation. Depart from it only when the source's conceptual order requires another explicit progression.
+- Introduce a unifying abstraction only after the reader has seen enough concrete evidence to earn it. Do not open with a taxonomy such as "MC, TD, and SGD share one form" when the chapter has not yet established those mechanisms.
+- Make every section opening depend on the previous section's conclusion. State the unanswered question or limitation that forces the next step; do not rely on headings, kickers, arrows, or adjacency to imply the connection.
+- Avoid ordered fragments: several correct sections are still a failure when each repeats the motivation, restates the same conclusion, or can be freely reordered without changing the argument.
+- Keep one running example or data trace through definitions, derivations, algorithms, and the experiment whenever the mathematics permits. Do not reset to unrelated toy examples merely to fill a fixed content slot.
+- Use synthesis, comparison, and "unified form" sections as earned conclusions or bridges, not premature opening decoration.
+- Audit the chapter twice: read only the prose while ignoring headings and chrome, then read only the transitions between blocks. Both passes must reveal a continuous argument with no unexplained jumps.
+- Reject a chapter when its facts are individually accurate but the reader cannot answer why this paragraph, equation, or experiment must appear at this exact point.
+
+## Formula Visual-Hierarchy Contract
+
+- Treat equations as part of the article's grammar. Keep short symbols and relations inline, and use display math only when an equation needs an independent reading step or belongs to a visible derivation.
+- Do not give ordinary supporting equations a persistent tinted background, quotation-style left border, card shell, or other callout chrome by default. Repeated formula callouts visually fragment the article even when the prose is continuous.
+- Reserve tinted or bordered emphasis for genuinely exceptional semantics such as a theorem, a convergence condition, a warning, a counterexample, or the one result the surrounding argument is proving.
+- Present consecutive transformations as one aligned derivation chain. Do not split each equality or closely related formula into separate visual islands.
+- Let clickable derivations remain article-native: use restrained hover, focus, or selected-line treatment while keeping the unselected chain visually quiet and continuous.
+- For every chapter, classify each displayed formula as derivation, definition, result, condition, worked calculation, or supporting relation. If its visual weight exceeds its teaching role, demote it to inline or plain display math.
+- Review the page at normal reading scale and reject any rhythm in which alternating prose and formula boxes makes the reader repeatedly enter and exit independent components.
+
+## Experiment-as-Argument Contract
+
+- Place the experiment after a concrete claim or tradeoff and ask the reader to predict the result before manipulating controls.
+- Expose the algorithm-specific causal state needed to explain the result. For stochastic approximation, for example, show observation, current estimate, residual, step size, correction, next estimate, and historical weighting rather than only a final curve.
+- Synchronize the running example, derivation symbols, controls, visible algorithm state, and post-experiment interpretation. The experiment must continue the same argument instead of opening a parallel mini-product.
+- Include a counterfactual comparison that changes one mechanism while holding the evidence stream fixed whenever randomness or data order matters.
+- Reject an experiment that answers only "what happened". The visible state must also let the reader explain why it happened and which assumption or tradeoff caused it.
+- Do not reuse a generic slider-chart-metrics shell when it hides the chapter's distinctive data flow, update timing, memory, target construction, or policy change.
+
+## Content-Organization Review
+
+For every chapter review, record:
+
+1. the unresolved opening problem;
+2. the causal spine in reader-visible order;
+3. first-use violations and premature synthesis;
+4. repeated restarts, freely reorderable blocks, and missing handoffs;
+5. the running example and whether it persists across prose, mathematics, and interaction;
+6. each display formula's teaching role and whether its visual weight is justified;
+7. what the experiment exposes internally, what it hides, and whether it supplies a controlled counterfactual;
+8. the final synthesis and the precise limitation that motivates the next chapter.
+
+Rate each chapter separately for conceptual sequence, causal continuity, mathematical integration, example continuity, experiment fidelity, and visual hierarchy. Do not merge these dimensions into one vague quality score. Produce a prioritized repair list before editing.
 
 ## Source Completeness Contract
 

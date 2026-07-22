@@ -3,7 +3,7 @@ const example = (title, caption, headers, rows) => ({ title, caption, headers, r
 
 export const approximationDeepeningZh = [
   {
-    id: 'mean-to-general-steps', kicker: '从已知递推到一般权重', title: '样本均值为什么只是步长选择的一种特例？',
+    id: 'mean-to-general-steps', kicker: '从已知递推到一般权重', title: '样本均值是特定步长序列下的增量估计',
     paragraphs: [
       '先不要直接接受一般步长。把前 k 个样本的均值拆开，新均值等于旧均值乘 k/(k+1)，再加新样本乘 1/(k+1)。整理以后，才出现“旧估计加误差纠正”的形式。',
       '把 1/(k+1) 换成一般的 α_k 后，算法不再保证每个历史样本等权：固定步长让近期样本保留更大权重，衰减步长则逐渐冻结估计。因此步长不是纯粹的数值旋钮，它定义了算法如何记忆历史。',
@@ -13,7 +13,7 @@ export const approximationDeepeningZh = [
     handoff: '均值递推只能估计一个常数期望；若目标由更一般的期望方程定义，就需要把“样本误差”推广为带噪声的函数观测。',
   },
   {
-    id: 'robbins-monro-why', kicker: '随机求根', title: 'Robbins–Monro 为什么沿一次 noisy residual 也能找到期望方程的根？',
+    id: 'robbins-monro-why', kicker: '随机求根', title: 'Robbins–Monro 以 noisy residual 逼近期望方程的根',
     paragraphs: [
       '目标不是让每次观测都精确，而是让给定当前参数时的平均观测等于真实残差。若根的两侧具有相反符号，那么期望更新方向会把参数推回根附近；零均值噪声只是在这个方向周围抖动。',
       '收敛条件分工明确：步长总和发散，保证离根很远时仍有足够总路程；步长平方和收敛，保证独立噪声的累计方差有限。固定步长保留追踪能力，但不能满足第二条，所以通常只收敛到根附近的稳态分布。',
@@ -39,14 +39,14 @@ export const approximationDeepeningZh = [
 
 export const approximationDeepeningEn = [
   {
-    id: 'mean-to-general-steps', kicker: 'From a known recursion to general weights', title: 'Why is the sample mean only one step-size schedule?',
+    id: 'mean-to-general-steps', kicker: 'From a known recursion to general weights', title: 'The sample mean as an incremental estimate under one step-size schedule',
     paragraphs: ['Decompose the mean of k+1 samples before introducing a general step. The old mean receives weight k/(k+1) and the new observation receives 1/(k+1); rearrangement produces the error-correction form.', 'Replacing 1/(k+1) with α_k changes memory. A constant step emphasizes recent data, while a decaying step gradually freezes the estimate. Step size therefore defines historical weighting, not merely numerical speed.'],
     formulas: [String.raw`\bar X_{k+1}=\frac{k}{k+1}\bar X_k+\frac{1}{k+1}X_{k+1}`, String.raw`\bar X_{k+1}=\bar X_k+\frac{1}{k+1}\left(X_{k+1}-\bar X_k\right)`, String.raw`w_{k+1}=(1-\alpha_k)w_k+\alpha_kX_{k+1}`],
     example: example('How three observations receive different weights', 'The same observations create different memories under a mean step and a constant step.', ['Update', 'Mean schedule', 'Constant step 0.5'], [['Observe 2', 'Estimate 2', 'Estimate 1'], ['Observe 8', 'Estimate 5', 'Estimate 4.5'], ['Observe 2', 'Estimate 4', 'Estimate 3.25']]),
     handoff: 'A mean recursion estimates one constant expectation. A general expectation-defined target requires replacing sample error with a noisy function observation.',
   },
   {
-    id: 'robbins-monro-why', kicker: 'Stochastic root finding', title: 'Why can one noisy residual find the root of an expectation equation?',
+    id: 'robbins-monro-why', kicker: 'Stochastic root finding', title: 'Approaching the root of an expectation equation with noisy residuals',
     paragraphs: ['Individual observations need not be accurate. Their conditional mean must equal the true residual, whose sign points toward the root on both sides. Zero-mean noise perturbs this useful average direction.', 'The two step-size conditions have distinct jobs: infinite total step preserves enough travel, while finite squared steps bound accumulated noise variance. Constant steps retain tracking ability but usually fluctuate around the root.'],
     formulas: [String.raw`g(w)=\mathbb E[\widetilde g(w,\eta)],\qquad g(w^*)=0`, String.raw`w_{k+1}=w_k-\alpha_k\widetilde g(w_k,\eta_k)`, String.raw`\sum_k\alpha_k=\infty,\qquad\sum_k\alpha_k^2<\infty`],
     theorem: theorem('Under a stable root, controlled noise, and Robbins–Monro steps, the iterates converge to the root almost surely.', 'Not every step is closer. Wrong-way random moves are eventually averaged out while total available motion remains sufficient.', [String.raw`(w-w^*)g(w)>0\quad\text{for }w\ne w^*`, String.raw`\mathbb E[\eta_k\mid\mathcal F_k]=0,\quad\mathbb E[\eta_k^2\mid\mathcal F_k]\le C`]),
@@ -66,7 +66,7 @@ export const approximationDeepeningEn = [
 
 export const tdDeepeningZh = [
   {
-    id: 'bellman-sample-logic', kicker: '从期望方程到一次转移', title: 'TD target 为什么是 Bellman 右侧的合法随机样本？',
+    id: 'bellman-sample-logic', kicker: '从期望方程到一次转移', title: 'TD target 是 Bellman 方程右侧的无偏随机样本',
     paragraphs: ['固定策略以后，Bellman 方程右侧先对动作、后继状态和奖励取条件期望。真实交互只暴露其中一次联合抽样；R_{t+1}+γV(S_{t+1}) 因而是当前估计下 Bellman backup 的单样本观测。', '这里有两种误差不能混淆：环境抽样产生方差，而用 V_t 替代真实 v^π 产生 bootstrap 偏差。TD 的优势来自更早、更频繁的更新，不是因为单步 target 本身无偏于真实 return。'],
     formulas: [String.raw`(T^{\pi}V)(s)=\mathbb E_{\pi}[R_{t+1}+\gamma V(S_{t+1})\mid S_t=s]`, String.raw`U_t=R_{t+1}+\gamma V_t(S_{t+1})`, String.raw`\mathbb E[U_t\mid S_t=s]=(T^{\pi}V_t)(s)`],
     theorem: theorem('给定当前估计 V_t，单步 TD target 对 Bellman backup 无偏；它一般不对真实 value 无偏。', '这一区分解释了 TD 如何符合随机逼近，又为何会有 bootstrap bias。', [String.raw`\pi\ \text{fixed}`, String.raw`\mathbb E[R_{t+1}^2\mid S_t=s]<\infty`]),
@@ -92,7 +92,7 @@ export const tdDeepeningZh = [
 
 export const tdDeepeningEn = [
   {
-    id: 'bellman-sample-logic', kicker: 'Expectation equation to one transition', title: 'Why is the TD target a valid random sample of the Bellman right-hand side?',
+    id: 'bellman-sample-logic', kicker: 'Expectation equation to one transition', title: 'The TD target as an unbiased sample of the Bellman right-hand side',
     paragraphs: ['Under a fixed policy, the Bellman right-hand side averages over actions, successor states, and rewards. Interaction reveals one joint sample, so R_{t+1}+γV(S_{t+1}) is a one-sample observation of the Bellman backup at the current estimate.', 'Separate environment sampling variance from bootstrap bias caused by substituting V_t for true v^π. TD wins earlier and more frequent updates; its target is not generally unbiased for the full return.'],
     formulas: [String.raw`(T^{\pi}V)(s)=\mathbb E_{\pi}[R_{t+1}+\gamma V(S_{t+1})\mid S_t=s]`, String.raw`U_t=R_{t+1}+\gamma V_t(S_{t+1})`, String.raw`\mathbb E[U_t\mid S_t=s]=(T^{\pi}V_t)(s)`],
     theorem: theorem('Given V_t, the one-step target is unbiased for the Bellman backup, not generally for the true value.', 'This distinction explains both the stochastic-approximation justification and bootstrap bias.', [String.raw`\pi\ \text{fixed}`, String.raw`\mathbb E[R_{t+1}^2\mid S_t=s]<\infty`]),
@@ -118,7 +118,7 @@ export const tdDeepeningEn = [
 
 export const controlDeepeningZh = [
   {
-    id: 'sarsa-complete-loop', kicker: 'On-policy 控制', title: 'Sarsa 为什么必须先选下一动作，再更新当前动作价值？',
+    id: 'sarsa-complete-loop', kicker: 'On-policy 控制', title: 'Sarsa 以实际选择的下一动作构造更新目标',
     paragraphs: ['Sarsa 的五元组是 S_t、A_t、R_{t+1}、S_{t+1}、A_{t+1}。最后一个动作不是记号装饰：它由当前行为策略真实采样，target 因而评价“继续按这套含探索的策略行动”会怎样。', '更新之后直接复用已经采样的 A_{t+1} 作为下一步动作，才能保持数据与 target 的 on-policy 一致性。若更新后重新采样，算法仍可运行，但必须明确行为概率发生了什么变化。'],
     formulas: [String.raw`U_t^{\mathrm{Sarsa}}=R_{t+1}+\gamma Q(S_{t+1},A_{t+1})`, String.raw`Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\alpha\left(U_t^{\mathrm{Sarsa}}-Q(S_t,A_t)\right)`],
     pseudocodeTitle: 'Sarsa 控制',
@@ -126,7 +126,7 @@ export const controlDeepeningZh = [
     handoff: 'Sarsa 评价的是含探索行为本身，因此它会把未来探索事故计入当前动作的价值。',
   },
   {
-    id: 'q-learning-off-policy', kicker: 'Off-policy 控制', title: 'Q-learning 为什么可以一边探索，一边学习贪心目标策略？',
+    id: 'q-learning-off-policy', kicker: 'Off-policy 控制', title: 'Q-learning 在探索行为下学习贪心目标策略',
     paragraphs: ['Q-learning 的行为策略仍可用 ε-greedy 收集覆盖，但 target 不使用真实采样的 A_{t+1}，而是对下一状态所有动作取最大值。这把“产生数据的策略”与“被评价和改进的策略”分开。', 'max 并不会消除探索；它只让 target 假设未来按贪心策略行动。若行为策略不给某些动作正概率，相关 Q 仍没有数据，off-policy 也无法凭空学习。'],
     formulas: [String.raw`U_t^{\mathrm{Q}}=R_{t+1}+\gamma\max_a Q(S_{t+1},a)`, String.raw`b(a\mid s)\ \text{collects data},\qquad \pi(a\mid s)\in\arg\max_a Q(s,a)`],
     pseudocodeTitle: 'Q-learning 控制',
@@ -145,7 +145,7 @@ export const controlDeepeningZh = [
 
 export const controlDeepeningEn = [
   {
-    id: 'sarsa-complete-loop', kicker: 'On-policy control', title: 'Why must Sarsa choose the next action before updating the current action value?',
+    id: 'sarsa-complete-loop', kicker: 'On-policy control', title: 'Sarsa constructs its target from the action actually selected next',
     paragraphs: ['The five-tuple ends with A_{t+1}. That action is sampled from the actual behavior policy, so the target evaluates continued behavior under the same exploratory policy.', 'Reusing A_{t+1} as the next executed action preserves on-policy consistency between target and data. Resampling is possible, but its policy timing must be explicit.'],
     formulas: [String.raw`U_t^{\mathrm{Sarsa}}=R_{t+1}+\gamma Q(S_{t+1},A_{t+1})`, String.raw`Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\alpha\left(U_t^{\mathrm{Sarsa}}-Q(S_t,A_t)\right)`],
     pseudocodeTitle: 'Sarsa control',
@@ -153,7 +153,7 @@ export const controlDeepeningEn = [
     handoff: 'Sarsa evaluates exploratory behavior itself, including future exploration accidents.',
   },
   {
-    id: 'q-learning-off-policy', kicker: 'Off-policy control', title: 'Why can Q-learning explore while learning a greedy target policy?',
+    id: 'q-learning-off-policy', kicker: 'Off-policy control', title: 'Q-learning learns a greedy target policy under exploratory behavior',
     paragraphs: ['The behavior policy may remain ε-greedy for coverage, but the target ignores the realized next action and maximizes over all next actions. Data generation and the policy being evaluated are separated.', 'The max does not create exploration. If behavior assigns zero probability to an action, no off-policy target can invent its missing evidence.'],
     formulas: [String.raw`U_t^{\mathrm{Q}}=R_{t+1}+\gamma\max_a Q(S_{t+1},a)`, String.raw`b(a\mid s)\ \text{collects data},\qquad \pi(a\mid s)\in\arg\max_a Q(s,a)`],
     pseudocodeTitle: 'Q-learning control',
@@ -169,3 +169,6 @@ export const controlDeepeningEn = [
     handoff: 'A state-action table cannot share evidence across similar states, motivating parameterized V and Q.',
   },
 ]
+
+Object.assign(approximationDeepeningEn[0].example, { title: 'Different weights assigned to three observations' })
+Object.assign(tdDeepeningEn[1].example, { title: 'The effect of one transition on the current state' })

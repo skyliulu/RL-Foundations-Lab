@@ -8,6 +8,7 @@ import { rlhfChapter } from './content/rlhf-system.js'
 import { tokenMdpChapter } from './content/token-mdp.js'
 import { agentMdpChapter, codingRlChapter, creditChapter, dpoChapter, grpoChapter } from './content/modern-extension.js'
 import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from './content/part23.js'
+import { stochasticApproximationContent } from './content/stochastic-approximation-flow.js'
 
 export const copy = {
   zh: {
@@ -44,7 +45,7 @@ export const copy = {
     optimality: { ...optimalityChapter.zh, sources: optimalityChapter.sources },
     planning: { ...planningChapter.zh, sources: planningChapter.sources },
     montecarlo: { ...monteCarloChapter.zh, sources: monteCarloChapter.sources },
-    approximation: { ...approximationChapter.zh, sources: approximationChapter.sources },
+    approximation: { ...approximationChapter.zh, ...stochasticApproximationContent.zh, sources: approximationChapter.sources },
     td: { ...tdChapter.zh, sources: tdChapter.sources },
     control: { ...controlChapter.zh, sources: controlChapter.sources },
     vfa: { ...vfaChapter.zh, sources: vfaChapter.sources },
@@ -107,7 +108,7 @@ export const copy = {
     optimality: { ...optimalityChapter.en, sources: optimalityChapter.sources },
     planning: { ...planningChapter.en, sources: planningChapter.sources },
     montecarlo: { ...monteCarloChapter.en, sources: monteCarloChapter.sources },
-    approximation: { ...approximationChapter.en, sources: approximationChapter.sources },
+    approximation: { ...approximationChapter.en, ...stochasticApproximationContent.en, sources: approximationChapter.sources },
     td: { ...tdChapter.en, sources: tdChapter.sources },
     control: { ...controlChapter.en, sources: controlChapter.sources },
     vfa: { ...vfaChapter.en, sources: vfaChapter.sources },

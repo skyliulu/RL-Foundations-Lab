@@ -47,6 +47,29 @@ test('Chinese and English expose the same complete Part I–III chapter nodes pl
   assert.ok(copy.en.bellman.intro.length > 50)
 })
 
+test('reader-facing titles stay declarative while experiment prompts may remain questions', async () => {
+  const { copy } = await import('../content.js')
+  const violations = []
+  const visit = (value, path = []) => {
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => visit(item, [...path, index]))
+      return
+    }
+    if (!value || typeof value !== 'object') return
+    Object.entries(value).forEach(([key, item]) => {
+      const nextPath = [...path, key]
+      if (key === 'title' && typeof item === 'string') {
+        const isQuestionHeading = /[?？]/.test(item) || /^(为什么|为何|怎样|如何|怎么|why\b|how\b|what\b|when\b|where\b)/i.test(item)
+        if (isQuestionHeading) violations.push(`${nextPath.join('.')} = ${item}`)
+      }
+      visit(item, nextPath)
+    })
+  }
+
+  visit(copy)
+  assert.deepEqual(violations, [])
+})
+
 test('all chapter-specific capability slices are wired into the reading shell', () => {
   const app = read('App.jsx')
   ;['ChapterShell', 'CourseWorldExplorer', 'ReturnObservatory', 'BellmanLab', 'OptimalitySwitch', 'PlanningLab', 'PpoLab', 'TokenMdpLab', 'SystemLab', 'ModernExtensionLab', 'RightRail'].forEach((name) => {
@@ -71,7 +94,7 @@ test('the chapter shell keeps prose on one reading column and experiments on one
   assert.match(styles, /--chapter-frame:\s*1240px/)
   assert.match(styles, /--reading-column:\s*920px/)
   assert.match(styles, /\.chapter-shell\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
-  ;['derivation-sequence', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources'].forEach((className) => {
+  ;['chapter-continuity', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources'].forEach((className) => {
     assert.match(styles, new RegExp(`\\.${className}\\s*\\{[^}]*max-width:\\s*var\\(--reading-column\\)`), className)
   })
   assert.match(styles, /\.world-explorer\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
@@ -94,10 +117,57 @@ test('desktop reading width and long equations avoid unnecessary inner scrollbar
 
 test('all chapter explanations use continuous article sections rather than a card grid', () => {
   const app = read('App.jsx')
+  const derivation = read('components/ClickableDerivation.jsx')
   const styles = read('styles.css')
   assert.match(app, /chapter-article-sections/)
+  assert.match(app, /<ChapterPrelude content=/)
+  assert.match(app, /<ChapterSections content=\{content\} placement="before"/)
+  assert.match(derivation, /derivation-line-short/)
+  assert.match(derivation, /derivation-line-detail/)
   assert.doesNotMatch(app, /chapter-section-grid|chapter-section-card/)
   assert.doesNotMatch(styles, /\.chapter-section-grid|\.chapter-section-card/)
+})
+
+test('chapter seven pilots the ordered article-flow contract and a dedicated evidence lab', async () => {
+  const { copy } = await import('../content.js')
+  const app = read('App.jsx')
+  const flow = read('components/ArticleFlow.jsx')
+  const lab = read('components/StochasticApproximationLab.jsx')
+  const zhIds = copy.zh.approximation.articleFlow.map((block) => block.id)
+  const enIds = copy.en.approximation.articleFlow.map((block) => block.id)
+  assert.deepEqual(enIds, zhIds)
+  assert.equal(zhIds[0], 'incremental-problem')
+  assert.equal(zhIds.at(-1), 'earned-synthesis')
+  assert.ok(zhIds.indexOf('sa-lab') < zhIds.indexOf('earned-synthesis'))
+  assert.match(app, /active === 'approximation'[\s\S]*?<ArticleFlow/)
+  assert.match(flow, /block\.type === 'derivation'/)
+  assert.match(flow, /block\.type === 'experiment'/)
+  assert.match(flow, /block\.id}-column-\$\{columnIndex\}/)
+  assert.match(lab, /runStochasticApproximationComparison/)
+  assert.match(lab, /sa-ledger/)
+  assert.match(lab, /sa-weight-strip/)
+})
+
+test('selecting the same derivation line toggles the contextual workbench', () => {
+  const app = read('App.jsx')
+  const derivation = read('components/ClickableDerivation.jsx')
+  assert.match(derivation, /selectionId: `\$\{step\.id\}:\$\{step\.latex\}`/)
+  assert.match(app, /rightOpen && rightContext\?\.selectionId === context\.selectionId/)
+  assert.match(app, /if \(isSameSelection\) \{\s*setRightOpen\(false\)/)
+  assert.doesNotMatch(app, /onSelect=\{\(context\) => \{ setRightContext\(context\); setRightOpen\(true\) \}\}/)
+})
+
+test('the five-part storyline gives every chapter an explicit bilingual causal handoff', async () => {
+  const { copy } = await import('../content.js')
+  const { chapterTransitions, coursePhases, phaseIds } = await import('../content/storyline.js')
+  const chapterIds = copy.zh.chapters.map((item) => item.id)
+  assert.deepEqual(phaseIds.flat(), chapterIds)
+  assert.equal(coursePhases.zh.length, 5)
+  assert.equal(coursePhases.en.length, 5)
+  for (const locale of ['zh', 'en']) {
+    assert.deepEqual(Object.keys(chapterTransitions[locale]), chapterIds)
+    chapterIds.forEach((id) => assert.ok(chapterTransitions[locale][id].length > 40, `${locale}.${id}`))
+  }
 })
 
 test('ordinary MDP sections use article headings instead of numbered timeline cards', () => {
@@ -121,13 +191,14 @@ test('chapter one introduces the shared course world before formal definitions',
   assert.match(styles, /\.overview-world-grid\s*\{/)
 })
 
-test('ordinary chapter-one formulas use the shared display treatment', () => {
+test('ordinary chapter-one formulas remain article-native instead of quote callouts', () => {
   const narrative = read('components/MdpNarrative.jsx')
   const styles = read('styles.css')
   assert.match(narrative, /<MathFormula block latex=\{formula\}/)
   assert.match(narrative, /layout === 'stacked'/)
-  assert.match(styles, /\.narrative-formulas\s*\{[^}]*border-left:\s*2px solid var\(--navy\)/)
-  assert.match(styles, /\.narrative-formulas\s*\{[^}]*background:\s*rgba\(23,79,130,\.035\)/)
+  const rule = styles.match(/\.narrative-formulas\s*\{([^}]*)\}/)?.[1] || ''
+  assert.match(rule, /padding:\s*7px 0/)
+  assert.doesNotMatch(rule, /border-left|background/)
   assert.match(styles, /\.narrative-formulas\.is-stacked\s*\{[^}]*grid-template-columns:\s*minmax\(0,1fr\)/)
 })
 

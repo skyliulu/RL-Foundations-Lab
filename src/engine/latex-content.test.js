@@ -11,7 +11,10 @@ function collectLatex(node, output = []) {
   if (!node || typeof node !== 'object') return output
   for (const [key, value] of Object.entries(node)) {
     if ((key === 'latex' || key === 'formula') && typeof value === 'string') output.push(value)
-    if (key === 'formulas' && Array.isArray(value)) value.forEach((item) => output.push(item))
+    if (key === 'formulas' && Array.isArray(value)) value.forEach((item) => {
+      if (typeof item === 'string') output.push(item)
+      else if (item && typeof item.latex === 'string') output.push(item.latex)
+    })
     if (key !== 'sources') collectLatex(value, output)
   }
   return output

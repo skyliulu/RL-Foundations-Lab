@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import MathFormula from './MathFormula'
-import MathText from './MathText'
+import RichContent from './RichContent'
 
 export default function ClickableDerivation({ eyebrow, title, intro, steps, onSelect }) {
   const [active, setActive] = useState(0)
@@ -8,6 +8,7 @@ export default function ClickableDerivation({ eyebrow, title, intro, steps, onSe
   function selectStep(step, index) {
     setActive(index)
     onSelect?.({
+      selectionId: `${step.id}:${step.latex}`,
       title: step.rule,
       body: step.short,
       detail: step.detail,
@@ -23,15 +24,19 @@ export default function ClickableDerivation({ eyebrow, title, intro, steps, onSe
       <header>
         <span>{eyebrow}</span>
         <h2>{title}</h2>
-        <p><MathText>{intro}</MathText></p>
+        <p><RichContent value={intro} /></p>
       </header>
       <ol>
         {steps.map((step, index) => (
           <li className={index === active ? 'is-active' : ''} key={step.id}>
             <button type="button" aria-pressed={index === active} onClick={() => selectStep(step, index)}>
               <span className="derivation-line-number">{String(index + 1).padStart(2, '0')}</span>
-              <span className="derivation-line-rule"><MathText>{step.rule}</MathText></span>
-              <MathFormula block latex={step.latex} className="derivation-line-math" />
+              <span className="derivation-line-content">
+                <span className="derivation-line-rule"><RichContent value={step.rule} /></span>
+                <MathFormula block latex={step.latex} className="derivation-line-math" />
+                <span className="derivation-line-short"><RichContent value={step.short} /></span>
+                {step.detail && <span className="derivation-line-detail"><RichContent value={step.detail} /></span>}
+              </span>
             </button>
           </li>
         ))}

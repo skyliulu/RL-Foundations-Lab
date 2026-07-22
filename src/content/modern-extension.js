@@ -262,3 +262,14 @@ export const creditChapter = compactChapter('credit', sources.credit, {
     { id: 'hindsight-risk', kicker: 'Hindsight risk', title: 'Evidence available after the answer was not available at decision time', paragraphs: ['Hindsight critics must have bounded information and replay validation.'], formula: String.raw`I_{\rm critic}(t)\subseteq I_{\rm audit}` },
   ], summaryTitle: 'Long-horizon credit balances sparse outcomes, dense proxies, and counterfactual bias', summary: ['Terminal broadcast confuses key and irrelevant steps.', 'Discount is temporal, not automatically causal.', 'Process and segment values add density and model bias.', 'Hindsight credit requires replay or independent verification.'],
 })
+
+Object.assign(dpoChapter.zh, { title: '从 chosen/rejected 回答直接优化策略' })
+Object.assign(dpoChapter.en, { title: 'Direct policy optimization from chosen and rejected responses' })
+Object.assign(grpoChapter.zh, { title: '以同组回答替代 Critic 的在线策略优化' })
+Object.assign(grpoChapter.en, { title: 'Online policy optimization with response groups instead of a critic' })
+Object.assign(codingRlChapter.zh, { title: '以编译器和测试反馈构造可验证强化学习' })
+Object.assign(codingRlChapter.en, { title: 'Verifiable reinforcement learning from compiler and test feedback' })
+Object.assign(agentMdpChapter.zh, { title: '工具调用、环境观察与记忆构成 Agent 轨迹' })
+Object.assign(agentMdpChapter.en, { title: 'Agent trajectories composed of tool calls, observations, and memory' })
+Object.assign(creditChapter.zh, { title: '将终局结果归因于长程轨迹中的关键决策' })
+Object.assign(creditChapter.en, { title: 'Assigning terminal outcomes to key decisions in long trajectories' })

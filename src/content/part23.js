@@ -28,7 +28,7 @@ function chapter(id, sources, zh, en) {
 }
 
 export const monteCarloChapter = chapter('montecarlo', [source('mc', 'Monte Carlo Learning', 'L5, pp.5–47')], {
-  prerequisite: '前置：Return、动作价值与策略迭代', eyebrow: 'Part II · 从模型转向经验', title: '没有环境模型，怎样从完整经历估计价值？',
+  prerequisite: '前置：Return、动作价值与策略迭代', eyebrow: 'Part II · 从模型转向经验', title: '利用完整经历进行无模型价值估计',
   intro: '动态规划的策略迭代知道环境模型，因此可以在策略评价时枚举所有后继并计算期望。现实交互往往只给出真正发生的一条状态—动作—奖励序列。Monte Carlo 的关键不是“换一个公式”，而是回答：模型未知以后，策略评价还能依靠什么证据完成？',
   bridge: '答案从一条完整 episode 开始：return 是动作价值的随机样本，样本平均替代精确期望；随后每一个算法变体都在修复前一种方法的数据效率或覆盖假设。', experimentIntro: '下面不再只画一条估计曲线，而是把同一批经验拆成 episode tape、访问热图、Q 更新账本与改进后的策略分布。',
   interpretation: 'MC Basic 最贴近策略迭代的定义，却浪费 episode 中的大量访问；Exploring Starts 复用整条轨迹，却要求能够控制起始状态—动作；ε-greedy 取消这一假设，却用持续探索换取覆盖。算法族的变化由失败模式推动，而不是三个平行名称。',
@@ -55,7 +55,7 @@ export const monteCarloChapter = chapter('montecarlo', [source('mc', 'Monte Carl
   sections: [section('visit-protocol', '数据复用', '首次访问与每次访问不是两个孤立名词', ['MC Basic 只使用起始对，相当于更严格的 initial-visit。first-visit 让每条 episode 对同一 (s,a) 至多贡献一次，every-visit 则保留所有出现。它们都在回答：同一条轨迹内部的相关访问应怎样计权？'], String.raw`N_{\mathrm{initial}}(s,a)\le N_{\mathrm{first}}(s,a)\le N_{\mathrm{every}}(s,a)`), section('coverage', '探索前提', '没有覆盖，就没有可靠的贪心改善', ['如果某个动作从未被访问，它的 Q 值只是初值；纯贪心策略可能把一次偶然低估永久固化。Exploring Starts 从起点保证覆盖，ε-soft 策略从整个行为过程保证覆盖。'], String.raw`\pi(a\mid s)>0\quad\forall(s,a)`), section('optimality', '能力边界', 'ε-greedy 的优势与代价必须同时看到', ['更大的 ε 带来更强覆盖，却让策略更频繁执行非贪心动作。固定 ε 下得到的是 ε-soft 策略类中的最优解；若要逼近全局贪心最优，通常需要让 ε 随训练逐渐减小，同时仍保证充分探索。'], String.raw`\epsilon_k\to 0,\qquad \sum_k\epsilon_k=\infty`), section('consistency', '一致性问题', '最优 ε-greedy 策略不一定与全局最优贪心策略一致', ['软策略改变了未来状态分布：即使当前状态选择同一个贪心动作，后续仍可能随机进入禁区或离开目标。因此它评价和优化的是另一套受探索约束的长期行为。', '这解释了为什么探索不是算法外的“小技巧”，而是目标集合与数据分布的一部分。']), section('forward', '下一步', '样本平均只是随机逼近的一种步长', ['1/N 让所有历史样本等权，适合固定目标；持续变化的策略和环境往往需要更一般的步长。下一章将从均值递推抽象出 Robbins–Monro 随机逼近。'])],
   summary: ['MC 保留价值定义，只把模型期望替换为完整 episode 的 return 样本。', 'MC Basic、Exploring Starts 与 ε-greedy 是一条由数据效率和覆盖假设推动的演化链。', 'first-visit 与 every-visit 决定同一 episode 内的证据怎样计权。', 'ε-soft 策略用持续探索换取覆盖，也因此改变可达到的最优策略集合。', '只有同时检查估计、覆盖、策略改善与假设，才真正理解 MC 控制。'], explorer: { cue: '依次切换三种算法；不要只看 Q 数值，还要同时检查访问热图、更新账本和动作概率。' },
 }, {
-  prerequisite: 'Prerequisites: return, action value, and policy iteration', eyebrow: 'Part II · From models to experience', title: 'How can complete experience estimate value without a model?',
+  prerequisite: 'Prerequisites: return, action value, and policy iteration', eyebrow: 'Part II · From models to experience', title: 'Model-free value estimation from complete experience',
   intro: 'Dynamic-programming policy iteration knows the environment model and can enumerate successors during policy evaluation. Real interaction reveals only the state-action-reward sequence that actually occurred. Monte Carlo is not merely a new formula; it answers what evidence can replace model-based policy evaluation.',
   bridge: 'A complete episode supplies a realized return. Sample means replace exact expectations, and each algorithmic variant then repairs a data-efficiency or coverage failure in its predecessor.', experimentIntro: 'The lab exposes the same data as an episode tape, visit heatmap, Q-update ledger, and improved policy distribution.',
   interpretation: 'MC Basic mirrors policy iteration but wastes intermediate visits. Exploring Starts reuses the full trajectory but assumes control over the initial pair. ε-greedy removes that assumption by keeping exploration alive, at the cost of optimizing within a soft-policy class.',
@@ -84,7 +84,7 @@ export const monteCarloChapter = chapter('montecarlo', [source('mc', 'Monte Carl
 })
 
 export const approximationChapter = chapter('approximation', [source('sa', 'Stochastic Approximation', 'L6, pp.7–60')], {
-  prerequisite: '前置：样本均值、期望与基本梯度', eyebrow: 'Part II · 带噪声的增量更新', title: '为什么带噪声的一小步能够逼近期望？',
+  prerequisite: '前置：样本均值、期望与基本梯度', eyebrow: 'Part II · 带噪声的增量更新', title: '噪声观测下的增量估计与随机逼近',
   intro: 'Monte Carlo 的增量均值已经具有“当前估计加一步纠正”的结构。随机逼近把这个结构推广到未知方程：只要能获得无偏或受控偏差的 noisy observation，就能沿着随机方向逐步靠近根。步长既决定每次相信新数据多少，也决定噪声是否最终被平均掉。',
   bridge: '从求根问题出发，定义带噪声观测，再得到 Robbins–Monro 更新及其步长条件。', experimentIntro: '在同一条噪声序列上比较固定步长与衰减步长。改变噪声幅度和步长，观察追踪速度、残余波动和最终误差。', interpretation: '固定步长不会完全忘记新数据，因此能追踪变化，但会在真值附近持续波动。衰减步长早期移动快、后期逐渐平均噪声；衰减过快则可能在尚未到达根时失去调整能力。',
   figure: '交互图 07.1 · Stochastic Approximation Lab', instruction: '在相同 seed 下比较固定和衰减步长', question: '步长怎样同时控制学习速度与噪声残留？',
@@ -100,7 +100,7 @@ export const approximationChapter = chapter('approximation', [source('sa', 'Stoc
   sections: [section('constant-decay', '两种目标', '收敛到常数与跟踪变化不是同一个任务', ['衰减步长适合固定真值和渐近收敛；固定步长保留对新数据的敏感度，适合非平稳问题。'], String.raw`w_{k+1}=(1-\alpha)w_k+\alpha X_k`), section('sgd-bridge', '连接优化', 'SGD 是随机逼近在梯度求根上的应用', ['最小化期望损失等价于寻找期望梯度为零的参数。单样本梯度是这个期望梯度的 noisy observation。'], String.raw`\mathbf w_{k+1}=\mathbf w_k-\alpha_k\nabla_{\mathbf w}f(\mathbf w_k,X_k)`), section('forward', '下一步', 'TD 用一次转移构造 Bellman 残差样本', ['下一章把未知的 value 方程写成求根，并用当前 value 估计构造单步 target。'])],
   summary: ['随机逼近用 noisy observation 求未知期望方程的根。', '步长决定新样本与历史估计的权重。', '衰减条件平衡持续移动和噪声抑制。', 'SGD 与 TD 都继承同一个增量结构。'], explorer: { cue: '先比较收敛速度，再看后半段波动；最终点偶然接近真值不等于整个过程稳定。' },
 }, {
-  prerequisite: 'Prerequisites: sample means, expectations, and basic gradients', eyebrow: 'Part II · Noisy incremental updates', title: 'Why can a small noisy step approach an expectation?',
+  prerequisite: 'Prerequisites: sample means, expectations, and basic gradients', eyebrow: 'Part II · Noisy incremental updates', title: 'Incremental estimation and stochastic approximation under noise',
   intro: 'The incremental Monte Carlo mean already has the form “current estimate plus a correction.” Stochastic approximation generalizes that structure to unknown equations: a noisy observation of the residual can guide estimates toward a root. Step size determines both how much to trust new data and whether noise is eventually averaged away.',
   bridge: 'Start with root finding, define a noisy observation, and derive the Robbins–Monro update and its step-size conditions.', experimentIntro: 'Compare constant and decaying step sizes on the same noise sequence. Vary noise and step size to inspect response speed, residual fluctuation, and final error.', interpretation: 'A constant step keeps responding to new data and can track change, but it continues to fluctuate near the truth. A decaying step averages noise increasingly well; if it decays too fast, it can lose the ability to reach the root.',
   figure: 'Interactive Figure 07.1 · Stochastic Approximation Lab', instruction: 'Compare constant and decaying steps under one seed', question: 'How does step size control both learning speed and residual noise?',
@@ -112,7 +112,7 @@ export const approximationChapter = chapter('approximation', [source('sa', 'Stoc
 })
 
 export const tdChapter = chapter('td', [source('td', 'Temporal-Difference Learning', 'L7, pp.6–23')], {
-  prerequisite: '前置：Bellman 期望方程与随机逼近', eyebrow: 'Part II · 不等待终点的预测', title: '为什么只看一步也能学习长期价值？',
+  prerequisite: '前置：Bellman 期望方程与随机逼近', eyebrow: 'Part II · 不等待终点的预测', title: '从单步转移学习长期价值',
   intro: 'Monte Carlo 必须等 episode 结束才能得到完整 return。TD prediction 直接利用 Bellman 方程：一次转移提供即时奖励，当前 value 估计提供剩余未来的近似。这个 bootstrap target 有偏，却能更早、更频繁地更新。', bridge: '把 Bellman 残差写成求根，再用单次转移替代环境期望，得到 TD target、TD error 和增量更新。',
   experimentIntro: '同一段奖励序列上并排计算 MC、TD(0) 和 n-step target。改变折扣与 n，观察真实奖励跨度、bootstrap 比例和 target 差异。', interpretation: 'n 越小，target 越早可用，但更依赖当前 value 估计；n 越大，包含的真实奖励更多，方差也更接近完整 return。TD(0) 与 MC 不是谁绝对更准，而是在 bias、variance 和更新时机之间选择不同位置。',
   figure: '交互图 08.1 · Target Comparator', instruction: '改变 n 与 γ，对照三个 target 的数值与信用跨度', question: 'bootstrap 怎样用当前估计换取更及时的学习信号？',
@@ -122,7 +122,7 @@ export const tdChapter = chapter('td', [source('td', 'Temporal-Difference Learni
   sections: [section('bias-variance', '估计权衡', 'n 改变真实奖励与估计尾项的比例', ['短 n 更依赖 V，长 n 更依赖随机轨迹。选择 n 就是在 bias、variance 与延迟之间选择。'], String.raw`G_t^{(1)}\longleftrightarrow G_t^{(n)}\longleftrightarrow G_t`), section('online', '在线更新', '一次 episode 可以边走边学', ['TD 在下一个状态出现后就更新前一个状态，后续行为会使用已经改变的 value。数据采集与学习因此交织。']), section('forward', '从状态到动作', '控制需要评价动作而非只评价状态', ['下一章把 TD target 应用于 action value，并比较 target 是否跟随真实下一动作。'])],
   summary: ['TD 用一步奖励和后继估计构造 bootstrap target。', 'TD error 是单次转移上的 Bellman 残差样本。', 'n-step target 连续连接 TD(0) 与 Monte Carlo。', '更及时的更新以对当前估计的依赖为代价。'], explorer: { cue: '不要只比较 target 大小；同时确认每个 target 使用了多少真实奖励、何时可计算、尾项来自哪里。' },
 }, {
-  prerequisite: 'Prerequisites: Bellman expectation equation and stochastic approximation', eyebrow: 'Part II · Prediction before termination', title: 'Why can one step teach long-term value?',
+  prerequisite: 'Prerequisites: Bellman expectation equation and stochastic approximation', eyebrow: 'Part II · Prediction before termination', title: 'Learning long-term value from one-step transitions',
   intro: 'Monte Carlo waits for episode termination. TD prediction instead uses the Bellman equation: one transition supplies an immediate reward, and the current value estimate approximates the remaining future. This bootstrap target is biased but available earlier and more often.', bridge: 'Write the Bellman residual as a root and replace its expectation with one transition to obtain the TD target, error, and update.',
   experimentIntro: 'Compute MC, TD(0), and n-step targets on the same reward sequence. Vary discount and n to inspect reward span, bootstrap weight, and target differences.', interpretation: 'Small n produces an earlier target but depends more strongly on current value estimates. Large n contains more realized rewards and approaches the variance of a full return. TD(0) and MC occupy different bias-variance-delay tradeoffs.',
   figure: 'Interactive Figure 08.1 · Target Comparator', instruction: 'Change n and γ, then compare the three targets', question: 'How does bootstrapping exchange current estimates for earlier learning?',
@@ -134,7 +134,7 @@ export const tdChapter = chapter('td', [source('td', 'Temporal-Difference Learni
 })
 
 export const controlChapter = chapter('control', [source('control', 'Sarsa and Q-learning', 'L7, pp.25–54')], {
-  prerequisite: '前置：动作价值、TD target 与 ε-greedy 探索', eyebrow: 'Part II · 从预测到控制', title: '为什么 Sarsa 与 Q-learning 会学出不同的风险行为？',
+  prerequisite: '前置：动作价值、TD target 与 ε-greedy 探索', eyebrow: 'Part II · 从预测到控制', title: 'Sarsa 与 Q-learning 的策略目标及风险行为',
   intro: '预测只评价给定策略；控制还要在学习过程中改善策略。Sarsa 的 target 使用行为策略实际选择的下一动作，因此把未来探索风险计入价值。Q-learning 的 target 使用下一状态的最大动作价值，因此学习一个贪心目标策略，即使数据来自更有探索性的行为策略。', bridge: '在同一个五元转移上分别写出 Sarsa 与 Q-learning target，再明确 behavior policy 和 target policy 的职责。',
   experimentIntro: 'Control Arena 用相同探索预算比较两种 target。调节 ε 与步长，观察危险状态频率、累计回报和 target gap。', interpretation: '探索率升高时，两种算法收集的数据都更随机；Sarsa 的 target 也包含这份随机性，因此倾向为探索留出安全余量。Q-learning 的 target 假设下一步执行贪心动作，可能学习更短但在行为探索下更危险的路线。',
   figure: '交互图 09.1 · Sarsa / Q-learning Control Arena', instruction: '锁定 seed 与探索预算，只改变 target 定义', question: '更新目标是否跟随实际下一动作，会怎样改变学到的策略？',
@@ -144,7 +144,7 @@ export const controlChapter = chapter('control', [source('control', 'Sarsa and Q
   sections: [section('on-policy', 'On-policy', '学习对象与数据策略一致', ['Sarsa 学习持续探索时实际执行的策略，因此最优解也取决于 ε。'], String.raw`Q\approx q^{b}`), section('off-policy', 'Off-policy', '用一种策略的数据学习另一种策略', ['Q-learning 允许 b 探索，同时用最大化 target 学习贪心策略。覆盖不足仍会导致未访问动作无法纠正。'], String.raw`Q\approx q^*,\qquad A\sim b`), section('forward', '表格的边界', '状态—动作空间变大后无法为每一项单独存值', ['下一部分用参数化函数共享统计强度，一个样本将同时影响多个状态。'])],
   summary: ['Sarsa target 使用实际下一动作，是 on-policy 控制。', 'Q-learning target 使用动作最大值，是 off-policy 控制。', '行为策略负责数据覆盖，目标策略定义学习对象。', '公平比较必须锁定探索预算与随机条件。'], explorer: { cue: '把危险率和平均回报一起读；最短贪心路线不一定是在探索行为下最安全的路线。' },
 }, {
-  prerequisite: 'Prerequisites: action value, TD targets, and ε-greedy exploration', eyebrow: 'Part II · Prediction to control', title: 'Why do Sarsa and Q-learning learn different risk behavior?',
+  prerequisite: 'Prerequisites: action value, TD targets, and ε-greedy exploration', eyebrow: 'Part II · Prediction to control', title: 'Policy targets and risk behavior in Sarsa and Q-learning',
   intro: 'Prediction evaluates a fixed policy; control improves policy during learning. Sarsa uses the next action actually selected by the behavior policy, so its target includes future exploration risk. Q-learning uses the largest next action value and learns a greedy target policy even when data comes from an exploratory behavior policy.', bridge: 'Write both targets on the same five-part transition, then separate the roles of behavior and target policies.',
   experimentIntro: 'Control Arena compares both targets under one exploration budget. Vary ε and step size to inspect danger frequency, return, and target gap.', interpretation: 'Higher exploration makes both data streams more random. Sarsa also includes that randomness in its target and tends to leave safety margin. Q-learning assumes a greedy next action and may learn a shorter route that is risky when exploration remains active.',
   figure: 'Interactive Figure 09.1 · Sarsa / Q-learning Control Arena', instruction: 'Lock seed and exploration; change only the target', question: 'How does following the actual next action change the learned policy?',
@@ -234,5 +234,20 @@ export const actorCriticChapter = chapter('actorcritic', [source('ac', 'Actor-Cr
   sections: [section('variance-bias', 'Tradeoff', 'The critic exchanges learnable bias for lower variance', ['An inaccurate critic biases advantage; better value estimates improve actor weights.'], String.raw`\mathbb E[\delta_t\mid s,a]\approx A^{\pi}(s,a)`), section('two-timescales', 'Coupled training', 'Actor and critic learning rates must coordinate', ['A slow critic supplies stale baselines; a fast actor continually changes the critic data distribution.']), section('forward', 'Toward PPO', 'Reusing old-policy data requires controlling ratio movement', ['PPO stores old probabilities and clips excessive surrogate improvement.'])],
   summary: ['Actor parameterizes policy; critic estimates state value.', 'A state baseline preserves expected policy gradient and lowers variance.', 'TD error is a timely advantage estimate.', 'One transition drives critic and actor updates.', 'Importance ratios connect Actor–Critic to PPO.'], explorer: { cue: 'Read TD target → δ → critic step → actor step; the error is shared, but each update differentiates a different function.' },
 })
+
+Object.assign(vfaChapter.zh, { title: '通过共享参数在状态之间传播价值信息' })
+Object.assign(vfaChapter.en, { title: 'Transferring value across states with shared parameters' })
+Object.assign(dqnChapter.zh, { title: 'Target network 与 replay 的稳定化分工' })
+Object.assign(dqnChapter.en, { title: 'Distinct stabilization roles of target networks and replay' })
+Object.assign(policyGradientChapter.zh, { title: '直接提高高回报动作的概率' })
+Object.assign(policyGradientChapter.en, { title: 'Directly increasing the probability of high-return actions' })
+Object.assign(actorCriticChapter.zh, { title: 'Critic 为 Actor 提供及时且低方差的学习信号' })
+Object.assign(actorCriticChapter.en, { title: 'Timely, lower-variance actor feedback from a critic' })
+Object.assign(monteCarloChapter.zh.reasoningPath[0], { title: '未知模型使策略评价失去精确期望' })
+Object.assign(monteCarloChapter.zh.reasoningPath[1], { title: '完整 episode 为价值估计提供 return 样本' })
+Object.assign(monteCarloChapter.zh.reasoningPath[2], { title: '价值估计必须接回策略改善闭环' })
+Object.assign(monteCarloChapter.en.reasoningPath[0], { title: 'An unknown model removes exact policy-evaluation expectations' })
+Object.assign(monteCarloChapter.en.reasoningPath[1], { title: 'A complete episode supplies a return sample for value estimation' })
+Object.assign(monteCarloChapter.en.reasoningPath[2], { title: 'Value estimation reconnects to the policy-improvement loop' })
 
 export const part23Chapters = [monteCarloChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter]

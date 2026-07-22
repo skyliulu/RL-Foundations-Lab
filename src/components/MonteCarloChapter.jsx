@@ -6,7 +6,7 @@ import MonteCarloLab from './MonteCarloLab.jsx'
 function ReasoningPath({ content, lang }) {
   return (
     <section className="mc-reasoning-path">
-      <header><span>{lang === 'zh' ? '问题驱动的主线' : 'Problem-driven spine'}</span><h2>{lang === 'zh' ? '先看原方法为什么失效，再引入新机制' : 'Start with the failure, then introduce the mechanism'}</h2></header>
+      <header><span>{lang === 'zh' ? '因果推进的主线' : 'Causal narrative'}</span><h2>{lang === 'zh' ? '从原方法的局限过渡到新机制' : 'From the limitation of one method to the mechanism that resolves it'}</h2></header>
       {content.reasoningPath.map((section, index) => (
         <article key={section.id}>
           <div className="mc-reasoning-index"><span>{index + 1}</span><small><MathText>{section.kicker}</MathText></small></div>
@@ -40,18 +40,19 @@ function AlgorithmFamily({ content, lang }) {
   )
 }
 
-export default function MonteCarloChapter({ content, lang, onSelect }) {
+export default function MonteCarloChapter({ content, lang, onSelect, beforeExperiment }) {
   return (
     <>
       <ReasoningPath content={content} lang={lang} />
       <ClickableDerivation
         eyebrow={lang === 'zh' ? '从定义到可学习的递推' : 'From definition to a learnable recursion'}
-        title={lang === 'zh' ? '完整推导：return 样本怎样成为动作价值估计？' : 'Complete derivation: how does a return sample estimate action value?'}
+        title={lang === 'zh' ? '完整推导：从 return 样本到动作价值估计' : 'Complete derivation: from return samples to action-value estimates'}
         intro={lang === 'zh' ? '先完成策略评价的数学接口，再讨论算法变体。点击任意等式，右侧解释该步使用的条件、变换与符号。' : 'First establish the mathematical interface for policy evaluation, then compare algorithm variants. Select any line for assumptions and symbols.'}
         steps={content.derivation}
         onSelect={onSelect}
       />
       <AlgorithmFamily content={content} lang={lang} />
+      {beforeExperiment}
       <p className="article-copy chapter-transition"><MathText>{content.experimentIntro}</MathText></p>
       <MonteCarloLab lang={lang} content={content} />
     </>

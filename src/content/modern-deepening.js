@@ -17,7 +17,7 @@ export const ppoDeepeningZh = [
     handoff: '完整算法还需要严格区分 rollout 阶段与优化阶段。',
   },
   {
-    id: 'ppo-complete-loop', kicker: '完整训练循环', title: 'PPO 为什么只能在有限 epoch 后丢弃旧 batch 并重新 rollout？',
+    id: 'ppo-complete-loop', kicker: '完整训练循环', title: 'PPO 在有限 epoch 后刷新 rollout batch',
     paragraphs: ['先复制 θ_old，再用它收集固定长度 rollout，保存 observation、action、reward、done、old log-probability 与 old value。反向计算 GAE 和 value target 后，才将样本打乱做 K 轮 minibatch。', '每次梯度步都重算新 log-probability 与 value，却始终使用保存的 old log-probability、advantage 和 target。K 太大时 ratio、KL 与 clip fraction 上升，旧优势不再代表新策略的数据分布。'],
     formulas: [String.raw`\widehat A_t=\delta_t+\gamma\lambda(1-d_{t+1})\widehat A_{t+1}`, String.raw`\widehat R_t=\widehat A_t+V_{\mathrm{old}}(S_t)`],
     pseudocodeTitle: 'PPO with GAE and minibatch epochs',
@@ -42,7 +42,7 @@ export const ppoDeepeningEn = [
     handoff: 'The complete algorithm must separate rollout and optimization phases.',
   },
   {
-    id: 'ppo-complete-loop', kicker: 'Complete training loop', title: 'Why must PPO discard an old batch after finite epochs and roll out again?',
+    id: 'ppo-complete-loop', kicker: 'Complete training loop', title: 'PPO refreshes the rollout batch after a finite number of epochs',
     paragraphs: ['Copy θ_old, collect T steps, and store observations, actions, rewards, done flags, old log probabilities, and old values. Compute GAE and value targets backward before shuffling K minibatch epochs.', 'Every gradient step recomputes current probabilities and values but retains saved old probabilities, advantages, and targets. Too many epochs raise ratio drift, KL, and clip fraction until the old advantage no longer describes the new policy distribution.'],
     formulas: [String.raw`\widehat A_t=\delta_t+\gamma\lambda(1-d_{t+1})\widehat A_{t+1}`, String.raw`\widehat R_t=\widehat A_t+V_{\mathrm{old}}(S_t)`],
     pseudocodeTitle: 'PPO with GAE and minibatch epochs',
@@ -60,7 +60,7 @@ export const rlhfDeepeningZh = [
     handoff: '模型角色明确后，下一步是把序列级偏好分数分配到 token 轨迹。',
   },
   {
-    id: 'sequence-to-token-reward', kicker: '奖励整形', title: '序列级 reward 为什么通常放在最后一个有效 token，而 KL 代价逐 token 产生？',
+    id: 'sequence-to-token-reward', kicker: '奖励整形', title: '序列级 reward 与逐 token KL 代价的对齐方式',
     paragraphs: ['Reward model 读取完整 prompt-response 才能给出序列分数，因此最自然的 MDP 实现是在 EOS 或截断位置注入终局奖励。Reference KL 可在每个已采样 token 上由 log-probability 差估计，因此形成稠密代价。', '总 return 会把终局偏好向前传播，而逐 token KL 立即惩罚每一步偏离。若 padding mask、EOS 位置或长度惩罚处理错误，模型可能优化格式和长度而非偏好。'],
     formulas: [String.raw`r_t^{\mathrm{KL}}=-\beta\left(\log\pi_\theta(y_t\mid s_t)-\log\pi_{\mathrm{ref}}(y_t\mid s_t)\right)`, String.raw`r_t=r_t^{\mathrm{KL}}+\mathbf 1[t=T-1]r_\psi(x,y)`],
     example: example('一条三 token response 的 shaped reward', '终局偏好分数为 2.0，逐 token KL 代价分别为 −0.1、−0.2、−0.1。', ['位置', 'KL 代价', '最终 token reward'], [['token 1', '−0.1', '−0.1'], ['token 2', '−0.2', '−0.2'], ['token 3 / EOS', '−0.1', '1.9']]),
@@ -85,7 +85,7 @@ export const rlhfDeepeningEn = [
     handoff: 'With model roles clear, a sequence preference score must be assigned to the token trajectory.',
   },
   {
-    id: 'sequence-to-token-reward', kicker: 'Reward shaping', title: 'Why is sequence reward placed at the final valid token while KL cost is tokenwise?',
+    id: 'sequence-to-token-reward', kicker: 'Reward shaping', title: 'Aligning sequence rewards with tokenwise KL costs',
     paragraphs: ['The reward model needs the complete response, so its score naturally arrives at EOS or truncation. Reference KL can be estimated at every sampled token from log-probability differences, creating dense cost.', 'Return propagates terminal preference backward while token KL penalizes local drift. Incorrect padding, EOS, or length handling can make the model optimize formatting rather than preference.'],
     formulas: [String.raw`r_t^{\mathrm{KL}}=-\beta\left(\log\pi_\theta(y_t\mid s_t)-\log\pi_{\mathrm{ref}}(y_t\mid s_t)\right)`, String.raw`r_t=r_t^{\mathrm{KL}}+\mathbf 1[t=T-1]r_\psi(x,y)`],
     example: example('Shaped reward for a three-token response', 'Terminal preference is 2.0; token KL costs are −0.1, −0.2, and −0.1.', ['Position', 'KL cost', 'Final token reward'], [['Token 1', '−0.1', '−0.1'], ['Token 2', '−0.2', '−0.2'], ['Token 3 / EOS', '−0.1', '1.9']]),
