@@ -245,6 +245,24 @@ test('micro-sections are merged into running prose instead of merely demoting th
   assert.match(skill, /Reject a refactor that changes only heading tags or CSS/)
 })
 
+test('main-path chapter blocks contain developed bilingual explanations', async () => {
+  const { copy } = await import('../content.js')
+
+  for (const lang of ['zh', 'en']) {
+    for (const chapter of copy[lang].chapters) {
+      if (chapter.id === 'approximation') continue
+      const content = copy[lang][chapter.id]
+      const blocks = [...(content.prelude || []), ...(content.sections || [])]
+      for (const block of blocks) {
+        assert.ok(
+          block.paragraphs?.length >= 2,
+          `${lang}:${chapter.id}:${block.id} must develop its claim across at least two connected paragraphs`,
+        )
+      }
+    }
+  }
+})
+
 test('chapter eight explains TD timing in natural Chinese and keeps prose visually continuous', async () => {
   const { copy } = await import('../content.js')
   const styles = read('styles.css')
