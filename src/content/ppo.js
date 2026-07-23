@@ -41,3 +41,6 @@ export const ppoChapter = assertFoundationChapterDefinition({
     ], summary: ['Actor–Critic uses a value baseline to express policy direction as advantage.', 'PPO reuses rollout data through old-policy ratios and discourages excessive movement with clipping.', 'Advantage sign determines whether probability should rise or fall; clipping caps gain from moving farther.', 'Repeated minibatch updates must be paired with a fresh-rollout lifecycle.'], explorer: {},
   },
 })
+
+Object.assign(ppoChapter.zh, { eyebrow: '第 14 章 · PPO 策略更新' })
+Object.assign(ppoChapter.en, { eyebrow: 'Chapter 14 · PPO policy updates' })

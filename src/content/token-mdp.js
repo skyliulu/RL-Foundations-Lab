@@ -86,3 +86,6 @@ export const tokenMdpChapter = assertFoundationChapterDefinition({
     summary: ['State is prompt plus visible prefix; action is the next token.', 'Prefix extension is usually deterministic and policy sampling supplies randomness.', 'EOS and length truncation have different semantics.', 'Reward placement defines token credit assignment.', 'Rollout must preserve generation-time probabilities and positional evidence.'], explorer: {},
   },
 })
+
+Object.assign(tokenMdpChapter.zh, { eyebrow: '第 15 章 · Token MDP' })
+Object.assign(tokenMdpChapter.en, { eyebrow: 'Chapter 15 · Token MDP' })

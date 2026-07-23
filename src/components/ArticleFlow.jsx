@@ -14,9 +14,16 @@ function FlowSection({ block }) {
   </article>
 }
 
+function FlowProse({ block }) {
+  return <div className={`article-flow-prose flow-${block.id}`}>
+    {block.paragraphs.map((paragraph, index) => <p key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
+    {block.formulas?.length > 0 && <div className="article-flow-equations">{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
+  </div>
+}
+
 function FlowTable({ block, label }) {
-  return <article className={`article-flow-block article-flow-${block.type} flow-${block.id}`}>
-    <FlowHeader block={block} />
+  return <figure className={`article-flow-evidence article-flow-${block.type} flow-${block.id}`}>
+    <figcaption><span><RichContent value={block.kicker} /></span><strong><RichContent value={block.title} /></strong></figcaption>
     <p><RichContent value={block.intro} /></p>
     <div className="article-flow-table-scroll">
       <table aria-label={label}>
@@ -25,12 +32,12 @@ function FlowTable({ block, label }) {
       </table>
     </div>
     {block.note && <p className="article-flow-note"><RichContent value={block.note} /></p>}
-  </article>
+  </figure>
 }
 
 function FlowAlgorithm({ block, lang }) {
-  return <article className={`article-flow-block article-flow-algorithm flow-${block.id}`}>
-    <FlowHeader block={block} />
+  return <article className={`article-flow-evidence article-flow-algorithm flow-${block.id}`}>
+    <header className="article-flow-evidence-heading"><span><RichContent value={block.kicker} /></span><h3><RichContent value={block.title} /></h3></header>
     <p><RichContent value={block.intro} /></p>
     <div className="article-flow-algorithm-body"><span>{lang === 'zh' ? '完整步骤' : 'Complete loop'}</span><ol>{block.steps.map((item, index) => <li key={`${block.id}-${index}`}><b>{String(index + 1).padStart(2, '0')}</b><code><RichContent value={item} /></code></li>)}</ol></div>
     {block.note && <p className="article-flow-note"><RichContent value={block.note} /></p>}
@@ -38,8 +45,8 @@ function FlowAlgorithm({ block, lang }) {
 }
 
 function FlowTheorem({ block, lang }) {
-  return <article className={`article-flow-block article-flow-theorem flow-${block.id}`}>
-    <FlowHeader block={block} />
+  return <article className={`article-flow-evidence article-flow-theorem flow-${block.id}`}>
+    <header className="article-flow-evidence-heading"><span><RichContent value={block.kicker} /></span><h3><RichContent value={block.title} /></h3></header>
     <strong className="article-flow-claim"><RichContent value={block.claim} /></strong>
     {block.paragraphs.map((paragraph, index) => <p key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
     <div className="article-flow-conditions"><span>{lang === 'zh' ? '条件与作用' : 'Conditions and roles'}</span>{block.conditions.map((condition) => <div key={condition.latex}><MathFormula block latex={condition.latex} /><p><RichContent value={condition.explanation} /></p></div>)}</div>
@@ -50,7 +57,8 @@ export default function ArticleFlow({ blocks, lang, onSelect, renderExperiment }
   return <section className="article-flow" aria-label={lang === 'zh' ? '连续正文' : 'Continuous article'}>
     {blocks.map((block) => {
       if (block.type === 'section') return <FlowSection block={block} key={block.id} />
-      if (block.type === 'derivation') return <ClickableDerivation eyebrow={block.kicker} title={block.title} intro={block.intro} steps={block.steps} onSelect={onSelect} key={block.id} />
+      if (block.type === 'prose') return <FlowProse block={block} key={block.id} />
+      if (block.type === 'derivation') return <ClickableDerivation eyebrow={block.level === 'embedded' ? null : block.kicker} title={block.title} intro={block.intro} steps={block.steps} onSelect={onSelect} variant={block.level === 'embedded' ? 'embedded' : 'major'} key={block.id} />
       if (block.type === 'example' || block.type === 'comparison') return <FlowTable block={block} label={block.title} key={block.id} />
       if (block.type === 'algorithm') return <FlowAlgorithm block={block} lang={lang} key={block.id} />
       if (block.type === 'theorem') return <FlowTheorem block={block} lang={lang} key={block.id} />

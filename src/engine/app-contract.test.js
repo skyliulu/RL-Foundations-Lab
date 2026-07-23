@@ -121,7 +121,11 @@ test('all chapter explanations use continuous article sections rather than a car
   const styles = read('styles.css')
   assert.match(app, /chapter-article-sections/)
   assert.match(app, /<ChapterPrelude content=/)
-  assert.match(app, /<ChapterSections content=\{content\} placement="before"/)
+  assert.match(app, /<ChapterSections content=\{content\} lang=\{lang\} placement="before"/)
+  assert.match(app, /function ProseTurn/)
+  assert.match(app, /chapter-prose-opening/)
+  assert.doesNotMatch(app, /<h3><MathText>\{section\.title\}<\/MathText><\/h3>/)
+  assert.match(styles, /\.chapter-prose-turn \+ \.chapter-prose-turn/)
   assert.match(derivation, /derivation-line-short/)
   assert.match(derivation, /derivation-line-detail/)
   assert.doesNotMatch(app, /chapter-section-grid|chapter-section-card/)
@@ -135,17 +139,62 @@ test('chapter seven pilots the ordered article-flow contract and a dedicated evi
   const lab = read('components/StochasticApproximationLab.jsx')
   const zhIds = copy.zh.approximation.articleFlow.map((block) => block.id)
   const enIds = copy.en.approximation.articleFlow.map((block) => block.id)
+  const majorIds = copy.zh.approximation.articleFlow
+    .filter((block) => block.type === 'section' || (block.type === 'derivation' && block.level !== 'embedded'))
+    .map((block) => block.id)
+  const rootDerivation = copy.zh.approximation.articleFlow.find((block) => block.id === 'root-abstraction')
   assert.deepEqual(enIds, zhIds)
   assert.equal(zhIds[0], 'incremental-problem')
   assert.equal(zhIds.at(-1), 'earned-synthesis')
   assert.ok(zhIds.indexOf('sa-lab') < zhIds.indexOf('earned-synthesis'))
+  assert.deepEqual(majorIds, ['incremental-problem', 'root-abstraction', 'sgd-as-rm'])
+  assert.deepEqual(rootDerivation.steps.map((step) => step.id), ['mean-root', 'mean-noisy-residual', 'root-target', 'noisy-residual', 'rm-update'])
+  ;['mean-check', 'step-size-memory', 'rm-loop', 'rm-conditions', 'mean-as-sgd', 'gradient-generalization', 'batch-motivation', 'sgd-loop', 'gradient-family', 'convergence-pattern', 'sa-lab'].forEach((id) => assert.ok(zhIds.includes(id), `chapter 7 source coverage: ${id}`))
+  assert.ok(zhIds.indexOf('mean-as-sgd') < zhIds.indexOf('sgd-as-rm'))
+  assert.ok(zhIds.indexOf('gradient-generalization') < zhIds.indexOf('sgd-as-rm'))
+  assert.ok(zhIds.indexOf('batch-motivation') < zhIds.indexOf('gradient-family'))
+  assert.ok(zhIds.indexOf('gradient-family') < zhIds.indexOf('sgd-loop'))
+  assert.equal(rootDerivation.title, '用样本残差代替无法计算的期望残差')
   assert.match(app, /active === 'approximation'[\s\S]*?<ArticleFlow/)
+  assert.match(app, /<ChapterContinuity[^>]*compact[^>]*prerequisite=/)
+  assert.match(app, /showPrerequisite=\{false\}/)
+  assert.match(app, /chapter-context-prerequisite/)
+  assert.match(app, /!compact && <p>/)
+  assert.match(flow, /block\.type === 'prose'/)
   assert.match(flow, /block\.type === 'derivation'/)
   assert.match(flow, /block\.type === 'experiment'/)
   assert.match(flow, /block\.id}-column-\$\{columnIndex\}/)
   assert.match(lab, /runStochasticApproximationComparison/)
   assert.match(lab, /sa-ledger/)
   assert.match(lab, /sa-weight-strip/)
+})
+
+test('all chapters adopt the chapter-seven opening and heading hierarchy', async () => {
+  const { copy } = await import('../content.js')
+  const app = read('App.jsx')
+  const deepening = read('components/ChapterDeepening.jsx')
+  const monteCarlo = read('components/MonteCarloChapter.jsx')
+
+  copy.zh.chapters.forEach((chapter) => {
+    const content = copy.zh[chapter.id]
+    assert.match(content.eyebrow, new RegExp(`^第 ${Number(chapter.number)} 章`), `${chapter.id} Chinese eyebrow`)
+    assert.doesNotMatch(content.title, /[？?]$/, `${chapter.id} Chinese title must be declarative`)
+  })
+  copy.en.chapters.forEach((chapter) => {
+    const content = copy.en[chapter.id]
+    assert.match(content.eyebrow, new RegExp(`^Chapter ${Number(chapter.number)}`), `${chapter.id} English eyebrow`)
+    assert.doesNotMatch(content.title, /[?]$/, `${chapter.id} English title must be declarative`)
+  })
+
+  ;['td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic', 'dpo', 'grpo', 'codingrl', 'agentmdp', 'credit'].forEach((id) => {
+    assert.ok(copy.zh[id].derivationEyebrow && copy.zh[id].derivationTitle, `${id} Chinese concrete derivation heading`)
+    assert.ok(copy.en[id].derivationEyebrow && copy.en[id].derivationTitle, `${id} English concrete derivation heading`)
+  })
+  assert.match(app, /<ChapterContinuity[^>]*compact[^>]*prerequisite=/)
+  assert.match(app, /showPrerequisite=\{false\}/)
+  assert.match(deepening, /<h3><MathText>\{section\.title\}/)
+  assert.doesNotMatch(deepening, /为什么继续|Why continue/)
+  assert.doesNotMatch(monteCarlo, /因果推进的主线|Causal narrative|完整推导：|Complete derivation:/)
 })
 
 test('selecting the same derivation line toggles the contextual workbench', () => {
@@ -174,7 +223,52 @@ test('ordinary MDP sections use article headings instead of numbered timeline ca
   const source = read('components/MdpNarrative.jsx')
   assert.match(source, /narrative-section/)
   assert.match(source, /narrative-heading/)
+  assert.match(source, /narrative-turn-opening/)
+  assert.doesNotMatch(source, /<h3>/)
   assert.doesNotMatch(source, /narrative-index|padStart\(/)
+})
+
+test('micro-sections are merged into running prose instead of merely demoting their headings', () => {
+  const app = read('App.jsx')
+  const mdp = read('components/MdpNarrative.jsx')
+  const monteCarlo = read('components/MonteCarloChapter.jsx')
+  const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
+
+  assert.match(app, /const \[opening, \.\.\.continuation\] = content\.prelude/)
+  assert.match(app, /continuation\.map\(\(step\) => <ProseTurn/)
+  assert.match(app, /sections\.map\(\(section\) => <ProseTurn/)
+  assert.match(mdp, /isMajor \?/)
+  assert.match(mdp, /chapter-prose-lead/)
+  assert.doesNotMatch(monteCarlo, /mc-reasoning-index|mc-reasoning-copy"><h3/)
+  assert.match(skill, /Demoting a heading from `h2` to `h3`/)
+  assert.match(skill, /must not normally open a new visible heading/)
+  assert.match(skill, /Reject a refactor that changes only heading tags or CSS/)
+})
+
+test('chapter eight explains TD timing in natural Chinese and keeps prose visually continuous', async () => {
+  const { copy } = await import('../content.js')
+  const styles = read('styles.css')
+  const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
+  const zh = copy.zh.td
+
+  assert.match(zh.intro, /每执行一步.*即时奖励和下一状态/)
+  assert.match(zh.prelude[0].paragraphs.join(''), /完整回报.*尚未发生.*局部一致性/)
+  assert.match(zh.prelude[1].paragraphs.join(''), /bootstrapping（自举）/)
+  assert.match(zh.sections[0].paragraphs.join(''), /n=1.*完整回报/)
+  assert.match(zh.deepening[2].title, /target 使用哪些信息、何时能够计算/)
+  assert.match(zh.deepening[2].paragraphs.join(''), /episodic task.*continuing task/)
+  assert.doesNotMatch(zh.deepening[2].title, /同一轨迹、同一预算下分解/)
+
+  const proseSequenceRule = styles.match(/\.chapter-prose-sequence\s*\{([^}]*)\}/)?.[1] || ''
+  const transitionRule = styles.match(/\.chapter-transition\s*\{([^}]*)\}/)?.[1] || ''
+  const deepeningRule = styles.match(/\.deepening-section\s*\{([^}]*)\}/)?.[1] || ''
+  assert.doesNotMatch(proseSequenceRule, /border/)
+  assert.doesNotMatch(transitionRule, /border/)
+  assert.doesNotMatch(deepeningRule, /border/)
+  assert.match(skill, /Do not use horizontal rules to manufacture structure/)
+  assert.match(skill, /Require every main-path prose block/)
+  assert.match(skill, /name the actual comparison axes/)
+  assert.match(skill, /Audit visible borders and separators on article-level prose/)
 })
 
 test('chapter one introduces the shared course world before formal definitions', () => {
@@ -221,7 +315,6 @@ test('algorithms, tables, experiments, and the right workbench share a readable 
   assert.match(styles, /small\s*\{\s*font-size:\s*inherit/)
   assert.match(styles, /\.deepening-pseudocode code\s*\{[^}]*var\(--font-code\)/)
   assert.match(styles, /\.deepening-example-table > span\s*\{[^}]*var\(--font-table\)/)
-  assert.match(styles, /\.deepening-handoff > \.deepening-handoff-label\s*\{[^}]*var\(--font-ui\)/)
   assert.match(styles, /\.deepening-handoff > \.deepening-handoff-copy\s*\{[^}]*var\(--font-support\)/)
   assert.doesNotMatch(styles, /\.deepening-handoff span\s*\{/)
   assert.match(styles, /Readability floor for algorithms, evidence tables, and interactive workbenches/)

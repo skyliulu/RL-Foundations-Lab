@@ -2,8 +2,9 @@ import { useState } from 'react'
 import MathFormula from './MathFormula'
 import RichContent from './RichContent'
 
-export default function ClickableDerivation({ eyebrow, title, intro, steps, onSelect }) {
+export default function ClickableDerivation({ eyebrow, title, intro, steps, onSelect, variant = 'major' }) {
   const [active, setActive] = useState(0)
+  const Heading = variant === 'embedded' ? 'h3' : 'h2'
 
   function selectStep(step, index) {
     setActive(index)
@@ -20,10 +21,10 @@ export default function ClickableDerivation({ eyebrow, title, intro, steps, onSe
   }
 
   return (
-    <section className="clickable-derivation">
+    <section className={`clickable-derivation is-${variant}`}>
       <header>
-        <span>{eyebrow}</span>
-        <h2>{title}</h2>
+        {eyebrow && <span>{eyebrow}</span>}
+        <Heading>{title}</Heading>
         <p><RichContent value={intro} /></p>
       </header>
       <ol>

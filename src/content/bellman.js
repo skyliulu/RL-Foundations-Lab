@@ -175,7 +175,7 @@ export const bellmanChapter = assertChapterDefinition({
   sources,
   zh: {
     eyebrow: '第 3 章 · 状态价值与 Bellman 方程',
-    title: '一步递归对长期价值的表达',
+    title: '把无限回报拆成当前奖励与下一状态价值',
     intro: '状态价值不是对眼前奖励的评分，而是从当前状态出发，沿策略产生的全部未来回报的期望。Bellman 方程把这条无限长的时间链切成“下一步奖励”与“下一状态的价值”。',
     bridge: '下面继续使用同一个 5×5 网格环境：进入黄色禁区或尝试越界奖励 −1，进入蓝色目标奖励 +1，其余移动奖励 0；目标状态不会终止任务。点击状态、调整参数并执行一次更新，观察数值如何从同一套环境模型中产生。',
     experimentIntro: '下面在已经定义的 5×5 环境中执行一次 Bellman backup。先选择状态，再逐项核对策略动作、后继分支、即时奖励和折扣后继价值，最后才写回新的状态价值。',
@@ -280,7 +280,7 @@ export const bellmanChapter = assertChapterDefinition({
   },
   en: {
     eyebrow: 'Chapter 3 · State Value and the Bellman Equation',
-    title: 'One-step recursion as an expression of long-term value',
+    title: 'Split an infinite return into current reward and successor value',
     intro: 'A state value is not a score for the immediate reward. It is the expected future return under a policy. The Bellman equation cuts that infinite chain into the next reward and the value of the next state.',
     bridge: 'The canvas continues with the same 5×5 grid environment: entering a yellow forbidden cell or attempting to cross the boundary yields −1, entering the blue target yields +1, and every other move yields 0. The target is non-terminal. Select a state, adjust parameters, and see the values emerge from the same model.',
     experimentIntro: 'Perform one Bellman backup in the defined 5×5 environment. Select a state, inspect policy action, successor branches, immediate reward, and discounted successor value, and only then write back the new estimate.',

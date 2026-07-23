@@ -51,3 +51,6 @@ export const rlhfChapter = assertFoundationChapterDefinition({
     ], summaryTitle: 'PPO-based RLHF is an online loop with strict data provenance', summary: ['Policy, old, reference, reward, and value are distinct roles.', 'Reference KL and old-policy ratios solve different problems.', 'Tokens, masks, probabilities, and values must align.', 'Workers refresh and roll out again after updates.'], explorer: {},
   },
 })
+
+Object.assign(rlhfChapter.zh, { eyebrow: '第 16 章 · PPO-based RLHF' })
+Object.assign(rlhfChapter.en, { eyebrow: 'Chapter 16 · PPO-based RLHF' })

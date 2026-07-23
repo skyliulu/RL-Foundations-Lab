@@ -100,7 +100,7 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     prerequisite: '前置：状态价值、动作价值与 Bellman 期望方程',
     summaryTitle: '最优性不是另一个环境，而是对五个动作进行同场竞争',
     eyebrow: '第 4 章 · Bellman 最优方程与最优策略',
-    title: '从策略评价到最优控制的算子变化',
+    title: '让同一状态的动作竞争长期回报',
     intro: 'Bellman 期望方程假定策略 π 已知，并按 π(a|s) 汇总动作价值；Bellman 最优方程把策略也变成未知量。因为概率权重和为 1，右侧最大化最终等价于选择最大的 q(s,a)。',
     bridge: '下面在同一个 5×5 世界、同一个状态和同一张后继价值快照上计算五个动作的 target。切换算子时，环境模型没有改变；改变的只是“服从当前策略”还是“选择最大动作价值”。',
     experimentIntro: '下面固定环境、状态与后继价值，只切换聚合规则。先检查五个动作各自的一步 target，再比较策略加权结果与最大动作结果。',
@@ -111,8 +111,8 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     instruction: '选择状态并切换算子，观察固定策略动作与最大动作何时分离',
     question: '为什么 maxπ Σa π(a|s)q(s,a) 最终可以化成 maxa q(s,a)？',
     prelude: [
-      { id: 'evaluation-control', kicker: '两个不同问题', title: '策略评估问“这套策略值多少”', paragraphs: ['当 π 固定时，状态 s 的价值由 π 在各动作上的概率和环境响应共同决定。', '确定性固定策略只选择一个动作，因此期望算子在该状态上读取这个动作的 qπ(s,a)。'], formulas: [String.raw`T^{\pi}V(s)=\sum_a\pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]`] },
-      { id: 'max-reduction', kicker: '把策略也纳入优化', title: '最优性问“哪一个动作能给出最大 target”', paragraphs: ['任何随机策略产生的值都是各动作 q 的凸组合，不可能超过其中最大的一个。', '因此最大值可由确定性贪心策略达到：把概率 1 放在 arg max 动作上。'], formulas: [String.raw`T^*V(s)=\max_a\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]`] },
+      { id: 'evaluation-control', kicker: '两个不同问题', title: '固定策略按动作概率加权价值', paragraphs: ['当 π 固定时，状态 s 的价值由 π 在各动作上的概率和环境响应共同决定。', '确定性固定策略只选择一个动作，因此期望算子在该状态上读取这个动作的 qπ(s,a)。'], formulas: [String.raw`\begin{aligned}T^{\pi}V(s)&=\sum_a\pi(a\mid s)\\&\quad\cdot\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]\end{aligned}`] },
+      { id: 'max-reduction', kicker: '把策略也纳入优化', title: '最大动作价值取代策略加权', paragraphs: ['任何随机策略产生的值都是各动作 q 的凸组合，不可能超过其中最大的一个。', '因此最大值可由确定性贪心策略达到：把概率 1 放在 arg max 动作上。'], formulas: [String.raw`T^*V(s)=\max_a\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]`] },
     ],
     sections: [
       { id: 'fixed-point-optimality', kicker: '存在、唯一与最优', title: '最优算子的不动点就是 V*', paragraphs: ['当 0 < γ < 1 时，Bellman 最优算子仍是压缩映射，因此存在唯一不动点。', '对这个 V* 逐状态取贪心动作，就得到至少一个确定性最优策略。'], formula: String.raw`V^*=T^*V^*,\qquad \pi^*(s)\in\operatorname*{arg\,max}_a q^*(s,a)` },
@@ -126,7 +126,7 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     prerequisite: 'Prerequisites: state value, action value, and the Bellman expectation equation',
     summaryTitle: 'Optimality is not a new environment; it is a fair competition among five actions',
     eyebrow: 'Chapter 4 · Bellman optimality equation and optimal policy',
-    title: 'The operator change from policy evaluation to optimal control',
+    title: 'Let actions at one state compete on long-term return',
     intro: 'The Bellman expectation equation assumes policy π is known and aggregates action values with π(a|s). The Bellman optimality equation makes the policy unknown too. Because the action probabilities sum to one, right-hand maximization reduces to selecting the largest q(s,a).',
     bridge: 'The switch computes all five action targets in the same 5×5 world, at the same state, from the same successor-value snapshot. Toggling the operator does not change the environment; it changes whether the update follows the current policy or selects the maximum action value.',
     experimentIntro: 'Hold the environment, state, and successor values fixed. Inspect all five one-step targets before comparing policy weighting with action maximization.',
@@ -137,8 +137,8 @@ export const optimalityChapter = assertFoundationChapterDefinition({
     instruction: 'Choose a state and toggle the operator to see when the fixed action and maximum action separate',
     question: 'Why does maxπ Σa π(a|s)q(s,a) reduce to maxa q(s,a)?',
     prelude: [
-      { id: 'evaluation-control', kicker: 'Two different questions', title: 'Policy evaluation asks what this policy is worth', paragraphs: ['With π fixed, the value of state s is determined jointly by its action probabilities and the environment response.', 'A deterministic fixed policy selects one action, so its expectation operator reads that action’s qπ(s,a).'], formulas: [String.raw`T^{\pi}V(s)=\sum_a\pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]`] },
-      { id: 'max-reduction', kicker: 'Optimize the policy too', title: 'Optimality asks which action produces the largest target', paragraphs: ['Any stochastic policy produces a convex combination of action q values and cannot exceed the largest member.', 'A deterministic greedy policy reaches the maximum by assigning probability one to an arg max action.'], formulas: [String.raw`T^*V(s)=\max_a\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]`] },
+      { id: 'evaluation-control', kicker: 'Two different problems', title: 'A fixed policy weights action values by its probabilities', paragraphs: ['With π fixed, the value of state s is determined jointly by its action probabilities and the environment response.', 'A deterministic fixed policy selects one action, so its expectation operator reads that action’s qπ(s,a).'], formulas: [String.raw`\begin{aligned}T^{\pi}V(s)&=\sum_a\pi(a\mid s)\\&\quad\cdot\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]\end{aligned}`] },
+      { id: 'max-reduction', kicker: 'Optimize the policy too', title: 'Maximum action value replaces policy weighting', paragraphs: ['Any stochastic policy produces a convex combination of action q values and cannot exceed the largest member.', 'A deterministic greedy policy reaches the maximum by assigning probability one to an arg max action.'], formulas: [String.raw`T^*V(s)=\max_a\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V(s')\right]`] },
     ],
     sections: [
       { id: 'fixed-point-optimality', kicker: 'Existence, uniqueness, optimality', title: 'The fixed point of the optimality operator is V*', paragraphs: ['For 0 < γ < 1, the Bellman optimality operator remains a contraction and therefore has one fixed point.', 'Choosing a greedy action from V* in every state yields at least one deterministic optimal policy.'], formula: String.raw`V^*=T^*V^*,\qquad \pi^*(s)\in\operatorname*{arg\,max}_a q^*(s,a)` },

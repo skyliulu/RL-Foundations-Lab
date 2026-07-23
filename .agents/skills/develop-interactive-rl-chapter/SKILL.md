@@ -60,8 +60,52 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Avoid ordered fragments: several correct sections are still a failure when each repeats the motivation, restates the same conclusion, or can be freely reordered without changing the argument.
 - Keep one running example or data trace through definitions, derivations, algorithms, and the experiment whenever the mathematics permits. Do not reset to unrelated toy examples merely to fill a fixed content slot.
 - Use synthesis, comparison, and "unified form" sections as earned conclusions or bridges, not premature opening decoration.
+- Introduce a named algorithm only after the reader has encountered the concrete limitation, seen the required mathematical object, and derived or justified the update it names. The name should consolidate an earned mechanism, not announce an unexplained topic.
+- When a later variant changes evidence quantity, update frequency, or compute schedule rather than the learning objective, state that invariant first and derive the variant from the exposed tradeoff. Do not let mini-batch, replay, target-network, or clipping variants appear as adjacent vocabulary.
 - Audit the chapter twice: read only the prose while ignoring headings and chrome, then read only the transitions between blocks. Both passes must reveal a continuous argument with no unexplained jumps.
 - Reject a chapter when its facts are individually accurate but the reader cannot answer why this paragraph, equation, or experiment must appear at this exact point.
+
+## Chapter 7 Pilot Standard
+
+Use the rebuilt stochastic-approximation chapter as the structural reference for every chapter, without copying its subject-specific components.
+
+- Open with one concrete unresolved problem inherited from the previous chapter. The first paragraph must state what the reader can already do, why it is now insufficient, and what observable task this chapter will solve.
+- Keep the opening context compact: one chapter-number eyebrow, one title, one introductory argument, then a single context block that combines prerequisites with the concrete neighboring-chapter sequence. Do not add a separate part banner, phase slogan, or second introduction.
+- Write major headings as concrete teaching claims or mechanisms with a visible actor and action. Reject headings that sound like internal outline labels, taxonomies, or stacked abstractions such as “unified framework”, “objective-equation transformation”, or “general methodological perspective”.
+- Derive before naming. Begin with the running example, expose the missing quantity or failed operation, derive the replacement, and only then attach the standard algorithm or theorem name.
+- Let a later abstraction reuse the exact symbols, residual, trajectory, table, or update already established by the concrete example. The abstraction must feel like a change of scope, not a change of subject.
+- Keep supporting derivations, worked checks, algorithms, comparisons, and experiments inside the surrounding argument. Their labels may aid navigation, but they must not restart the chapter or repeat its motivation.
+- Before each named algorithm, verify that the preceding prose has established its input, target, observable evidence, update, and need. After it, show one worked consequence and the remaining tradeoff before moving on.
+- Place the experiment only after the chapter has made a falsifiable claim. The experiment must expose the internal variables used in the derivation and compare one controlled alternative on the same evidence.
+- End by synthesizing only mechanisms that the reader has already derived. State the precise unresolved limitation that supplies the next chapter's opening problem.
+- Apply this standard to Chinese and English independently. Structural equivalence is required; translated sentence shape is not.
+
+## Heading Density and Natural Chinese
+
+- Place headings only at genuine conceptual turns. A heading must introduce a section that changes the problem, mathematical object, mechanism, or stage of the argument; it must not merely label the next paragraph, formula, example, or transition.
+- Demoting a heading from `h2` to `h3`, changing its wording, or removing its number is not a prose refactor. If the same heading-plus-one-sentence rhythm remains, the chapter is still fragmented.
+- A block containing only one or two short explanatory paragraphs, one supporting equation, one example, or one transition must not normally open a new visible heading. Merge its title into the surrounding paragraph as a natural lead sentence and keep the equation inside that paragraph's argument.
+- Start a new visible heading only when the reader is entering a genuinely new problem, mathematical object, named theorem, complete algorithm, experiment, or stage of the proof. A label that merely describes the next sentence does not meet this threshold.
+- Consecutive micro-blocks must be rewritten as connected paragraphs, not only wrapped in a shared container. Add explicit causal handoffs so that each paragraph begins from the result or limitation established by the previous one.
+- During review, count visible headings whose body ends after one paragraph or one supporting formula. Each instance requires a written justification; otherwise merge it into continuous prose.
+- Treat three to five level-two headings in an ordinary chapter as a useful diagnostic range, not a quota. Named algorithm variants, theorems, and experiments may use subordinate headings when the distinction carries teaching meaning.
+- Embed calculations, comparison tables, derivations, and interactive evidence inside the surrounding argument. Their captions or interface labels must not make the article appear to restart.
+- Never repair a question-heavy outline by mechanically converting every question into an abstract noun phrase. Formal exposition still needs concrete subjects, verbs, and causal sentences.
+- Write Chinese and English independently from the same conceptual outline. Preserve definitions, formulas, evidence, and sequence across languages, but do not mirror English word order or nominalization in Chinese.
+- In Chinese, prefer a concrete actor and action over stacked abstractions. Introduce a standard English term once in parentheses when useful, then use the established Chinese term consistently unless the English name is the conventional algorithm label.
+- Do not translate editorial abstractions literally into Chinese. Phrases such as "matched comparison", "same budget decomposition", "objective transformation", or "information span" must be rewritten around a concrete reader-visible action: what is held fixed, what is observed, and what conclusion follows.
+- Read every edited Chinese paragraph aloud as ordinary technical Chinese. Reject missing subjects, excessive nominalization, stacked "在……下进行……" constructions, and sentences whose logical relation depends on an English source order.
+- Diagnose fragmentation by reading the prose with all headings removed and by listing headings without body copy. The prose must still form a continuous argument, while the heading list must resemble a compact conceptual outline rather than a table of paragraph labels.
+- Reject a refactor that changes only heading tags or CSS. The rendered article and its source data must show fewer restarts, longer connected paragraphs, and explicit transitions between equations, evidence, and conclusions.
+
+## Prose Sufficiency and Segmentation Gate
+
+- Require every main-path prose block to establish a concrete situation or observation, explain the mechanism or causal relation, and state the consequence or remaining tradeoff. A heading followed by one compressed or abstract sentence is incomplete even when its typography looks continuous.
+- When comparing methods, name the actual comparison axes in the prose: what evidence each method uses, when that evidence becomes available, what estimate depends on the current value function, and how bias, variance, memory, or task assumptions change. Do not replace these facts with editorial slogans such as "fair comparison" or "same-budget decomposition".
+- Preserve the operational distinctions carried by the source. For Monte Carlo and temporal-difference learning, for example, state whether an episode must terminate, whether bootstrapping is used, when updates occur, and what information enters each target before summarizing their tradeoff.
+- Expand, merge, or remove any ordinary article block that contains fewer than two complete explanatory sentences. Keep a shorter block only when it is a self-contained definition, theorem statement, algorithm step, caption, or deliberate transition whose meaning is already established by the adjacent prose.
+- Audit visible borders and separators on article-level prose, transitions, handoffs, and deepening sections. Ordinary exposition must be connected by language and spacing; a horizontal rule must represent a real semantic or interface boundary.
+- Read the Chinese body once with headings, labels, and visual separators mentally removed. The mechanism and progression must remain understandable from the sentences themselves rather than from readers inferring meaning from section names.
 
 ## Formula Visual-Hierarchy Contract
 
@@ -72,6 +116,7 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Let clickable derivations remain article-native: use restrained hover, focus, or selected-line treatment while keeping the unselected chain visually quiet and continuous.
 - For every chapter, classify each displayed formula as derivation, definition, result, condition, worked calculation, or supporting relation. If its visual weight exceeds its teaching role, demote it to inline or plain display math.
 - Review the page at normal reading scale and reject any rhythm in which alternating prose and formula boxes makes the reader repeatedly enter and exit independent components.
+- Do not use horizontal rules to manufacture structure between ordinary prose paragraphs. A rule is allowed only when it belongs to a real interface boundary, table, algorithm ledger, theorem, derivation step list, or reference section; it must not substitute for a textual transition.
 
 ## Experiment-as-Argument Contract
 
@@ -170,6 +215,8 @@ Use this shape for derivation data:
 - Keep the same readable text column from the chapter opening through the closing summary and references. Do not alternate among unrelated centered widths.
 - Keep the desktop reading column broad enough for technical prose and derivations. In this product, use the shared 920 px reading-column token when the chapter frame has room; let it contract responsively instead of assigning narrower per-section widths.
 - Place experiments as intentional wide regions inside the same chapter shell. Their outer edges must follow the shared grid, and entry/exit copy must return to the same text column.
+- Treat phase navigation and chapter-position indicators as orientation, not a second introduction. Do not repeat the chapter motivation immediately below the header; combine the phase label and neighboring chapter sequence into a compact path when the opening already supplies the rationale.
+- Do not stack an isolated prerequisite line and an abstract phase banner at the chapter opening. When both are useful, combine the prerequisite and concrete neighboring-chapter sequence into one compact context block; omit internal phase labels that do not help the reader understand the next paragraph.
 - Do not create a narrow-wide-narrow rhythm merely because components have different `max-width` values.
 - Render supporting equations compactly near the prose. Use display math only when the equation needs its own reading step; do not enlarge every formula or force each short expression onto a separate row.
 - Split genuinely long equations into semantic `aligned` rows before adding horizontal scrolling. At desktop width, article derivations and primary experiment equations must not show an inner scrollbar merely because a container was made too narrow.
@@ -205,6 +252,9 @@ Use this shape for derivation data:
 - Capture each complete interaction, not only its header or one convenient state, and inspect dense formulas, tables, action lists, and scroll surfaces at their actual rendered size.
 - List the first occurrence of every chapter-specific technical term and confirm that occurrence includes a definition or local explanation.
 - Confirm required teaching content forms a coherent article without relying on generic card grids.
+- List every main-path prose block with fewer than two complete explanatory sentences. Expand or merge it unless it qualifies for one of the explicit short-block exceptions.
+- For every method comparison, record the concrete axes stated in the prose and reject abstract claims that do not identify what is held fixed, what evidence is available, and what outcome is being compared.
+- Audit borders and horizontal rules on article-level prose classes. Reject separators whose only purpose is to compensate for a missing textual transition.
 - Compare the completed chapter against its source-coverage matrix and fail it if any required algorithm, variant, theorem condition, comparison, pseudocode stage, or worked example lacks a visible destination.
 - For every named algorithm, confirm that the reader can identify the limitation that motivated it, its complete execution loop, why its update is valid, and its tradeoff relative to the previous method.
 - Reject generic experiments whose visible state does not correspond to the chapter's actual algorithm state and data flow.

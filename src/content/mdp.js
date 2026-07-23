@@ -57,7 +57,7 @@ const mdpZhPath = [
   {
     id: 'problem-setting',
     kicker: '先建立共同场景',
-    title: '先把贯穿本章的网格世界摆在眼前',
+    title: '在网格世界中观察一次完整交互',
     paragraphs: [
       '我们先固定一个具体世界：一张 5×5 的方格地图。蓝色格是目标，黄色格是禁区，地图外侧是边界；禁区仍然可以进入，只是会受到惩罚。这张地图及其规则合在一起，就是智能体所处的环境。',
       '智能体，也就是需要在地图中不断做出选择的主体，可以从任意格子出发。任务不只是抵达目标，还要区分撞到边界、穿过禁区和无谓绕路，因此我们需要逐一建立描述这个世界的基本对象。',
@@ -143,7 +143,7 @@ const mdpZhPath = [
   {
     id: 'mdp-definition',
     kicker: '形式化 · MDP 与 Markov 性',
-    title: 'Markov 性回答的是：当前状态是否已经足够预测下一步',
+    title: 'Markov 性要求当前状态足以预测下一步',
     paragraphs: [
       '一个 MDP 汇集前面逐一建立的对象：状态集合、每个状态可用的动作集合、奖励集合或奖励分布、状态转移分布，以及智能体采用的策略。环境模型由转移与奖励分布组成；策略仍是智能体侧的选择规则。',
       'Markov 性先提出一个具体的预测问题：动作 Aₜ 已经选定时，若要预测下一状态 Sₜ₊₁ 和奖励 Rₜ₊₁，除了当前状态 Sₜ，还需不需要回看从起点到现在的完整历史？下面用 Hₜ 表示这段历史。',
@@ -162,7 +162,7 @@ const mdpZhPath = [
 
 const mdpEnPath = [
   {
-    id: 'problem-setting', kicker: 'Establish the shared scene', title: 'Place the grid world in view before naming its parts',
+    id: 'problem-setting', kicker: 'Establish the shared scene', title: 'Observe one complete interaction in the grid world',
     paragraphs: ['Begin with one concrete world: a 5×5 grid. The blue cell is the target, yellow cells are forbidden, and the outside edge is the boundary. Forbidden cells remain accessible but carry a penalty. The map and its rules together form the environment in which the agent operates.', 'The agent—the decision-making entity moving through the grid—may start in any cell. Reaching the target is not enough: boundary collisions, forbidden cells, and needless detours should differ, so the next sections build the objects needed to describe this world.'],
     formulas: [], note: 'This section establishes only the scene. The location, available directions, world response, choice rule, and evaluation signal are named next.',
   },
@@ -203,7 +203,7 @@ const mdpEnPath = [
     formulas: [String.raw`\text{episodic: }S_0,A_0,R_1,\ldots,S_T`, String.raw`\text{continuing: }S_0,A_0,R_1,S_1,A_1,R_2,\ldots`],
   },
   {
-    id: 'mdp-definition', kicker: 'Formalization · MDP and the Markov property', title: 'The Markov property asks whether the current state is enough to predict the next step',
+    id: 'mdp-definition', kicker: 'Formalization · MDP and the Markov property', title: 'The Markov property requires the current state to predict the next step',
     paragraphs: [
       'An MDP gathers the objects established above: states, available actions, reward sets or distributions, transition distributions, and the policy used by the agent. Transition and reward form the environment model; policy remains the agent’s choice rule.',
       'The Markov property begins with a concrete prediction question. Once action Aₜ has been selected, does predicting successor Sₜ₊₁ and reward Rₜ₊₁ require the complete history from the start, or is current state Sₜ enough? Let Hₜ denote that complete history.',

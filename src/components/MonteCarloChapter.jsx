@@ -6,11 +6,18 @@ import MonteCarloLab from './MonteCarloLab.jsx'
 function ReasoningPath({ content, lang }) {
   return (
     <section className="mc-reasoning-path">
-      <header><span>{lang === 'zh' ? '因果推进的主线' : 'Causal narrative'}</span><h2>{lang === 'zh' ? '从原方法的局限过渡到新机制' : 'From the limitation of one method to the mechanism that resolves it'}</h2></header>
-      {content.reasoningPath.map((section, index) => (
+      <header><span>{lang === 'zh' ? '从模型到经验' : 'From models to experience'}</span><h2>{lang === 'zh' ? '未知模型使精确期望变成可采样的 return' : 'An unknown model turns exact expectations into sampled returns'}</h2></header>
+      {content.reasoningPath.map((section) => (
         <article key={section.id}>
-          <div className="mc-reasoning-index"><span>{index + 1}</span><small><MathText>{section.kicker}</MathText></small></div>
-          <div className="mc-reasoning-copy"><h3><MathText>{section.title}</MathText></h3>{section.paragraphs.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}{section.formula && <MathFormula block latex={section.formula} />}</div>
+          <div className="mc-reasoning-copy">
+            <p className="mc-reasoning-opening">
+              <strong className="chapter-prose-lead"><MathText>{section.title}</MathText></strong>
+              <span className="chapter-prose-separator" aria-hidden="true">{lang === 'zh' ? '。' : '. '}</span>
+              <MathText>{section.paragraphs[0]}</MathText>
+            </p>
+            {section.paragraphs.slice(1).map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
+            {section.formula && <MathFormula block latex={section.formula} />}
+          </div>
         </article>
       ))}
     </section>
@@ -21,7 +28,7 @@ function AlgorithmFamily({ content, lang }) {
   const zh = lang === 'zh'
   return (
     <section className="mc-algorithm-family">
-      <header><span>{zh ? '算法演化链' : 'Algorithm evolution'}</span><h2>{zh ? '三种 Monte Carlo 方法不是并列清单' : 'Three Monte Carlo methods are not a flat list'}</h2><p>{zh ? '每一层都保留前一层有效的部分，只替换造成失败的假设。完整伪代码保留在正文，便于逐行对照差异。' : 'Each layer keeps what works and replaces the assumption that fails. Full pseudocode remains visible for line-by-line comparison.'}</p></header>
+      <header><span>{zh ? '逐步修正覆盖假设' : 'Repair the coverage assumption'}</span><h2>{zh ? '从首次访问估计到 ε-greedy 控制' : 'From first-visit estimation to ε-greedy control'}</h2><p>{zh ? '每一层都保留前一层有效的部分，只替换造成失败的假设。完整伪代码保留在正文，便于逐行对照差异。' : 'Each layer keeps what works and replaces the assumption that fails. Full pseudocode remains visible for line-by-line comparison.'}</p></header>
       <div className="mc-algorithm-stack">
         {content.algorithms.map((algorithm, index) => (
           <article key={algorithm.id} className={`mc-algorithm-card algorithm-${algorithm.id}`}>
@@ -45,8 +52,8 @@ export default function MonteCarloChapter({ content, lang, onSelect, beforeExper
     <>
       <ReasoningPath content={content} lang={lang} />
       <ClickableDerivation
-        eyebrow={lang === 'zh' ? '从定义到可学习的递推' : 'From definition to a learnable recursion'}
-        title={lang === 'zh' ? '完整推导：从 return 样本到动作价值估计' : 'Complete derivation: from return samples to action-value estimates'}
+        eyebrow={lang === 'zh' ? '样本平均' : 'Sample averaging'}
+        title={lang === 'zh' ? '用完整回合的 return 估计动作价值' : 'Estimate action value from complete-episode returns'}
         intro={lang === 'zh' ? '先完成策略评价的数学接口，再讨论算法变体。点击任意等式，右侧解释该步使用的条件、变换与符号。' : 'First establish the mathematical interface for policy evaluation, then compare algorithm variants. Select any line for assumptions and symbols.'}
         steps={content.derivation}
         onSelect={onSelect}

@@ -66,15 +66,15 @@ export const approximationDeepeningEn = [
 
 export const tdDeepeningZh = [
   {
-    id: 'bellman-sample-logic', kicker: '从期望方程到一次转移', title: 'TD target 是 Bellman 方程右侧的无偏随机样本',
-    paragraphs: ['固定策略以后，Bellman 方程右侧先对动作、后继状态和奖励取条件期望。真实交互只暴露其中一次联合抽样；R_{t+1}+γV(S_{t+1}) 因而是当前估计下 Bellman backup 的单样本观测。', '这里有两种误差不能混淆：环境抽样产生方差，而用 V_t 替代真实 v^π 产生 bootstrap 偏差。TD 的优势来自更早、更频繁的更新，不是因为单步 target 本身无偏于真实 return。'],
+    id: 'bellman-sample-logic', kicker: '从期望方程到一次转移', title: '一次转移可以作为当前 Bellman 更新的随机样本',
+    paragraphs: ['在固定策略下，Bellman 方程要求对所有可能的动作、奖励和后继状态取条件期望。真实交互不会一次给出这整个期望，但每次转移都会给出其中一个结果：当前状态为 S_t，随后观察到奖励 R_{t+1} 和后继状态 S_{t+1}。因此，在当前价值表 V_t 已知时，R_{t+1}+γV_t(S_{t+1}) 正好是 Bellman 方程右侧的一次随机观测。', '需要区分两种不同的误差。实际转移只是众多可能结果中的一个，因此单次观测带有抽样方差；同时，V_t(S_{t+1}) 仍是学习中的估计，而不是真实价值 v^π(S_{t+1})，所以 target 还带有自举误差。TD 能够成立，是因为反复采样可以逼近当前 Bellman 更新，而不是因为某一次 target 已经等于完整回报。'],
     formulas: [String.raw`(T^{\pi}V)(s)=\mathbb E_{\pi}[R_{t+1}+\gamma V(S_{t+1})\mid S_t=s]`, String.raw`U_t=R_{t+1}+\gamma V_t(S_{t+1})`, String.raw`\mathbb E[U_t\mid S_t=s]=(T^{\pi}V_t)(s)`],
     theorem: theorem('给定当前估计 V_t，单步 TD target 对 Bellman backup 无偏；它一般不对真实 value 无偏。', '这一区分解释了 TD 如何符合随机逼近，又为何会有 bootstrap bias。', [String.raw`\pi\ \text{fixed}`, String.raw`\mathbb E[R_{t+1}^2\mid S_t=s]<\infty`]),
     handoff: '既然一次转移可提供 residual 样本，就可以写出完整的在线 TD(0) 评价循环。',
   },
   {
-    id: 'td-zero-complete', kicker: '完整算法', title: 'TD(0) 不只是一个更新式，而是“采样—计算—更新—继续行动”的在线循环',
-    paragraphs: ['每个 episode 开始时只需初始状态。策略先选择动作，环境给出奖励和后继状态，算法立刻用尚未更新的后继估计组成 target，再只修改当前状态。', '终止状态的 value 约定为零，使最后一次更新自然退化为仅使用最终奖励。持续型任务则没有这一边界，需要折扣或平均奖励设定保证目标良好。'],
+    id: 'td-zero-complete', kicker: '完整算法', title: 'TD(0) 在每次转移后立即更新刚刚离开的状态',
+    paragraphs: ['TD(0) 的执行顺序与环境交互完全同步。策略在 S_t 选择动作，环境返回 R_{t+1} 和 S_{t+1}；算法先用更新前的 V(S_{t+1}) 计算 target，再只修改 V(S_t)，随后从 S_{t+1} 继续行动。这样，一个回合尚未结束时，前面访问过的状态已经开始吸收新信息。', '在回合制任务中，终止状态的价值约定为零，最后一次更新便只剩终局奖励。持续型任务没有必须等待的终点，TD 仍可逐步更新；此时需要折扣回报或平均奖励设定，确保长期价值有明确含义。'],
     formulas: [String.raw`\delta_t=R_{t+1}+\gamma V(S_{t+1})-V(S_t)`, String.raw`V(S_t)\leftarrow V(S_t)+\alpha_t\delta_t`],
     pseudocodeTitle: 'On-policy TD(0) prediction',
     pseudocode: ['初始化所有非终止状态的 V(s)，终止状态 V=0', '对每个 episode：取得初始状态 S', '  若 S 非终止：按固定策略 π 从 S 采样动作 A', '  执行动作，观察奖励 R 与后继 S′', '  计算 δ = R + γV(S′) − V(S)', '  更新 V(S) ← V(S) + α(S)δ', '  令 S ← S′ 并继续，直到终止'],
@@ -82,8 +82,8 @@ export const tdDeepeningZh = [
     handoff: '控制问题还必须选择动作，因此要把 V 的在线评价推广到 Q。',
   },
   {
-    id: 'mc-td-matched-comparison', kicker: '公平比较', title: 'MC 与 TD 的差异必须在同一轨迹、同一预算下分解',
-    paragraphs: ['MC target 包含终点前全部真实奖励，条件于状态时通常无 bootstrap 偏差，但轨迹随机性会贯穿整个 target。TD(0) 只含一个真实奖励，方差较低且立即可用，却继承当前 V 的误差。', 'n-step 方法不是另一个孤立名词，而是连续插值：每多展开一步，就少依赖一层 bootstrap，同时多承受一段轨迹方差与等待时间。'],
+    id: 'mc-td-matched-comparison', kicker: '方法比较', title: '比较 MC 与 TD，先看 target 使用哪些信息、何时能够计算',
+    paragraphs: ['两种方法都可以在未知环境模型时评价固定策略，区别在于监督信号怎样构造。MC 要等回合结束，再把终点之前实际发生的全部奖励组成回报；它不需要用当前价值估计补全尾部，但整条轨迹的随机性都会进入 target。TD(0) 在一次转移后就能计算，只使用一个实际奖励，再用 V(S_{t+1}) 估计尚未发生的部分，因此通常方差较低，却会继承当前价值表的误差。', '更新时间的差异也决定了适用场景。普通 MC 依赖回合终点，天然适合 episodic task；TD 每一步都能更新，所以既可用于回合制任务，也可用于没有自然终点的 continuing task。比较二者时，应当固定策略和经验数据，再分别观察 target 的可用时间、随机奖励数量以及对当前估计的依赖，而不是只比较某一次数值谁更接近。', 'n-step target 在两者之间连续移动：每向前多使用一个真实奖励，就会少依赖一层后继估计，同时多等待一步并引入一段新的轨迹随机性。n=1 是 TD(0)；若一直展开到回合终点，尾部价值为零，就得到 MC return。'],
     formulas: [String.raw`G_t^{(n)}=R_{t+1}+\gamma R_{t+2}+\cdots+\gamma^{n-1}R_{t+n}+\gamma^nV(S_{t+n})`, String.raw`G_t^{(1)}=U_t^{\mathrm{TD}},\qquad G_t^{(T-t)}=G_t`],
     theorem: theorem('表格型、on-policy TD(0) 在充分访问和逐状态 Robbins–Monro 步长下收敛到 v^π。', 'Bellman 算子提供稳定固定点，单步转移提供该算子残差的随机样本。', [String.raw`\sum_k\alpha_k(s)=\infty,\quad\sum_k\alpha_k^2(s)<\infty`, String.raw`\Pr(S_t=s\ \text{i.o.})=1`]),
     handoff: '从预测到控制的关键不是改变随机逼近，而是决定下一步动作应该进入 target，还是只进入数据采集。',
@@ -92,15 +92,15 @@ export const tdDeepeningZh = [
 
 export const tdDeepeningEn = [
   {
-    id: 'bellman-sample-logic', kicker: 'Expectation equation to one transition', title: 'The TD target as an unbiased sample of the Bellman right-hand side',
-    paragraphs: ['Under a fixed policy, the Bellman right-hand side averages over actions, successor states, and rewards. Interaction reveals one joint sample, so R_{t+1}+γV(S_{t+1}) is a one-sample observation of the Bellman backup at the current estimate.', 'Separate environment sampling variance from bootstrap bias caused by substituting V_t for true v^π. TD wins earlier and more frequent updates; its target is not generally unbiased for the full return.'],
+    id: 'bellman-sample-logic', kicker: 'Expectation equation to one transition', title: 'One transition samples the current Bellman update',
+    paragraphs: ['Under a fixed policy, the Bellman equation takes a conditional expectation over actions, rewards, and successor states. Interaction does not reveal that full expectation at once. It reveals one outcome: state S_t followed by reward R_{t+1} and successor S_{t+1}. Given the current table V_t, the quantity R_{t+1}+γV_t(S_{t+1}) is therefore one random observation of the Bellman right-hand side.', 'Two errors must remain separate. A single transition has sampling variance because it is only one possible outcome. The tail V_t(S_{t+1}) is also an estimate rather than the true v^π(S_{t+1}), which creates bootstrap error. Repeated transitions can estimate the current Bellman update; no individual target is already the complete return.'],
     formulas: [String.raw`(T^{\pi}V)(s)=\mathbb E_{\pi}[R_{t+1}+\gamma V(S_{t+1})\mid S_t=s]`, String.raw`U_t=R_{t+1}+\gamma V_t(S_{t+1})`, String.raw`\mathbb E[U_t\mid S_t=s]=(T^{\pi}V_t)(s)`],
     theorem: theorem('Given V_t, the one-step target is unbiased for the Bellman backup, not generally for the true value.', 'This distinction explains both the stochastic-approximation justification and bootstrap bias.', [String.raw`\pi\ \text{fixed}`, String.raw`\mathbb E[R_{t+1}^2\mid S_t=s]<\infty`]),
     handoff: 'A transition can therefore supply a residual sample for a complete online TD(0) loop.',
   },
   {
-    id: 'td-zero-complete', kicker: 'Complete algorithm', title: 'TD(0) is an online sample–target–update–act loop, not only an equation',
-    paragraphs: ['At each step the policy chooses an action, the environment returns reward and successor, and the algorithm immediately forms a target from the pre-update successor estimate. Only the current state changes.', 'Terminal value is zero, so the last update uses only terminal reward. Continuing tasks need discounting or an average-reward formulation instead.'],
+    id: 'td-zero-complete', kicker: 'Complete algorithm', title: 'TD(0) updates the state just left after every transition',
+    paragraphs: ['TD(0) stays synchronized with environment interaction. The policy acts in S_t, the environment returns R_{t+1} and S_{t+1}, and the algorithm forms a target from the pre-update V(S_{t+1}). It changes only V(S_t) and then continues from S_{t+1}. Values can therefore start changing before an episode ends.', 'For episodic tasks, terminal value is zero, so the final update uses only the terminal reward. A continuing task has no required endpoint, yet TD can still update step by step when discounting or an average-reward formulation gives long-term value a well-defined meaning.'],
     formulas: [String.raw`\delta_t=R_{t+1}+\gamma V(S_{t+1})-V(S_t)`, String.raw`V(S_t)\leftarrow V(S_t)+\alpha_t\delta_t`],
     pseudocodeTitle: 'On-policy TD(0) prediction',
     pseudocode: ['Initialize V(s) for nonterminal states and set terminal V=0', 'For each episode, obtain initial state S', '  While S is nonterminal, sample A from fixed policy π', '  Execute A and observe reward R and successor S′', '  Compute δ = R + γV(S′) − V(S)', '  Update V(S) ← V(S) + α(S)δ', '  Set S ← S′ and continue'],
@@ -108,8 +108,8 @@ export const tdDeepeningEn = [
     handoff: 'Control must also choose actions, so online V prediction must become Q learning.',
   },
   {
-    id: 'mc-td-matched-comparison', kicker: 'Matched comparison', title: 'MC and TD must be decomposed on one trajectory and one budget',
-    paragraphs: ['MC includes all realized rewards before termination and avoids bootstrap bias conditional on the state, but full trajectory randomness enters the target. TD(0) is immediate and often lower variance, but inherits current V error.', 'n-step targets form a continuum: each extra reward reduces one layer of bootstrap dependence while adding trajectory variance and delay.'],
+    id: 'mc-td-matched-comparison', kicker: 'Method comparison', title: 'Compare MC and TD by target evidence and availability time',
+    paragraphs: ['Both methods evaluate a fixed policy without an environment model, but they construct supervision differently. MC waits for termination and uses every realized reward in the return. It does not estimate the remaining tail with the current value table, but randomness from the whole trajectory enters the target. TD(0) is available after one transition: it uses one realized reward and estimates the unobserved tail with V(S_{t+1}), usually reducing variance while inheriting current value error.', 'This timing difference also changes the task setting. Ordinary MC depends on episode termination. TD updates at every step and can therefore serve both episodic and continuing tasks. A useful comparison fixes policy and experience, then examines when each target becomes available, how many random rewards it contains, and how strongly it depends on the current estimate.', 'An n-step target moves continuously between them. Every additional realized reward removes one layer of bootstrap dependence while adding one step of delay and trajectory randomness. n=1 gives TD(0); expansion through termination with a zero tail gives the MC return.'],
     formulas: [String.raw`G_t^{(n)}=R_{t+1}+\gamma R_{t+2}+\cdots+\gamma^{n-1}R_{t+n}+\gamma^nV(S_{t+n})`, String.raw`G_t^{(1)}=U_t^{\mathrm{TD}},\qquad G_t^{(T-t)}=G_t`],
     theorem: theorem('Tabular on-policy TD(0) converges to v^π under sufficient visitation and per-state Robbins–Monro steps.', 'The Bellman operator supplies a stable fixed point and transitions supply random residual samples.', [String.raw`\sum_k\alpha_k(s)=\infty,\quad\sum_k\alpha_k^2(s)<\infty`, String.raw`\Pr(S_t=s\ \text{i.o.})=1`]),
     handoff: 'The control question is whether the next action belongs in the target or only in data collection.',
