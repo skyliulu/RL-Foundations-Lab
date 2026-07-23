@@ -22,11 +22,32 @@ import ArticleFlow from './components/ArticleFlow'
 import StochasticApproximationLab from './components/StochasticApproximationLab'
 import RichContent from './components/RichContent'
 import { copy } from './content'
+import { articleFlowChapterIds } from './content/article-flow.js'
 import { chapterTransitions, coursePhases, getChapterPhase } from './content/storyline.js'
 import { detectBrowserLanguage, pageMetadata } from './i18n'
 
 const part23Ids = ['td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
 const modernExtensionIds = ['dpo', 'grpo', 'codingrl', 'agentmdp', 'credit']
+
+function ChapterArticleExperiment({ id, lang, content, text }) {
+  let experiment = null
+  if (id === 'returns') experiment = <ReturnObservatory lang={lang} content={content} />
+  if (id === 'bellman') experiment = <BellmanLab lang={lang} text={text} />
+  if (id === 'optimality') experiment = <OptimalitySwitch content={content} />
+  if (id === 'planning') experiment = <PlanningLab content={content} />
+  if (part23Ids.includes(id)) experiment = <LearningLab key={id} id={id} lang={lang} content={content} />
+  if (id === 'ppo') experiment = <PpoLab lang={lang} text={text} />
+  if (id === 'tokenmdp') experiment = <TokenMdpLab lang={lang} content={content} />
+  if (id === 'rlhf') experiment = <SystemLab lang={lang} text={text} ppoOnly />
+  if (modernExtensionIds.includes(id)) experiment = <ModernExtensionLab id={id} lang={lang} content={content} />
+  return (
+    <>
+      <p className="article-copy chapter-transition"><MathText>{content.experimentIntro || content.bridge}</MathText></p>
+      {experiment}
+      {content.interpretation && <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>}
+    </>
+  )
+}
 
 function ChapterHeader({ chapter, content, prerequisites, showPrerequisite = true }) {
   return (
@@ -341,7 +362,7 @@ export default function App() {
               <ChapterSources sources={text.mdp.sources} lang={lang} />
             </>
           )}
-        {active === 'returns' && (
+        {active === 'returns' && !articleFlowChapterIds.includes(active) && (
           <>
             <ChapterPrelude content={text.returns} lang={lang} />
             <ClickableDerivation
@@ -361,7 +382,7 @@ export default function App() {
             <ChapterSources sources={text.returns.sources} lang={lang} />
           </>
         )}
-        {active === 'bellman' && (
+        {active === 'bellman' && !articleFlowChapterIds.includes(active) && (
           <>
             <ChapterPrelude content={text.bellman} lang={lang} />
             <ClickableDerivation
@@ -381,7 +402,7 @@ export default function App() {
             <ChapterSources sources={text.bellman.sources} lang={lang} />
           </>
         )}
-        {active === 'optimality' && (
+        {active === 'optimality' && !articleFlowChapterIds.includes(active) && (
           <>
             <ChapterPrelude content={text.optimality} lang={lang} />
             <ClickableDerivation
@@ -401,7 +422,7 @@ export default function App() {
             <ChapterSources sources={text.optimality.sources} lang={lang} />
           </>
         )}
-        {active === 'planning' && (
+        {active === 'planning' && !articleFlowChapterIds.includes(active) && (
           <>
             <ChapterPrelude content={text.planning} lang={lang} />
             <ClickableDerivation
@@ -447,7 +468,19 @@ export default function App() {
               <ChapterSources sources={content.sources} lang={lang} />
             </>
           )}
-          {part23Ids.includes(active) && (
+          {articleFlowChapterIds.includes(active) && (
+            <>
+              <ArticleFlow
+                blocks={content.articleFlow}
+                lang={lang}
+                onSelect={handleDerivationSelect}
+                renderExperiment={() => <ChapterArticleExperiment id={active} lang={lang} content={content} text={text} />}
+              />
+              <ChapterSummary content={content} lang={lang} />
+              <ChapterSources sources={content.sources} lang={lang} />
+            </>
+          )}
+          {part23Ids.includes(active) && !articleFlowChapterIds.includes(active) && (
             <>
               <ChapterPrelude content={content} lang={lang} />
               <ClickableDerivation
@@ -467,7 +500,7 @@ export default function App() {
               <ChapterSources sources={content.sources} lang={lang} />
             </>
           )}
-          {active === 'ppo' && (
+          {active === 'ppo' && !articleFlowChapterIds.includes(active) && (
             <>
               <ChapterPrelude content={text.ppo} lang={lang} />
               <ClickableDerivation eyebrow={lang === 'zh' ? '从 Actor–Critic 到 PPO' : 'From Actor–Critic to PPO'} title={lang === 'zh' ? '旧策略样本的多轮稳定更新' : 'Stable repeated updates from old-policy samples'} intro={text.ppo.derivationIntro} steps={text.ppo.derivation} onSelect={handleDerivationSelect} />
@@ -481,7 +514,7 @@ export default function App() {
               <ChapterSources sources={text.ppo.sources} lang={lang} />
             </>
           )}
-          {active === 'tokenmdp' && (
+          {active === 'tokenmdp' && !articleFlowChapterIds.includes(active) && (
             <>
               <ChapterPrelude content={text.tokenmdp} lang={lang} />
               <ClickableDerivation eyebrow={lang === 'zh' ? '从语言生成到 MDP 五要素' : 'From generation to the five MDP elements'} title={lang === 'zh' ? '将一条 response 严格定义为 token 轨迹' : 'A rigorous token-trajectory definition of a response'} intro={text.tokenmdp.derivationIntro} steps={text.tokenmdp.derivation} onSelect={handleDerivationSelect} />
@@ -495,7 +528,7 @@ export default function App() {
               <ChapterSources sources={text.tokenmdp.sources} lang={lang} />
             </>
           )}
-          {active === 'rlhf' && (
+          {active === 'rlhf' && !articleFlowChapterIds.includes(active) && (
             <>
               <ChapterPrelude content={text.rlhf} lang={lang} />
               <ClickableDerivation eyebrow={lang === 'zh' ? '共享 batch 的数据血缘' : 'Shared-batch data provenance'} title={lang === 'zh' ? '从序列 reward 到逐 token advantage 与 PPO 更新' : 'From sequence reward to token advantage and PPO updates'} intro={text.rlhf.derivationIntro} steps={text.rlhf.derivation} onSelect={handleDerivationSelect} />
@@ -509,7 +542,7 @@ export default function App() {
               <ChapterSources sources={text.rlhf.sources} lang={lang} />
             </>
           )}
-          {modernExtensionIds.includes(active) && (
+          {modernExtensionIds.includes(active) && !articleFlowChapterIds.includes(active) && (
             <>
               <ChapterPrelude content={content} lang={lang} />
               <ClickableDerivation eyebrow={content.derivationEyebrow} title={content.derivationTitle} intro={content.derivationIntro || content.bridge} steps={content.derivation} onSelect={handleDerivationSelect} />

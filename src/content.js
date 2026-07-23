@@ -9,6 +9,7 @@ import { tokenMdpChapter } from './content/token-mdp.js'
 import { agentMdpChapter, codingRlChapter, creditChapter, dpoChapter, grpoChapter } from './content/modern-extension.js'
 import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from './content/part23.js'
 import { stochasticApproximationContent } from './content/stochastic-approximation-flow.js'
+import { articleFlowChapterIds, buildChapterArticleFlow } from './content/article-flow.js'
 
 export const copy = {
   zh: {
@@ -137,4 +138,10 @@ export const copy = {
       depthObserve: 'Observe', depthMechanism: 'Mechanism', depthDeep: 'Deep dive',
     },
   },
+}
+
+for (const lang of ['zh', 'en']) {
+  for (const id of articleFlowChapterIds) {
+    copy[lang][id].articleFlow = buildChapterArticleFlow(id, copy[lang][id], lang)
+  }
 }

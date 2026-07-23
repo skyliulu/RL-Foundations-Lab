@@ -289,6 +289,91 @@ test('chapter eight explains TD timing in natural Chinese and keeps prose visual
   assert.match(skill, /Audit visible borders and separators on article-level prose/)
 })
 
+test('main chapter prose uses a dedicated high-contrast body-copy token', () => {
+  const styles = read('styles.css')
+  const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
+  const paper = styles.match(/--paper:\s*(#[0-9a-f]{6})/i)?.[1]
+  const bodyCopy = styles.match(/--body-copy:\s*(#[0-9a-f]{6})/i)?.[1]
+  const toRgb = (hex) => [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16))
+  const luminance = (hex) => {
+    const [red, green, blue] = toRgb(hex).map((channel) => {
+      const value = channel / 255
+      return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+  }
+  const contrast = (foreground, background) => {
+    const first = luminance(foreground)
+    const second = luminance(background)
+    return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05)
+  }
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const bodySelectors = [
+    '.article-copy',
+    '.narrative-body p',
+    '.chapter-article-section p',
+    '.chapter-prose-turn p',
+    '.deepening-section > p',
+    '.article-flow-block > p',
+    '.article-flow-prose > p, .article-flow-evidence > p',
+    '.article-flow-table-scroll td',
+  ]
+
+  assert.ok(paper)
+  assert.ok(bodyCopy)
+  assert.ok(contrast(bodyCopy, paper) >= 6, `body copy contrast must be at least 6:1, received ${contrast(bodyCopy, paper).toFixed(2)}:1`)
+  bodySelectors.forEach((selector) => {
+    const rule = styles.match(new RegExp(`(?:^|\\n)${escapeRegExp(selector)}\\s*\\{([^}]*)\\}`))?.[1] || ''
+    assert.match(rule, /color:\s*var\(--body-copy\)/, `${selector} must use the shared body-copy token`)
+  })
+  assert.match(skill, /Reserve the muted token for navigation, captions, provenance, labels/)
+  assert.match(skill, /Reject body copy below 6:1/)
+})
+
+test('continuous chapter prose has one spacing owner and stable inline leads', async () => {
+  const { copy } = await import('../content.js')
+  const styles = read('styles.css')
+  const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
+  const app = read('App.jsx')
+
+  for (const token of ['paragraph', 'prose-turn', 'section', 'major']) {
+    assert.match(styles, new RegExp(`--flow-${token}-gap:\\s*\\d+px`), `missing --flow-${token}-gap`)
+  }
+
+  const deepeningRule = styles.match(/\.chapter-deepening\s*\{([^}]*)\}/)?.[1] || ''
+  const finalDeepeningRule = styles.match(/\.deepening-section:last-child\s*\{([^}]*)\}/)?.[1] || ''
+  const proseSequenceRule = styles.match(/\.chapter-prose-sequence\s*\{([^}]*)\}/)?.[1] || ''
+  const proseWrapRule = styles.match(/\.chapter-prose-opening \.math-text,[\s\S]*?\.mc-reasoning-opening \.math-text\s*\{([^}]*)\}/)?.[1] || ''
+
+  assert.doesNotMatch(deepeningRule, /margin:[^;]*46px/)
+  assert.match(finalDeepeningRule, /padding-bottom:\s*0/)
+  assert.match(proseSequenceRule, /var\(--flow-section-gap\)/)
+  assert.match(proseWrapRule, /overflow-wrap:\s*normal/)
+  assert.match(proseWrapRule, /word-break:\s*normal/)
+  assert.doesNotMatch(app, /<br\s*\/?>/)
+
+  assert.equal(copy.zh.dpo.sections[0].title, '同一提示词下的偏好对')
+  assert.equal(copy.en.dpo.sections[0].title, 'A preference pair shares one prompt')
+  assert.match(skill, /Assign every boundary exactly one spacing owner/)
+  assert.match(skill, /An inline prose lead must be a concise, grammatically complete opening phrase/)
+  assert.match(skill, /inspect line boxes for every inline prose lead/)
+})
+
+test('chapter skill rejects mechanically valid but semantically fragmented prose and formulas', () => {
+  const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
+
+  assert.match(skill, /Separate mechanical layout QA from semantic editorial QA/)
+  assert.match(skill, /Treat every paragraph boundary as a claim about reasoning structure/)
+  assert.match(skill, /Do not let content-array shape decide prose segmentation/)
+  assert.match(skill, /Give every display formula an introduction-use contract/)
+  assert.match(skill, /Immediately before it, state why the quantity or relation is needed/)
+  assert.match(skill, /Immediately after it, interpret the result or use it/)
+  assert.match(skill, /Do not append a `formula` or `formulas` array after prose merely because the schema supports it/)
+  assert.match(skill, /Do not reveal a derived result in a prelude and then derive the same result again/)
+  assert.match(skill, /Build a formula-role ledger for every display equation/)
+  assert.match(skill, /Read every adjacent paragraph pair as plain text without component boundaries/)
+})
+
 test('chapter one introduces the shared course world before formal definitions', () => {
   const narrative = read('components/MdpNarrative.jsx')
   const overview = read('components/CourseWorldOverview.jsx')
@@ -436,4 +521,94 @@ test('page and workbench scroll surfaces share one global scrollbar treatment', 
   assert.match(styles, /\*\s*\{[^}]*scrollbar-width:\s*thin/)
   assert.match(styles, /\*::\-webkit-scrollbar\s*\{[^}]*width:\s*7px;[^}]*height:\s*7px/)
   assert.doesNotMatch(styles, /\.left-nav::\-webkit-scrollbar/)
+})
+
+test('all rebuilt chapters expose one bilingual causal article flow with one experiment', async () => {
+  const { copy } = await import('../content.js')
+  const { articleFlowChapterIds } = await import('../content/article-flow.js')
+
+  assert.deepEqual(articleFlowChapterIds, [
+    'returns', 'bellman', 'optimality', 'planning',
+    'td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic',
+    'ppo', 'tokenmdp', 'rlhf', 'dpo', 'grpo', 'codingrl', 'agentmdp', 'credit',
+  ])
+
+  for (const id of articleFlowChapterIds) {
+    const zhFlow = copy.zh[id].articleFlow
+    const enFlow = copy.en[id].articleFlow
+    assert.deepEqual(enFlow.map((block) => [block.id, block.type]), zhFlow.map((block) => [block.id, block.type]), `${id} bilingual flow parity`)
+    assert.equal(zhFlow[0].type, 'section', `${id} must open with a motivated section`)
+    assert.equal(zhFlow.filter((block) => block.type === 'experiment').length, 1, `${id} must contain one experiment`)
+    assert.ok(zhFlow.findIndex((block) => block.type === 'derivation') < zhFlow.findIndex((block) => block.type === 'experiment'), `${id} derivation must prepare the experiment`)
+    zhFlow.flatMap((block) => block.formulas || []).forEach((formula) => {
+      assert.equal(typeof formula.latex, 'string', `${id} article formula must be explicit LaTeX`)
+      assert.ok(['definition', 'transition', 'result', 'support'].includes(formula.role), `${id} article formula needs a semantic role`)
+    })
+  }
+})
+
+test('long-horizon credit derivations appear beside the mechanism they justify', async () => {
+  const { copy } = await import('../content.js')
+  const expected = [
+    ['terminal-credit', 'derivation'],
+    ['curriculum', 'turn'],
+    ['process-credit', 'derivation'],
+    ['segmentation', 'turn'],
+    ['segment-credit', 'derivation'],
+    ['bias-audit', 'topic'],
+    ['hindsight-risk', 'turn'],
+    ['hindsight-credit', 'derivation'],
+  ]
+  for (const lang of ['zh', 'en']) {
+    const flow = copy[lang].credit.articleFlow
+    assert.deepEqual(
+      flow.filter((block) => expected.some(([id]) => id === block.id)).map((block) => [block.id, block.type]),
+      expected,
+    )
+    assert.deepEqual(flow.filter((block) => block.type === 'derivation').map((block) => block.steps.length), [2, 1, 1, 1])
+  }
+})
+
+test('chapters 08–13 expose algorithm-specific evidence before aggregate curves', () => {
+  const source = read('components/LearningLab.jsx')
+  const styles = read('styles.css')
+  ;[
+    'TdEvidenceStage',
+    'ControlEvidenceStage',
+    'VfaEvidenceStage',
+    'DqnEvidenceStage',
+    'PolicyGradientEvidenceStage',
+    'ActorCriticEvidenceStage',
+  ].forEach((component) => assert.match(source, new RegExp(`function ${component}\\(`)))
+  assert.match(source, /<DedicatedLearningStage id=\{id\}/)
+  assert.match(source, /className="learning-lab-stage is-secondary-evidence"/)
+  assert.match(source, /Replay buffer/)
+  assert.match(source, /Q_\{\\bar\\theta\}/)
+  assert.match(styles, /\.td-evidence-stage/)
+  assert.match(styles, /\.dqn-evidence-stage/)
+  assert.match(styles, /\.ac-two-updates/)
+})
+
+test('the return worked example remains attached to the shared course world', async () => {
+  const { copy } = await import('../content.js')
+  const zh = copy.zh.returns.deepening.find((item) => item.id === 'two-return-calculations')
+  const en = copy.en.returns.deepening.find((item) => item.id === 'two-return-calculations')
+  assert.match(zh.paragraphs[0], /网格世界/)
+  assert.match(zh.paragraphs[0], /禁区/)
+  assert.match(en.paragraphs[0], /shared grid world/)
+  assert.match(en.paragraphs[0], /forbidden region/)
+})
+
+test('every chapter closes with a chapter-specific bilingual summary title', async () => {
+  const { copy } = await import('../content.js')
+  for (const id of copy.zh.chapters.map((chapter) => chapter.id)) {
+    const zhTitle = copy.zh[id].summaryTitle || '从长期回报到可求解的状态方程'
+    const enTitle = copy.en[id].summaryTitle || 'From long-term return to solvable state equations'
+    assert.ok(zhTitle.length >= 8, `${id}.zh summary title`)
+    assert.ok(enTitle.length >= 12, `${id}.en summary title`)
+    if (id !== 'bellman') {
+      assert.notEqual(zhTitle, '从长期回报到可求解的状态方程', `${id} must not inherit Bellman summary`)
+      assert.notEqual(enTitle, 'From long-term return to solvable state equations', `${id} must not inherit Bellman summary`)
+    }
+  }
 })

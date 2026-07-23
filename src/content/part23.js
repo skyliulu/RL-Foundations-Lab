@@ -264,4 +264,19 @@ Object.assign(monteCarloChapter.en.reasoningPath[0], { title: 'An unknown model 
 Object.assign(monteCarloChapter.en.reasoningPath[1], { title: 'A complete episode supplies a return sample for value estimation' })
 Object.assign(monteCarloChapter.en.reasoningPath[2], { title: 'Value estimation reconnects to the policy-improvement loop' })
 
+Object.assign(monteCarloChapter.zh, { summaryTitle: '从完整经验到可改进的动作价值' })
+Object.assign(monteCarloChapter.en, { summaryTitle: 'From complete experience to improvable action values' })
+Object.assign(tdChapter.zh, { summaryTitle: '从完整回报到单步自举' })
+Object.assign(tdChapter.en, { summaryTitle: 'From complete returns to one-step bootstrapping' })
+Object.assign(controlChapter.zh, { summaryTitle: '从策略内更新到策略外控制' })
+Object.assign(controlChapter.en, { summaryTitle: 'From on-policy updates to off-policy control' })
+Object.assign(vfaChapter.zh, { summaryTitle: '从逐状态表格到参数共享' })
+Object.assign(vfaChapter.en, { summaryTitle: 'From state tables to shared parameters' })
+Object.assign(dqnChapter.zh, { summaryTitle: '从 Q-learning 到稳定的深度价值更新' })
+Object.assign(dqnChapter.en, { summaryTitle: 'From Q-learning to stable deep value updates' })
+Object.assign(policyGradientChapter.zh, { summaryTitle: '从价值比较到直接优化策略' })
+Object.assign(policyGradientChapter.en, { summaryTitle: 'From value comparison to direct policy optimization' })
+Object.assign(actorCriticChapter.zh, { summaryTitle: '从高方差回报到及时的 Actor–Critic 信号' })
+Object.assign(actorCriticChapter.en, { summaryTitle: 'From high-variance returns to timely actor–critic signals' })
+
 export const part23Chapters = [monteCarloChapter, approximationChapter, tdChapter, controlChapter, vfaChapter, dqnChapter, policyGradientChapter, actorCriticChapter]

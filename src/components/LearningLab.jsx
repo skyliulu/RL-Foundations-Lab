@@ -98,6 +98,170 @@ function LearningLineChart({ values, label }) {
   )
 }
 
+function TdEvidenceStage({ params, result, zh }) {
+  const rewards = [0, -1, 0.5, 0, 4]
+  return (
+    <div className="td-evidence-stage">
+      <section className="td-trajectory-ledger">
+        <header><span>{zh ? '同一条轨迹' : 'One shared trajectory'}</span><small>{zh ? '真实奖励与自举边界' : 'Observed rewards and bootstrap boundary'}</small></header>
+        <div className="td-tape">
+          {rewards.map((reward, index) => <div className={index < params.n ? 'is-observed' : index === params.n ? 'is-bootstrap' : ''} key={index}>
+            <b><MathFormula latex={String.raw`S_${index}`} /></b>
+            <span><MathFormula latex={String.raw`R_${index + 1}=${reward}`} /></span>
+            <small>{index < params.n ? (zh ? '已进入 target' : 'observed') : index === params.n ? (zh ? '在此自举' : 'bootstrap here') : (zh ? '尚未使用' : 'not used')}</small>
+          </div>)}
+        </div>
+      </section>
+      <section className="td-target-ledger">
+        <header><span>{zh ? '三种监督信号' : 'Three target contracts'}</span><small>{zh ? '只改变可用证据范围' : 'Only the evidence horizon changes'}</small></header>
+        <div>
+          <article><span>TD(0)</span><MathFormula block latex={String.raw`R_1+\gamma V(S_1)`} /><strong>{format(result.td)}</strong><p>{zh ? '一步后立即可用，依赖当前后继估计。' : 'Available after one step; depends on the current successor estimate.'}</p></article>
+          <article className="is-focus"><span>{params.n}-step</span><MathFormula block latex={String.raw`\sum_{k=0}^{n-1}\gamma^kR_{k+1}+\gamma^nV(S_n)`} /><strong>{format(result.nStep)}</strong><p>{zh ? `等待 ${params.n} 个奖励，再用价值补全尾部。` : `Waits for ${params.n} rewards, then bootstraps the tail.`}</p></article>
+          <article><span>Monte Carlo</span><MathFormula block latex={String.raw`\sum_{k=0}^{T-1}\gamma^kR_{k+1}`} /><strong>{format(result.mc)}</strong><p>{zh ? '等待终点，不依赖当前价值表。' : 'Waits for termination and does not use the current value table.'}</p></article>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function ControlEvidenceStage({ params, result, zh }) {
+  const nextAction = params.epsilon > 0.18 ? 'safe' : 'risky'
+  return (
+    <div className="control-evidence-stage">
+      <section className="control-shared-transition">
+        <header><span>{zh ? '共享的实际转移' : 'Shared observed transition'}</span><small>{zh ? '两种算法读取同一证据' : 'Both algorithms read the same evidence'}</small></header>
+        <div className="control-transition-row">
+          <b><MathFormula latex={String.raw`S_t=s_{17}`} /></b><i>→</i><b><MathFormula latex={String.raw`A_t=a_2`} /></b><i>→</i><b><MathFormula latex={String.raw`R_{t+1}=-1`} /></b><i>→</i><b><MathFormula latex={String.raw`S_{t+1}=s_{18}`} /></b>
+        </div>
+        <p>{zh ? '行为策略随后实际选择的动作是' : 'The behavior policy next selects'} <strong>{nextAction === 'safe' ? (zh ? '安全绕行' : 'safe detour') : (zh ? '贴近悬崖' : 'cliff edge')}</strong>{zh ? '。' : '.'}</p>
+      </section>
+      <section className="control-target-comparison">
+        <article>
+          <span>Sarsa · on-policy</span>
+          <MathFormula block latex={String.raw`U_t=R_{t+1}+\gamma Q(S_{t+1},A_{t+1})`} />
+          <p>{zh ? '把行为策略真实选出的下一动作写进 target，因此训练期探索风险会进入价值。' : 'Uses the behavior action actually selected, so training-time exploration risk enters value.'}</p>
+          <strong>{zh ? '危险率' : 'Danger'} {result.sarsaDanger.toFixed(3)}</strong>
+        </article>
+        <article>
+          <span>Q-learning · off-policy</span>
+          <MathFormula block latex={String.raw`U_t=R_{t+1}+\gamma\max_aQ(S_{t+1},a)`} />
+          <p>{zh ? '忽略实际下一动作，评价后续始终贪心时的最短路径。' : 'Ignores the observed next action and evaluates a greedy continuation.'}</p>
+          <strong>{zh ? '危险率' : 'Danger'} {result.qDanger.toFixed(3)}</strong>
+        </article>
+      </section>
+    </div>
+  )
+}
+
+function VfaEvidenceStage({ result, zh }) {
+  return (
+    <div className="vfa-evidence-stage">
+      <section>
+        <header><span>{zh ? '一次中心状态样本' : 'One center-state sample'}</span><small>{zh ? '特征重叠决定传播范围' : 'Feature overlap sets propagation'}</small></header>
+        <div className="vfa-state-strip">
+          {result.features.map((feature, index) => <article key={index} style={{ '--feature': feature }}>
+            <span><MathFormula latex={String.raw`s_${index + 1}`} /></span>
+            <i><b style={{ width: `${feature * 100}%` }} /></i>
+            <small>{zh ? '特征激活' : 'feature'} {feature.toFixed(2)}</small>
+            <MathFormula block latex={String.raw`${result.before[index].toFixed(2)}\to${result.after[index].toFixed(2)}`} />
+          </article>)}
+        </div>
+      </section>
+      <aside className="vfa-update-ledger">
+        <span>{zh ? '共享参数产生的连带变化' : 'Coupled changes from shared parameters'}</span>
+        <MathFormula block latex={String.raw`\Delta\widehat v(s')=\alpha\delta\,x(s')^\top x(s)`} />
+        <p>{zh ? '中心状态误差' : 'Center residual'} <strong>{format(result.centerError)}</strong></p>
+        <p>{zh ? '相邻状态改变量' : 'Neighbor change'} <strong>{format(result.spillover)}</strong></p>
+        <p>{zh ? '若特征正交，未访问状态不会变化；特征越宽，证据传播越远，干扰也越强。' : 'Orthogonal features isolate states. Wider features spread evidence farther and increase interference.'}</p>
+      </aside>
+    </div>
+  )
+}
+
+function DqnEvidenceStage({ params, result, zh }) {
+  const transitions = [
+    ['s_4', 'a_2', '0', 's_5'], ['s_{11}', 'a_1', '-1', 's_6'], ['s_8', 'a_3', '0', 's_{13}'],
+    ['s_{17}', 'a_2', '1', 's_{18}'], ['s_2', 'a_3', '0', 's_7'], ['s_{21}', 'a_1', '0', 's_{16}'],
+  ]
+  const sampled = Math.max(2, Math.round(2 + params.replay * 3))
+  return (
+    <div className="dqn-evidence-stage">
+      <section className="dqn-buffer">
+        <header><span>Replay buffer</span><small>{zh ? '轨迹顺序被保存，训练顺序被重排' : 'Storage preserves time; training reorders it'}</small></header>
+        <div>{transitions.map((row, index) => <article className={index < sampled && index % 2 === 0 ? 'is-sampled' : ''} key={index}>
+          <b>{String(index + 1).padStart(2, '0')}</b><MathFormula latex={String.raw`(${row[0]},${row[1]},${row[2]},${row[3]})`} /><small>{index < sampled && index % 2 === 0 ? (zh ? '本批抽中' : 'sampled') : (zh ? '留在缓冲区' : 'buffered')}</small>
+        </article>)}</div>
+      </section>
+      <section className="dqn-target-clock">
+        <header><span>Target network</span><small>{zh ? `每 ${params.targetPeriod} 次更新同步` : `sync every ${params.targetPeriod} updates`}</small></header>
+        <div className="dqn-network-pair">
+          <article><span>Online</span><MathFormula block latex={String.raw`Q_\theta(S,A)`} /><p>{zh ? '每个 minibatch 后变化' : 'changes every minibatch'}</p></article>
+          <i>→</i>
+          <article><span>Target</span><MathFormula block latex={String.raw`Q_{\bar\theta}(S',a')`} /><p>{zh ? '同步之间保持冻结' : 'frozen between syncs'}</p></article>
+        </div>
+        <div className="dqn-sync-track">{Array.from({ length: Math.min(params.targetPeriod, 12) }, (_, index) => <i className={index === 0 ? 'is-sync' : ''} key={index} />)}</div>
+        <p>{zh ? '样本相关性' : 'Sample correlation'} <strong>{format(result.correlation)}</strong> · {zh ? '末段 target 漂移' : 'late target drift'} <strong>{format(result.drift)}</strong></p>
+      </section>
+    </div>
+  )
+}
+
+function PolicyGradientEvidenceStage({ params, result, zh }) {
+  const returns = [2.4, 1.7, 0.6, -0.2]
+  return (
+    <div className="pg-evidence-stage">
+      <section className="pg-trajectory">
+        <header><span>{zh ? '同一条策略轨迹' : 'One policy trajectory'}</span><small>{zh ? '每个动作只使用其后的奖励' : 'Each action uses only later rewards'}</small></header>
+        <div>{returns.map((value, index) => <article key={index}>
+          <b><MathFormula latex={String.raw`t=${index}`} /></b>
+          <span><MathFormula latex={String.raw`A_${index}=a_${index + 1}`} /></span>
+          <span><MathFormula latex={String.raw`G_${index}=${value}`} /></span>
+          <span><MathFormula latex={String.raw`G_${index}-b=${(value - params.baseline).toFixed(2)}`} /></span>
+        </article>)}</div>
+      </section>
+      <aside className="pg-gradient-ledger">
+        <span>{zh ? '所选动作的概率移动' : 'Probability movement for the sampled action'}</span>
+        <MathFormula block latex={String.raw`\nabla_\theta\log\pi_\theta(A_t\mid S_t)(G_t-b)`} />
+        <div><strong>{result.probability.toFixed(3)}</strong><i>→</i><strong>{result.nextProbability.toFixed(3)}</strong></div>
+        <p>{result.weight >= 0 ? (zh ? '结果高于基线，所选动作概率上升。' : 'Outcome exceeds baseline, so sampled-action probability rises.') : (zh ? '结果低于基线，所选动作概率下降。' : 'Outcome falls below baseline, so sampled-action probability falls.')}</p>
+      </aside>
+    </div>
+  )
+}
+
+function ActorCriticEvidenceStage({ params, result, zh }) {
+  return (
+    <div className="ac-evidence-stage">
+      <section className="ac-transition">
+        <header><span>{zh ? '一条 transition，两条梯度路径' : 'One transition, two gradient paths'}</span></header>
+        <div className="ac-transition-row">
+          <article><span><MathFormula latex={String.raw`V_\phi(S_t)`} /></span><strong>{format(params.value)}</strong></article>
+          <i>+</i>
+          <article><span><MathFormula latex={String.raw`R_{t+1}`} /></span><strong>{format(params.reward)}</strong></article>
+          <i>+</i>
+          <article><span><MathFormula latex={String.raw`\gamma V_\phi(S_{t+1})`} /></span><strong>{format(params.gamma * params.nextValue)}</strong></article>
+          <i>=</i>
+          <article className="is-delta"><span><MathFormula latex={String.raw`\delta_t`} /></span><strong>{format(result.delta)}</strong></article>
+        </div>
+      </section>
+      <section className="ac-two-updates">
+        <article><span>Critic</span><MathFormula block latex={String.raw`\phi\leftarrow\phi+\alpha_v\delta_t\nabla_\phi V_\phi(S_t)`} /><p>{zh ? '当前状态价值' : 'Current value'} <strong>{format(params.value)} → {format(result.nextValueEstimate)}</strong></p></article>
+        <article><span>Actor</span><MathFormula block latex={String.raw`\theta\leftarrow\theta+\alpha_\pi\rho_t\delta_t\nabla_\theta\log\pi_\theta(A_t\mid S_t)`} /><p>{zh ? '策略参数步长' : 'Policy step'} <strong>{format(result.actorStep)}</strong></p></article>
+      </section>
+    </div>
+  )
+}
+
+function DedicatedLearningStage({ id, params, result, zh }) {
+  if (id === 'td') return <TdEvidenceStage params={params} result={result} zh={zh} />
+  if (id === 'control') return <ControlEvidenceStage params={params} result={result} zh={zh} />
+  if (id === 'vfa') return <VfaEvidenceStage result={result} zh={zh} />
+  if (id === 'dqn') return <DqnEvidenceStage params={params} result={result} zh={zh} />
+  if (id === 'policygradient') return <PolicyGradientEvidenceStage params={params} result={result} zh={zh} />
+  if (id === 'actorcritic') return <ActorCriticEvidenceStage params={params} result={result} zh={zh} />
+  return null
+}
+
 export default function LearningLab({ id, lang, content }) {
   const [params, setParams] = useState(defaults[id])
   const zh = lang === 'zh'
@@ -114,8 +278,9 @@ export default function LearningLab({ id, lang, content }) {
         {id === 'montecarlo' && <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((value) => <button type="button" key={value} className={params.visit === value ? 'active' : ''} onClick={() => set('visit', value)}>{value === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>}
         {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} onClick={() => set('decay', value)}><MathText>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</MathText></button>)}</div></fieldset>}
       </div>
-      <div className="learning-lab-stage">
-        <div className="learning-chart-panel"><header><span>{zh ? '参数改变后的可见结果' : 'Visible result under current parameters'}</span><small>{zh ? '所有曲线均在浏览器内确定性重算' : 'All curves are recomputed deterministically in the browser'}</small></header><LearningLineChart values={result.series} label={content.figure} /></div>
+      <DedicatedLearningStage id={id} params={params} result={result} zh={zh} />
+      <div className="learning-lab-stage is-secondary-evidence">
+        <div className="learning-chart-panel"><header><span>{zh ? '聚合结果' : 'Aggregate result'}</span><small>{zh ? '用于核对趋势，不替代上方算法状态' : 'A trend check, not a substitute for algorithm state'}</small></header><LearningLineChart values={result.series} label={content.figure} /></div>
         <aside className="learning-metrics"><MathFormula block latex={config.formula} />{metrics.map(([label, value]) => <div key={label}><span><MathText>{label}</MathText></span><strong>{format(value)}</strong></div>)}</aside>
       </div>
       <footer><span>{zh ? '读图提示' : 'Reading cue'}</span><p><MathText>{content.explorer.cue}</MathText></p></footer>

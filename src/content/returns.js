@@ -117,7 +117,7 @@ const returnDerivationEn = [
 const returnDeepeningZh = [
   {
     id: 'two-return-calculations', kicker: '同一对象，两种算法', title: '按定义累加与从后向前递推必须得到同一个 return',
-    paragraphs: ['考虑一条有限 episode，其奖励依次为 0、−1、0、+1，折扣 γ=0.9。按定义可以从起点把每项乘上相应幂次后相加；也可以从终点令 G₃=1，再用 G_t=R_{t+1}+γG_{t+1} 逐步向前递推。', '第二种写法没有改变 return，只是复用了已经算出的后缀回报。这个递归结构使后续 Bellman 方程和逐步学习成为可能。'],
+    paragraphs: ['仍沿用第 01 章建立的共享网格世界。智能体先经过一个普通格，再试图进入禁区而得到 −1，随后回到普通格，最后进入目标格得到 +1，因此这条有限 episode 的奖励依次为 0、−1、0、+1；取折扣 γ=0.9。按定义可以从起点把每项乘上相应幂次后相加，也可以从终点令 G₃=1，再用 G_t=R_{t+1}+γG_{t+1} 逐步向前递推。', '第二种写法没有改变 return，只是复用了已经算出的后缀回报。这个递归结构使后续 Bellman 方程和逐步学习成为可能。'],
     formulas: [String.raw`G_0=0+0.9(-1)+0.9^2(0)+0.9^3(1)=-0.171`, String.raw`G_3=1,\quad G_2=0+0.9G_3=0.9,\quad G_1=-1+0.9G_2=-0.19,\quad G_0=0+0.9G_1=-0.171`],
     example: { title: '同一条 episode 的反向 return 表', caption: '每行的 Gₜ 都完整包含该时刻之后的奖励。', headers: ['t', 'Rₜ₊₁', '递推', 'Gₜ'], rows: [['3', '+1', '1 + 0', '1.000'], ['2', '0', '0 + 0.9×1', '0.900'], ['1', '−1', '−1 + 0.9×0.9', '−0.190'], ['0', '0', '0 + 0.9×(−0.19)', '−0.171']] },
     handoff: 'return 的递推仍依赖这条 episode 的真实未来；要评价一个状态，还必须把所有可能未来的概率纳入。',
@@ -134,7 +134,7 @@ const returnDeepeningZh = [
 const returnDeepeningEn = [
   {
     id: 'two-return-calculations', kicker: 'One object, two procedures', title: 'Definition-based summation and backward recursion must produce the same return',
-    paragraphs: ['Consider a finite episode with rewards 0, −1, 0, +1 and γ=0.9. The definition weights each reward from the start. The backward procedure begins with G₃=1 and repeatedly applies G_t=R_{t+1}+γG_{t+1}.', 'Backward recursion does not redefine return; it reuses an already computed suffix. That structure makes Bellman equations and incremental learning possible.'],
+    paragraphs: ['Continue with the shared grid world. The agent crosses an ordinary cell, attempts to enter the forbidden region and receives −1, returns to an ordinary cell, and finally enters the goal for +1. The resulting finite episode has rewards 0, −1, 0, +1 with γ=0.9. The definition weights each reward from the start; backward recursion begins with G₃=1 and repeatedly applies G_t=R_{t+1}+γG_{t+1}.', 'Backward recursion does not redefine return; it reuses an already computed suffix. That structure makes Bellman equations and incremental learning possible.'],
     formulas: [String.raw`G_0=0+0.9(-1)+0.9^2(0)+0.9^3(1)=-0.171`, String.raw`G_3=1,\quad G_2=0+0.9G_3=0.9,\quad G_1=-1+0.9G_2=-0.19,\quad G_0=0+0.9G_1=-0.171`],
     example: { title: 'Backward return table for one episode', caption: 'Each Gₜ contains every reward after that time.', headers: ['t', 'Rₜ₊₁', 'Recursion', 'Gₜ'], rows: [['3', '+1', '1 + 0', '1.000'], ['2', '0', '0 + 0.9×1', '0.900'], ['1', '−1', '−1 + 0.9×0.9', '−0.190'], ['0', '0', '0 + 0.9×(−0.19)', '−0.171']] },
     handoff: 'Return recursion still uses one realized future. Evaluating a state requires probabilities over every possible future.',

@@ -1,6 +1,7 @@
 import MathFormula from './MathFormula'
 import ClickableDerivation from './ClickableDerivation'
 import RichContent from './RichContent'
+import ChapterDeepening from './ChapterDeepening'
 
 function FlowHeader({ block }) {
   return <header className="article-flow-heading"><span><RichContent value={block.kicker} /></span><h2><RichContent value={block.title} /></h2></header>
@@ -19,6 +20,26 @@ function FlowProse({ block }) {
     {block.paragraphs.map((paragraph, index) => <p key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
     {block.formulas?.length > 0 && <div className="article-flow-equations">{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
   </div>
+}
+
+function FlowTurn({ block, lang }) {
+  const [opening, ...rest] = block.paragraphs
+  return <div className={`article-flow-prose article-flow-turn flow-${block.id}`}>
+    <p className="article-flow-turn-opening">
+      <strong className="chapter-prose-lead"><RichContent value={block.title} /></strong>
+      <span className="chapter-prose-separator" aria-hidden="true">{lang === 'zh' ? '。' : '. '}</span>
+      <RichContent value={opening} />
+    </p>
+    {rest.map((paragraph, index) => <p key={`${block.id}-p-${index + 1}`}><RichContent value={paragraph} /></p>)}
+    {block.formulas?.length > 0 && <div className="article-flow-equations">{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
+  </div>
+}
+
+function FlowTopic({ block, lang }) {
+  return <ChapterDeepening
+    lang={lang}
+    sections={[{ ...block, formulas: block.formulas?.map((formula) => formula.latex) || [] }]}
+  />
 }
 
 function FlowTable({ block, label }) {
@@ -58,6 +79,8 @@ export default function ArticleFlow({ blocks, lang, onSelect, renderExperiment }
     {blocks.map((block) => {
       if (block.type === 'section') return <FlowSection block={block} key={block.id} />
       if (block.type === 'prose') return <FlowProse block={block} key={block.id} />
+      if (block.type === 'turn') return <FlowTurn block={block} lang={lang} key={block.id} />
+      if (block.type === 'topic') return <FlowTopic block={block} lang={lang} key={block.id} />
       if (block.type === 'derivation') return <ClickableDerivation eyebrow={block.level === 'embedded' ? null : block.kicker} title={block.title} intro={block.intro} steps={block.steps} onSelect={onSelect} variant={block.level === 'embedded' ? 'embedded' : 'major'} key={block.id} />
       if (block.type === 'example' || block.type === 'comparison') return <FlowTable block={block} label={block.title} key={block.id} />
       if (block.type === 'algorithm') return <FlowAlgorithm block={block} lang={lang} key={block.id} />

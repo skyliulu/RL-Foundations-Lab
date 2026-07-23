@@ -1,6 +1,6 @@
 ---
 name: develop-interactive-rl-chapter
-description: Create, modify, refactor, correct, audit, and validate interactive reinforcement-learning chapters in this repository. Use for chapter prose, content organization and continuity reviews, mathematical derivations, LaTeX rendering, course-world experiments, bilingual content, source alignment, right-rail explanations, or chapter-level UI and QA.
+description: Create, modify, refactor, correct, audit, and validate interactive reinforcement-learning chapters in this repository. Use for chapter prose, semantic paragraphing, content organization and continuity reviews, formula placement and motivation, mathematical derivations, LaTeX rendering, course-world experiments, bilingual content, source alignment, right-rail explanations, or chapter-level UI and QA.
 ---
 
 # Develop Interactive RL Chapter
@@ -106,6 +106,19 @@ Use the rebuilt stochastic-approximation chapter as the structural reference for
 - Expand, merge, or remove any ordinary article block that contains fewer than two complete explanatory sentences. Keep a shorter block only when it is a self-contained definition, theorem statement, algorithm step, caption, or deliberate transition whose meaning is already established by the adjacent prose.
 - Audit visible borders and separators on article-level prose, transitions, handoffs, and deepening sections. Ordinary exposition must be connected by language and spacing; a horizontal rule must represent a real semantic or interface boundary.
 - Read the Chinese body once with headings, labels, and visual separators mentally removed. The mechanism and progression must remain understandable from the sentences themselves rather than from readers inferring meaning from section names.
+
+## Semantic Paragraph and Formula Integration Gate
+
+- Separate mechanical layout QA from semantic editorial QA. Passing checks for `<br>`, wrapping, overflow, spacing, LaTeX validity, or font size proves only that the page renders; it does not prove that the argument reads continuously.
+- Treat every paragraph boundary as a claim about reasoning structure. Start a new paragraph only when the subject, claim, evidence stage, mathematical object, or argumentative task changes. Keep evidence and the immediate question or consequence it establishes in one paragraph when they form one reasoning unit.
+- Do not let content-array shape decide prose segmentation. Multiple strings in `paragraphs`, `sections`, or similar schema fields are not automatically justified as multiple rendered paragraphs. Read the concatenated prose and merge entries whose separation creates a false restart.
+- Reject a paragraph sequence when the later paragraph merely states the question, consequence, or qualification created by the preceding sentence and could follow it naturally with an explicit causal connector.
+- Give every display formula an introduction-use contract. Immediately before it, state why the quantity or relation is needed and what role the equation plays. At first occurrence, define every new symbol. Immediately after it, interpret the result or use it in the next inferential step.
+- Do not append a `formula` or `formulas` array after prose merely because the schema supports it. A renderer that places equations at the end of a block does not supply their missing motivation, symbol definitions, or logical connection.
+- Keep short notation definitions inline unless the reader must inspect them as an independent mathematical object. A dataset tuple, variable declaration, or one-line naming convention should not interrupt the article as display math without a specific teaching reason.
+- Do not reveal a derived result in a prelude and then derive the same result again. Before a derivation, describe the destination in prose; let the equation first appear at the step where its premises have been established. Repeat it later only for a distinct worked use, theorem, or synthesis.
+- For each displayed equation, record its role as definition, premise, transformation, derived result, condition, or worked substitution. Reject any equation whose role cannot be stated in one sentence or whose removal leaves the surrounding prose unchanged.
+- Audit formula-prose continuity by reading only the sentence before the equation, the equation, and the sentence after it. The three must form one valid inferential unit in both languages.
 
 ## Formula Visual-Hierarchy Contract
 
@@ -222,8 +235,21 @@ Use this shape for derivation data:
 - Split genuinely long equations into semantic `aligned` rows before adding horizontal scrolling. At desktop width, article derivations and primary experiment equations must not show an inner scrollbar merely because a container was made too narrow.
 - Inspect adjacent block edges and vertical rhythm in rendered desktop and mobile output, not only individual components.
 
+## Vertical Rhythm and Line-Break Contract
+
+- Use the shared flow-spacing tokens for paragraph, prose-turn, section, and major-boundary gaps. Do not introduce one-off vertical margins for ordinary chapter prose.
+- Assign every boundary exactly one spacing owner. When two adjacent components belong to one continuous argument, the preceding component's bottom margin or padding and the following component's top margin must not accumulate into an unintended blank band.
+- Reset the trailing padding or margin of the final child when its parent is immediately followed by another main-path prose component. A component boundary must not be visually stronger than the conceptual transition it represents.
+- Keep ordinary paragraphs on the paragraph-gap token, connected prose turns on the prose-turn token, genuine section changes on the section-gap token, and experiment or chapter-stage changes on the major-boundary token. Do not use a major gap between two sentences that continue the same claim.
+- Treat browser line wrapping as part of authored typography. Do not insert manual `<br>` elements or source newlines to repair ordinary prose, and do not rely on `overflow-wrap: anywhere` in the main reading path.
+- An inline prose lead must be a concise, grammatically complete opening phrase that joins naturally to the first sentence. If it is too long or semantically independent, rewrite and shorten it or promote it to a genuine heading; do not leave an isolated bold line followed by an accidental continuation line.
+- Preserve normal word boundaries for Latin algorithm names, paired labels such as `chosen/rejected`, and inline mathematics. Allow Chinese prose to wrap naturally, and use `text-wrap: pretty` where supported to avoid visually orphaned final fragments.
+- During rendered QA, measure the actual vertical distance between adjacent main-path blocks and inspect line boxes for every inline prose lead in both languages at desktop and mobile widths. Source markup alone cannot validate rhythm or wrapping.
+
 ## Readability and Reference Contract
 
+- Separate long-form body copy from muted interface metadata. Main-path paragraphs, derivation explanations, worked-example prose, ordinary table cells, post-experiment interpretation, and chapter summaries must use the shared body-copy token with at least a 6:1 contrast ratio against the paper background. Reserve the muted token for navigation, captions, provenance, labels, and genuinely secondary annotations.
+- Do not use a muted text color for required teaching content merely to create hierarchy. Establish hierarchy with headings, spacing, weight, and semantic labels while keeping continuous reading copy comfortably legible on the warm paper surface.
 - Use the shared semantic typography tokens as the only source of reader-facing small type: `--font-floor` and `--font-dense` are at least 12 px, `--font-ui` is at least 13 px, and explanatory copy, pseudocode, worked-example tables, and code use at least 14 px. Article prose remains at least 14 px.
 - Never author a reader-facing `font-size` or `font` shorthand below 12 px (`.75rem` at the 16 px root), including inside `clamp()`. Decorative geometry may be smaller only when it contains no text.
 - Apply the floor to pseudocode, algorithm comparisons, worked-example tables, transition/handoff explanations, ledgers, controls, chart labels, inspectors, navigation, and the right workbench. If larger text no longer fits, add wrapping, scrolling, or a responsive layout instead of reducing the type again.
@@ -253,11 +279,18 @@ Use this shape for derivation data:
 - List the first occurrence of every chapter-specific technical term and confirm that occurrence includes a definition or local explanation.
 - Confirm required teaching content forms a coherent article without relying on generic card grids.
 - List every main-path prose block with fewer than two complete explanatory sentences. Expand or merge it unless it qualifies for one of the explicit short-block exceptions.
+- Read every adjacent paragraph pair as plain text without component boundaries. Reject a break that separates evidence from its immediate consequence, a limitation from the question it creates, or a definition from the sentence that uses it.
+- Build a formula-role ledger for every display equation: preceding need, equation role, first-use symbol definitions, following interpretation or use, and whether the same result appears prematurely elsewhere.
+- Reject any display equation that is only appended by a generic `formula` or `formulas` renderer and lacks an explicit prose bridge. Demote short notation definitions to inline math unless independent display is pedagogically necessary.
+- Compare preludes with derivation chains and remove premature duplicate results. A prelude may announce what will be derived, but it must not display the final or intermediate equation before the argument earns it.
 - For every method comparison, record the concrete axes stated in the prose and reject abstract claims that do not identify what is held fixed, what evidence is available, and what outcome is being compared.
 - Audit borders and horizontal rules on article-level prose classes. Reject separators whose only purpose is to compensate for a missing textual transition.
 - Compare the completed chapter against its source-coverage matrix and fail it if any required algorithm, variant, theorem condition, comparison, pseudocode stage, or worked example lacks a visible destination.
 - For every named algorithm, confirm that the reader can identify the limitation that motivated it, its complete execution loop, why its update is valid, and its tradeoff relative to the previous method.
 - Reject generic experiments whose visible state does not correspond to the chapter's actual algorithm state and data flow.
 - Measure the rendered left and right edges of the opening, representative prose, experiment entry, post-experiment interpretation, summary, and references. Confirm they use the same chapter grid and text column rather than unrelated widths.
+- Measure adjacent main-path block gaps and identify the single CSS rule that owns each one. Reject cumulative margins or trailing padding that make a continuous transition exceed the shared section-gap token.
+- Inspect every inline prose lead in both languages at desktop and mobile widths. Reject manual line breaks, arbitrary Latin-word breaks, isolated bold lead lines, and continuation lines whose indentation or spacing suggests a new paragraph without a semantic reason.
 - Measure every algorithm, pseudocode, worked-example table, experiment inspector, and right-workbench text surface on desktop and mobile. Reject any value below the readability floor unless a documented graphical exception remains legible at actual size; a single representative sample cannot close a site-wide typography issue.
+- Measure the computed contrast of every main chapter prose path against its effective background. Reject body copy below 6:1 or any required teaching paragraph that inherits the muted metadata color.
 - Confirm each chapter ends with one source section and no separate concept-source footer.
