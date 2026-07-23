@@ -7,16 +7,16 @@ export default function HomePage({ lang, chapters, onSelect }) {
   const chapterById = Object.fromEntries(chapters.map((chapter) => [chapter.id, chapter]))
   const readingSteps = isZh
     ? [
-        ['找到问题', '先弄清上一种方法留下了什么困难，以及为什么需要新的方法。'],
-        ['展开推导', '逐行检查等式、假设与符号，让结论真正从定义中生长出来。'],
-        ['操作实验', '改变参数与策略，观察轨迹、数值和图形如何共同变化。'],
-        ['回看结论', '确认方法解决了什么，又为下一章留下了什么问题。'],
+        ['明确问题', '理解本章要解决的具体困难，并看清环境、数据与学习目标。'],
+        ['建立论证', '从定义和假设出发完成必要推导，理解算法更新为何成立。'],
+        ['检验机制', '改变关键条件，结合轨迹、数值与算法内部状态验证推导结论。'],
+        ['理解边界', '归纳方法解决了什么、依赖哪些条件，以及仍然存在哪些限制。'],
       ]
     : [
-        ['Locate the problem', 'Identify what the previous method could not resolve and why a new one is needed.'],
-        ['Unfold the derivation', 'Inspect each equality, assumption, and symbol as the conclusion grows from its definitions.'],
-        ['Run the experiment', 'Change parameters and policies, then compare the trajectory, values, and visual evidence.'],
-        ['Revisit the result', 'Confirm what the method solved and what question it leaves for the next chapter.'],
+        ['Frame the problem', 'Identify the concrete difficulty and establish its environment, data, and learning objective.'],
+        ['Build the argument', 'Start from definitions and assumptions, then derive why the algorithmic update is valid.'],
+        ['Test the mechanism', 'Vary key conditions and use trajectories, values, and internal algorithm state as evidence.'],
+        ['Read the limits', 'Summarize what the method solves, the conditions it needs, and the limitations that remain.'],
       ]
 
   return (
@@ -56,10 +56,10 @@ export default function HomePage({ lang, chapters, onSelect }) {
 
       <section className="home-reading-guide" aria-labelledby="reading-guide-title">
         <div className="reading-guide-intro">
-          <span>{isZh ? '阅读方式' : 'How to use each chapter'}</span>
+          <span>{isZh ? '如何阅读' : 'How to read the lab'}</span>
           <div>
-            <h2 id="reading-guide-title">{isZh ? '每章都按同一种学习节奏推进' : 'Every chapter follows the same learning rhythm'}</h2>
-            <p>{isZh ? '先找到旧方法留下的问题，再展开推导、操作实验，最后回到结论。' : 'Start with the problem left by the previous method, unfold the derivation, run the experiment, and return to the conclusion.'}</p>
+            <h2 id="reading-guide-title">{isZh ? '用正文建立逻辑，用实验检验理解' : 'Build the argument in the article, then test it in the lab'}</h2>
+            <p>{isZh ? '每章围绕一个完整问题展开：正文交代背景、定义与推导，交互实验把抽象机制转化为可观察的证据，最后说明方法的适用条件与局限。' : 'Each chapter develops one complete question. The article establishes context, definitions, and derivation; the interactive lab turns the mechanism into observable evidence; the close states its assumptions and limits.'}</p>
           </div>
         </div>
         <ol className="reading-guide-steps">
@@ -74,8 +74,8 @@ export default function HomePage({ lang, chapters, onSelect }) {
           ))}
         </ol>
         <div className="reading-guide-cycle">
-          <span>{isZh ? '迭代进入下一章' : 'Continue into the next chapter'}</span>
-          <p>{isZh ? '第 04 步得到的结论会暴露新的边界与问题，它们直接成为下一章第 01 步的起点。' : 'The conclusion in step 04 exposes new limits and questions, which become the starting point for step 01 of the next chapter.'}</p>
+          <span>{isZh ? '章节如何衔接' : 'How chapters connect'}</span>
+          <p>{isZh ? '一种方法尚未解决的限制，会自然成为后续章节的问题来源。学习路径因此持续推进，但每章会根据概念与算法选择最合适的讲解和交互方式。' : 'The limitations left by one method motivate the chapters that follow. The learning path remains continuous while each topic uses the explanation and interaction best suited to its mechanism.'}</p>
         </div>
       </section>
     </div>
