@@ -38,6 +38,7 @@ export default function CourseWorldExplorer({ lang, content }) {
   const [action, setAction] = useState('right')
   const [noise, setNoise] = useState(0)
   const [showPolicy, setShowPolicy] = useState(true)
+  const [showContract, setShowContract] = useState(false)
   const [trajectory, setTrajectory] = useState([])
 
   const branches = useMemo(() => (
@@ -71,17 +72,17 @@ export default function CourseWorldExplorer({ lang, content }) {
     <section className="world-explorer" aria-label={content.figure}>
       <header className="world-explorer-heading">
         <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
-        <span className="method-badge">MDP · <MathFormula latex={String.raw`\mathcal S\times\mathcal A\rightarrow\mathcal R\times\mathcal S'`} /></span>
+        <button type="button" className="progressive-toggle" onClick={() => setShowContract((value) => !value)}>{showContract ? (lang === 'zh' ? '收起 MDP 接口' : 'Hide MDP contract') : (lang === 'zh' ? '展开 MDP 五要素' : 'Show five MDP elements')}</button>
       </header>
 
-      <div className="mdp-interface-strip" aria-label={text.tupleTitle}>
+      {showContract && <><div className="mdp-interface-strip" aria-label={text.tupleTitle}>
         <div><span>S</span><strong>{text.stateSpace}</strong><small>{labelState(current, text.statePrefix)}</small></div>
         <div><span>A</span><strong>{text.actionSpace}</strong><small>{ACTIONS[action].arrow} {actionCopy[lang][action]}</small></div>
         <div><span>P</span><strong><MathFormula latex={String.raw`p(s'\mid s,a)`} /></strong><small>{branches.length} {text.possible}</small></div>
         <div><span>R</span><strong><MathFormula latex={String.raw`p(r\mid s,a)`} /></strong><small><MathFormula latex={String.raw`\mathbb E[r]=${expectedReward.toFixed(2)}`} /></small></div>
         <div><span><MathFormula latex={String.raw`\pi`} /></span><strong><MathFormula latex={String.raw`\pi(a\mid s)`} /></strong><small>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]} · 1.00</small></div>
       </div>
-      <p className="mdp-interface-hint"><strong>{text.tupleTitle}</strong><MathText>{text.tupleHint}</MathText></p>
+      <p className="mdp-interface-hint"><strong>{text.tupleTitle}</strong><MathText>{text.tupleHint}</MathText></p></>}
 
       <div className="world-explorer-stage">
         <section className="world-map-panel">

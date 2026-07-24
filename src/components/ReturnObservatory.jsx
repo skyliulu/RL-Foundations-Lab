@@ -61,6 +61,7 @@ export default function ReturnObservatory({ lang, content }) {
   const [mode, setMode] = useState(baseline.mode)
   const [presetId, setPresetId] = useState('course-baseline')
   const [selectedRun, setSelectedRun] = useState(0)
+  const [showPresets, setShowPresets] = useState(false)
 
   const result = useMemo(() => estimateStateValue({ start, gamma, noise, sampleCount }), [start, gamma, noise, sampleCount])
   const selectedIndex = Math.min(selectedRun, result.samples.length - 1)
@@ -95,17 +96,18 @@ export default function ReturnObservatory({ lang, content }) {
         <div className="return-mode-switch" role="group" aria-label={text.valueLens}>
           <button type="button" className={mode === 'trajectory' ? 'active' : ''} onClick={() => setMode('trajectory')}>{text.modeTrajectory}</button>
           <button type="button" className={mode === 'value' ? 'active' : ''} onClick={() => setMode('value')}>{text.modeValue}</button>
+          <button type="button" onClick={() => setShowPresets((value) => !value)}>{showPresets ? (lang === 'zh' ? '收起预设' : 'Hide presets') : (lang === 'zh' ? '教学预设' : 'Presets')}</button>
         </div>
       </header>
 
-      <div className="return-presets">
+      {showPresets && <div className="return-presets">
         <span>{text.preset}</span>
         {Object.keys(returnPresetConfigs).map((id) => (
           <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}>
             <strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small>
           </button>
         ))}
-      </div>
+      </div>}
 
       <div className="return-control-row">
         <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>

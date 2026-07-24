@@ -1,8 +1,10 @@
 export const codingCandidates = [
-  { id: 'A', label: '边界遗漏', visible: [1, 1, 1, 0], hidden: [0, 0], syntax: true },
-  { id: 'B', label: '可见测试捷径', visible: [1, 1, 1, 1], hidden: [0, 0], syntax: true },
-  { id: 'C', label: '完整修复', visible: [1, 1, 1, 1], hidden: [1, 1], syntax: true },
+  { id: 'A', label: '边界遗漏', visible: [1, 1, 1, 0], hidden: [0, 0], syntax: true, diff: ['+ if value > limit: return limit', '- return normalize(value)'], intent: 'clamp common inputs only' },
+  { id: 'B', label: '可见测试捷径', visible: [1, 1, 1, 1], hidden: [0, 0], syntax: true, diff: ['+ if value in FIXTURES: return EXPECTED[value]', '+ return normalize(value)'], intent: 'memorize visible fixtures' },
+  { id: 'C', label: '完整修复', visible: [1, 1, 1, 1], hidden: [1, 1], syntax: true, diff: ['+ bounded = min(limit, max(lower, value))', '+ return normalize(bounded)'], intent: 'enforce the full input contract' },
 ]
+
+export const codingTests = ['nominal input', 'upper boundary', 'negative input', 'empty input', 'unseen boundary', 'property invariant']
 
 export function evaluateCodingReward({ candidateId = 'A', mode = 'partial', revealHidden = false } = {}) {
   const candidate = codingCandidates.find((item) => item.id === candidateId) || codingCandidates[0]
@@ -14,7 +16,7 @@ export function evaluateCodingReward({ candidateId = 'A', mode = 'partial', reve
     : mode === 'weighted'
       ? tests.reduce((sum, value, index) => sum + value * weights[index], 0) / weights.reduce((sum, value) => sum + value, 0)
       : passed / tests.length
-  return { candidate, tests, weights, passed, reward, generalizes: candidate.hidden.every(Boolean) }
+  return { candidate, tests, testNames: codingTests.slice(0, tests.length), weights, passed, reward, generalizes: candidate.hidden.every(Boolean) }
 }
 
 export const agentSteps = [
@@ -43,7 +45,15 @@ export function evaluateCredit({ scheme = 'terminal', gamma = 0.9, trust = 0.7 }
     if (scheme === 'discounted') credit = gamma ** distance
     if (scheme === 'process') credit = gamma ** distance + trust * processSignals[index]
     if (scheme === 'hindsight') credit = (1 - trust) * gamma ** distance + trust * hindsightSignals[index]
-    return { ...step, credit }
+    return {
+      ...step,
+      credit,
+      evidence: scheme === 'process'
+        ? processSignals[index]
+        : scheme === 'hindsight'
+          ? hindsightSignals[index]
+          : gamma ** distance,
+    }
   })
   return { credits, total: credits.reduce((sum, step) => sum + step.credit, 0) }
 }

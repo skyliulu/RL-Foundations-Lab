@@ -45,6 +45,7 @@ export default function MonteCarloLab({ lang, content }) {
   const zh = lang === 'zh'
   const [params, setParams] = useState(defaults)
   const [sampleSlot, setSampleSlot] = useState(2)
+  const [evidenceView, setEvidenceView] = useState('episode')
   const result = useMemo(() => runMonteCarloCourse(params), [params])
   const sample = result.samples[Math.min(sampleSlot, result.samples.length - 1)]
   const variant = variantCopy[lang][params.variant]
@@ -82,8 +83,14 @@ export default function MonteCarloLab({ lang, content }) {
         <div><span>{zh ? '观察中的起始状态' : 'Focus start state'}</span><strong>{result.focusState}</strong></div>
       </div>
 
-      <div className="mc-stage">
-        <section className="mc-coverage-panel">
+      <div className="evidence-view-switch" role="group" aria-label={zh ? '证据视图' : 'Evidence view'}>
+        <button type="button" className={evidenceView === 'coverage' ? 'active' : ''} onClick={() => setEvidenceView('coverage')}>{zh ? '覆盖范围' : 'Coverage'}</button>
+        <button type="button" className={evidenceView === 'episode' ? 'active' : ''} onClick={() => setEvidenceView('episode')}>{zh ? 'Episode 与更新' : 'Episode and updates'}</button>
+        <button type="button" className={evidenceView === 'policy' ? 'active' : ''} onClick={() => setEvidenceView('policy')}>{zh ? '策略结果' : 'Policy result'}</button>
+      </div>
+
+      {evidenceView !== 'policy' && <div className={`mc-stage view-${evidenceView}`}>
+        {evidenceView === 'coverage' && <section className="mc-coverage-panel">
           <header><span>{zh ? '状态访问热图' : 'State visit heatmap'}</span><small>{zh ? '颜色代表该状态下所有动作的累计更新次数' : 'Color encodes total updates across actions'}</small></header>
           <div className="mc-coverage-grid">
             {allStates().map((state) => {
@@ -93,31 +100,31 @@ export default function MonteCarloLab({ lang, content }) {
             })}
           </div>
           <p><MathText>{zh ? '只看 Q 的数值是否稳定不够：没有被访问的状态—动作对仍然保持初值。' : 'A stable Q estimate is not enough: unvisited pairs still retain their initial values.'}</MathText></p>
-        </section>
+        </section>}
 
-        <section className="mc-episode-panel">
+        {evidenceView === 'episode' && <section className="mc-episode-panel">
           <header><span>{zh ? 'Episode tape' : 'Episode tape'}</span><div>{result.samples.map((item, index) => <button type="button" key={item.index} className={sampleSlot === index ? 'active' : ''} onClick={() => setSampleSlot(index)}>#{item.index + 1}</button>)}</div></header>
           <div className="mc-tape-head"><span><MathFormula latex={String.raw`t`} /></span><span><MathFormula latex={String.raw`S_t`} /></span><span><MathFormula latex={String.raw`A_t`} /></span><span><MathFormula latex={String.raw`R_{t+1}`} /></span><span><MathFormula latex={String.raw`G_t`} /></span><span>{zh ? '用于更新' : 'Used'}</span></div>
           <div className="mc-tape-body">
             {sample.steps.map((step) => <div key={step.time} className={step.used ? 'used' : 'skipped'}><span>{step.time}</span><strong>s{indexOf(step.state) + 1}</strong><span>{ACTIONS[step.action].arrow} {actionCopy[lang][step.action]}</span><span className={step.reward < 0 ? 'negative' : step.reward > 0 ? 'positive' : ''}>{step.reward > 0 ? '+' : ''}{step.reward}</span><span>{format(step.returnValue)}</span><span>{step.used ? '●' : '—'}</span></div>)}
           </div>
-        </section>
+        </section>}
 
-        <aside className="mc-update-panel">
+        {evidenceView === 'episode' && <aside className="mc-update-panel">
           <header><span><MathText>{zh ? '该 episode 的 Q 更新' : 'Q updates in this episode'}</MathText></span><small>{sample.updates.length} {zh ? '次更新' : 'updates'}</small></header>
           <MathFormula block latex={String.raw`\begin{aligned}Q(S_t,A_t)&\leftarrow Q(S_t,A_t)\\&\quad+\frac{1}{N(S_t,A_t)}\\&\qquad\cdot\left(G_t-Q(S_t,A_t)\right)\end{aligned}`} />
           <div className="mc-update-list">
             {sample.updates.slice(0, 7).map((update) => <div key={`${update.time}-${update.state}-${update.action}`}><span>{update.state} · {ACTIONS[update.action].arrow}</span><strong><MathFormula latex={String.raw`${format(update.before)}\rightarrow${format(update.after)}`} /></strong><small><MathFormula latex={String.raw`G=${format(update.returnValue)}\;\cdot\;N=${update.visits}`} /></small></div>)}
           </div>
           {sample.updates.length > 7 && <p>+ {sample.updates.length - 7} {zh ? '条更新未展开' : 'more updates'}</p>}
-        </aside>
-      </div>
+        </aside>}
+      </div>}
 
-      <section className="mc-policy-panel">
+      {evidenceView === 'policy' && <section className="mc-policy-panel">
         <div><span>{zh ? '改进后的动作分布' : 'Improved action distribution'}</span><strong>{result.focusState}</strong></div>
         <div className="mc-policy-bars">{result.policy.map((item) => <span key={item.action}><b>{ACTIONS[item.action].arrow}</b><i><em style={{ width: `${item.probability * 100}%` }} /></i><small>{(item.probability * 100).toFixed(0)}%</small></span>)}</div>
         <p><MathText>{params.variant === 'epsilon' ? (zh ? 'ε-greedy 让非贪心动作仍有正概率，因此覆盖得以继续；代价是策略通常不再属于全部策略中的严格最优策略。' : 'ε-greedy preserves positive probability for non-greedy actions. Coverage continues, but the policy is generally not globally optimal.') : (zh ? '确定性贪心改善会集中到一个动作；若起点和数据收集不能保证覆盖，错误的早期判断可能永远无法被修正。' : 'Deterministic greedy improvement concentrates on one action; without coverage, an early error may never be corrected.')}</MathText></p>
-      </section>
+      </section>}
     </section>
   )
 }

@@ -573,7 +573,7 @@ test('long-horizon credit derivations appear beside the mechanism they justify',
   }
 })
 
-test('chapters 08–13 expose algorithm-specific evidence before aggregate curves', () => {
+test('chapters 08–13 expose algorithm-specific evidence without a generic aggregate chart', () => {
   const source = read('components/LearningLab.jsx')
   const styles = read('styles.css')
   ;[
@@ -585,12 +585,14 @@ test('chapters 08–13 expose algorithm-specific evidence before aggregate curve
     'ActorCriticEvidenceStage',
   ].forEach((component) => assert.match(source, new RegExp(`function ${component}\\(`)))
   assert.match(source, /<DedicatedLearningStage id=\{id\}/)
-  assert.match(source, /className="learning-lab-stage is-secondary-evidence"/)
+  assert.match(source, /className="learning-compact-summary"/)
+  assert.doesNotMatch(source, /className="learning-lab-stage is-secondary-evidence"/)
   assert.match(source, /Replay buffer/)
-  assert.match(source, /Q_\{\\bar\\theta\}/)
+  assert.match(source, /\\bar\\theta/)
   assert.match(styles, /\.td-evidence-stage/)
   assert.match(styles, /\.dqn-evidence-stage/)
   assert.match(styles, /\.ac-two-updates/)
+  assert.match(styles, /\.learning-compact-summary/)
 })
 
 test('the return worked example remains attached to the shared course world', async () => {

@@ -30,12 +30,13 @@ export default function TokenMdpLab({ lang, content }) {
     const shaped = selected.tokens.map((token, index) => {
       const klCost = -beta * (selected.old[index] - selected.ref[index])
       const terminal = index === selected.tokens.length - 1 ? terminalReward : 0
-      return { token, index, klCost, process: selected.process[index], reward: klCost + selected.process[index] + terminal }
+      return { token, index, oldLogp: selected.old[index], refLogp: selected.ref[index], value: 0.35 - index * 0.08, mask: 1, klCost, process: selected.process[index], reward: klCost + selected.process[index] + terminal }
     })
     let future = 0
     for (let index = shaped.length - 1; index >= 0; index -= 1) {
       future = shaped[index].reward + gamma * future
       shaped[index].returnValue = future
+      shaped[index].advantage = future - shaped[index].value
     }
     return shaped
   }, [selected, terminalReward, beta, gamma])
@@ -51,8 +52,8 @@ export default function TokenMdpLab({ lang, content }) {
       </div>
       <div className="token-mdp-equation"><MathFormula block latex={String.raw`r_t=r_t^{\mathrm{process}}-\beta(\log\pi_{\mathrm{old},t}-\log\pi_{\mathrm{ref},t})+\mathbf 1[t=T-1]R_{\mathrm{terminal}}`} /></div>
       <div className="token-trajectory-ledger" role="table" aria-label={zh ? 'Token 轨迹账本' : 'Token trajectory ledger'}>
-        <div className="token-trajectory-head" role="row"><b>{zh ? '状态 / 前缀' : 'State / prefix'}</b><b>{zh ? '动作 token' : 'Action token'}</b><b>{zh ? 'KL 代价' : 'KL cost'}</b><b>{zh ? '过程奖励' : 'Process reward'}</b><b>{zh ? '总奖励' : 'Reward'}</b><b>Return</b></div>
-        {rows.map((row) => <div className="token-trajectory-row" role="row" key={`${row.index}-${row.token}`}><span>{row.index === 0 ? (zh ? 'prompt' : 'prompt') : selected.tokens.slice(0, row.index).join(' ')}</span><strong>{row.token}</strong><span>{number(row.klCost)}</span><span>{number(row.process)}</span><span>{number(row.reward)}</span><span>{number(row.returnValue)}</span></div>)}
+        <div className="token-trajectory-head" role="row"><b>{zh ? '状态 / 前缀' : 'State / prefix'}</b><b>{zh ? '动作 token' : 'Action token'}</b><b>old logp</b><b>ref logp</b><b>value</b><b>mask</b><b>{zh ? 'KL 代价' : 'KL cost'}</b><b>{zh ? '总奖励' : 'Reward'}</b><b>advantage</b><b>return</b></div>
+        {rows.map((row) => <div className="token-trajectory-row" role="row" key={`${row.index}-${row.token}`}><span>{row.index === 0 ? 'prompt' : selected.tokens.slice(0, row.index).join(' ')}</span><strong>{row.token}</strong><span>{number(row.oldLogp)}</span><span>{number(row.refLogp)}</span><span>{number(row.value)}</span><span>{row.mask}</span><span>{number(row.klCost)}</span><span>{number(row.reward)}</span><span>{number(row.advantage)}</span><span>{number(row.returnValue)}</span></div>)}
       </div>
       <footer><span>{zh ? '终止原因' : 'Termination reason'}</span><strong>{selected.ending}</strong><p>{selected.ending === 'EOS' ? (zh ? '策略主动选择结束；最后位置通常不再 bootstrap。' : 'The policy chose to end; the final position normally does not bootstrap.') : (zh ? '外部长度预算强制停止；是否 bootstrap 必须由训练契约明确。' : 'An external length budget stopped generation; the training contract must decide whether to bootstrap.')}</p></footer>
     </section>

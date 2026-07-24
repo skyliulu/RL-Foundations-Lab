@@ -274,14 +274,108 @@ export function compareTdTargets({ gamma = 0.9, n = 3, value = 2.4, nextValue = 
   return { series: [td, nStep, mc], td, nStep, mc, delta: td - value, value }
 }
 
-export function compareControl({ epsilon = 0.12, alpha = 0.3, seed = 20260719 } = {}) {
+const CLIFF_WIDTH = 7
+const CLIFF_HEIGHT = 4
+const CLIFF_START = (CLIFF_HEIGHT - 1) * CLIFF_WIDTH
+const CLIFF_GOAL = CLIFF_START + CLIFF_WIDTH - 1
+const CLIFF_ACTIONS = ['up', 'right', 'down', 'left']
+
+function cliffMove(state, action) {
+  const row = Math.floor(state / CLIFF_WIDTH)
+  const col = state % CLIFF_WIDTH
+  const nextRow = Math.max(0, Math.min(CLIFF_HEIGHT - 1, row + (action === 'down' ? 1 : action === 'up' ? -1 : 0)))
+  const nextCol = Math.max(0, Math.min(CLIFF_WIDTH - 1, col + (action === 'right' ? 1 : action === 'left' ? -1 : 0)))
+  const candidate = nextRow * CLIFF_WIDTH + nextCol
+  const fell = nextRow === CLIFF_HEIGHT - 1 && nextCol > 0 && nextCol < CLIFF_WIDTH - 1
+  return {
+    state: fell ? CLIFF_START : candidate,
+    reward: fell ? -100 : -1,
+    fell,
+    terminal: candidate === CLIFF_GOAL,
+  }
+}
+
+function greedyIndex(row) {
+  return row.reduce((best, value, index) => value > row[best] ? index : best, 0)
+}
+
+function epsilonAction(row, epsilon, random) {
+  return random() < epsilon ? Math.floor(random() * CLIFF_ACTIONS.length) : greedyIndex(row)
+}
+
+function trainCliffControl(kind, { epsilon, alpha, seed, episodes = 120 }) {
   const random = lcg(seed)
-  const jitter = (random() - 0.5) * 0.03
-  const sarsaDanger = Math.max(0.01, epsilon * 0.22 + jitter)
-  const qDanger = Math.max(0.02, epsilon * 0.72 - jitter)
-  const sarsaReturn = -17 - 44 * sarsaDanger + 2 * alpha
-  const qReturn = -13 - 62 * qDanger + 4 * alpha
-  return { series: [sarsaReturn, qReturn], sarsaDanger, qDanger, sarsaReturn, qReturn, targetGap: 2.8 + 3.5 * epsilon }
+  const q = Array.from({ length: CLIFF_WIDTH * CLIFF_HEIGHT }, () => Array(CLIFF_ACTIONS.length).fill(0))
+  const episodeReturns = []
+  let falls = 0
+
+  for (let episode = 0; episode < episodes; episode += 1) {
+    let state = CLIFF_START
+    let actionIndex = epsilonAction(q[state], epsilon, random)
+    let total = 0
+    for (let step = 0; step < 180; step += 1) {
+      const outcome = cliffMove(state, CLIFF_ACTIONS[actionIndex])
+      total += outcome.reward
+      if (outcome.fell) falls += 1
+      const nextActionIndex = epsilonAction(q[outcome.state], epsilon, random)
+      const bootstrap = outcome.terminal
+        ? 0
+        : kind === 'sarsa'
+          ? q[outcome.state][nextActionIndex]
+          : q[outcome.state][greedyIndex(q[outcome.state])]
+      q[state][actionIndex] += alpha * (outcome.reward + 0.9 * bootstrap - q[state][actionIndex])
+      state = outcome.state
+      actionIndex = nextActionIndex
+      if (outcome.terminal) break
+    }
+    episodeReturns.push(total)
+  }
+
+  const path = [CLIFF_START]
+  let state = CLIFF_START
+  for (let step = 0; step < 40 && state !== CLIFF_GOAL; step += 1) {
+    const actionIndex = greedyIndex(q[state])
+    const outcome = cliffMove(state, CLIFF_ACTIONS[actionIndex])
+    state = outcome.state
+    path.push(state)
+    if (outcome.fell) break
+  }
+
+  return {
+    q,
+    policy: q.map((row) => CLIFF_ACTIONS[greedyIndex(row)]),
+    path,
+    falls,
+    danger: falls / episodes,
+    meanReturn: mean(episodeReturns.slice(-20)),
+    episodeReturns,
+  }
+}
+
+export function compareControl({ epsilon = 0.12, alpha = 0.3, seed = 20260719 } = {}) {
+  const sarsa = trainCliffControl('sarsa', { epsilon, alpha, seed })
+  const qLearning = trainCliffControl('qlearning', { epsilon, alpha, seed })
+  const focusState = (CLIFF_HEIGHT - 2) * CLIFF_WIDTH
+  const nextState = focusState + 1
+  const sarsaNextAction = epsilon >= 0.18 ? 'up' : sarsa.policy[nextState]
+  const sarsaNextIndex = CLIFF_ACTIONS.indexOf(sarsaNextAction)
+  const qGreedyIndex = greedyIndex(qLearning.q[nextState])
+  const sarsaTarget = -1 + 0.9 * sarsa.q[nextState][Math.max(0, sarsaNextIndex)]
+  const qTarget = -1 + 0.9 * qLearning.q[nextState][qGreedyIndex]
+  return {
+    series: [sarsa.meanReturn, qLearning.meanReturn],
+    sarsaDanger: sarsa.danger,
+    qDanger: qLearning.danger,
+    sarsaReturn: sarsa.meanReturn,
+    qReturn: qLearning.meanReturn,
+    targetGap: Math.abs(sarsaTarget - qTarget),
+    sarsaTarget,
+    qTarget,
+    transition: { state: focusState, action: 'right', reward: -1, nextState, sarsaNextAction },
+    sarsa,
+    qLearning,
+    grid: { width: CLIFF_WIDTH, height: CLIFF_HEIGHT, start: CLIFF_START, goal: CLIFF_GOAL },
+  }
 }
 
 export function runFunctionApproximation({ width = 1.2, alpha = 0.24, target = 5 } = {}) {
@@ -293,24 +387,71 @@ export function runFunctionApproximation({ width = 1.2, alpha = 0.24, target = 5
   return { series: after, before, after, features, centerError, spillover: Math.abs(after[1] - before[1]) }
 }
 
-export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42 } = {}) {
-  const series = Array.from({ length: steps }, (_, index) => {
-    const drift = Math.sin(index * 0.72) * (1 - replay) * 1.8
-    const targetJump = (index % targetPeriod) / targetPeriod * 0.38
-    return 2.8 * Math.exp(-index / 15) + Math.abs(drift) + targetJump
-  })
-  const correlation = Math.max(0.04, 1 - replay * 0.88)
-  const drift = mean(series.slice(-8))
-  return { series, correlation, drift, replaySize: Math.round(800 + replay * 9200), targetPeriod }
+export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, seed = 20260719 } = {}) {
+  const random = lcg(seed)
+  const stream = [
+    { id: 1, feature: 0.25, action: 0, reward: 0, nextFeature: 0.38 },
+    { id: 2, feature: 0.38, action: 1, reward: -1, nextFeature: 0.31 },
+    { id: 3, feature: 0.52, action: 0, reward: 0, nextFeature: 0.66 },
+    { id: 4, feature: 0.66, action: 1, reward: 1, nextFeature: 0.81 },
+    { id: 5, feature: 0.81, action: 0, reward: 0, nextFeature: 0.94 },
+    { id: 6, feature: 0.94, action: 1, reward: 2, nextFeature: 1 },
+  ]
+  const buffer = []
+  const sampledIds = []
+  const sampledFeatures = []
+  const series = []
+  let online = [0.15, -0.08]
+  let target = [...online]
+  const predict = (weights, feature, action) => weights[0] * feature + weights[1] * (action ? 1 : -1)
+
+  for (let step = 0; step < steps; step += 1) {
+    const observed = stream[step % stream.length]
+    buffer.push({ ...observed, time: step })
+    if (buffer.length > 24) buffer.shift()
+    const sampleIndex = random() < replay ? Math.floor(random() * buffer.length) : buffer.length - 1
+    const sample = buffer[sampleIndex]
+    sampledIds.push(sample.id)
+    sampledFeatures.push(sample.feature)
+    const nextBest = Math.max(predict(target, sample.nextFeature, 0), predict(target, sample.nextFeature, 1))
+    const y = sample.reward + 0.9 * nextBest
+    const prediction = predict(online, sample.feature, sample.action)
+    const error = y - prediction
+    const actionFeature = sample.action ? 1 : -1
+    online = [
+      online[0] + 0.08 * error * sample.feature,
+      online[1] + 0.08 * error * actionFeature,
+    ]
+    if ((step + 1) % targetPeriod === 0) target = [...online]
+    series.push(Math.abs(error))
+  }
+
+  const adjacentFeatureDistance = mean(sampledFeatures.slice(1).map((feature, index) => Math.abs(feature - sampledFeatures[index])))
+  const correlation = Math.max(0, 1 - adjacentFeatureDistance / 0.75)
+  const drift = Math.abs(predict(online, 0.75, 1) - predict(target, 0.75, 1))
+  return {
+    series,
+    correlation,
+    drift,
+    replaySize: buffer.length,
+    targetPeriod,
+    buffer: buffer.slice(-6),
+    sampledIds: sampledIds.slice(-6),
+    online,
+    target,
+    stepsUntilSync: targetPeriod - (steps % targetPeriod || targetPeriod),
+  }
 }
 
-export function runPolicyGradient({ theta = 0, advantage = 1.4, alpha = 0.18, baseline = 0 } = {}) {
+export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, baseline = 0 } = {}) {
+  const returns = [2.4, 1.7, 0.6, -0.2]
+  const selectedReturn = returns[Math.max(0, Math.min(returns.length - 1, selectedStep))]
   const probability = 1 / (1 + Math.exp(-theta))
-  const weight = advantage - baseline
+  const weight = selectedReturn - baseline
   const gradient = (1 - probability) * weight
   const nextTheta = theta + alpha * gradient
   const nextProbability = 1 / (1 + Math.exp(-nextTheta))
-  return { series: [probability, nextProbability], probability, nextProbability, gradient, weight, nextTheta }
+  return { series: [probability, nextProbability], probability, nextProbability, gradient, weight, nextTheta, selectedReturn, returns, selectedStep }
 }
 
 export function runActorCritic({ reward = 1, gamma = 0.9, value = 2.2, nextValue = 2.8, actorAlpha = 0.12, criticAlpha = 0.18, ratio = 1 } = {}) {

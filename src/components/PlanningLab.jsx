@@ -71,6 +71,7 @@ export default function PlanningLab({ content }) {
   const [truncation, setTruncation] = useState(baseline.truncation)
   const [checkpoint, setCheckpoint] = useState(baseline.checkpoint)
   const [presetId, setPresetId] = useState('early-propagation')
+  const [view, setView] = useState('cost')
   const results = useMemo(() => comparePlanningAlgorithms({ gamma, noise, truncation, maxOuter: 240 }), [gamma, noise, truncation])
   const maxCheckpoint = Math.max(...algorithmOrder.map((id) => results[id].trace.length - 1))
   const activeCheckpoint = Math.min(checkpoint, maxCheckpoint)
@@ -104,7 +105,11 @@ export default function PlanningLab({ content }) {
         <label><span>{text.checkpoint}<output>k={activeCheckpoint}</output></span><input type="range" min="0" max={maxCheckpoint} step="1" value={activeCheckpoint} onChange={(event) => setCheckpoint(Number(event.target.value))} /></label>
       </div>
 
-      <div className="planning-main-stage">
+      <div className="evidence-view-switch" role="group">
+        <button type="button" className={view === 'cost' ? 'active' : ''} onClick={() => setView('cost')}>{text.residualChart}</button>
+        <button type="button" className={view === 'propagation' ? 'active' : ''} onClick={() => setView('propagation')}>{text.propagation}</button>
+      </div>
+      {view === 'cost' && <div className="planning-main-stage">
         <section className="planning-chart-panel">
           <header><span>{text.residualChart}</span><small>{text.chartHint}</small></header>
           <div className="planning-legend"><span><i className="legend-vi" />{text.vi}</span><span><i className="legend-tpi" />{text.tpi}</span><span><i className="legend-pi" />{text.pi}</span></div>
@@ -116,12 +121,12 @@ export default function PlanningLab({ content }) {
             {algorithmOrder.map((id) => <div key={id}><strong>{text[id]}</strong><span>{results[id].backups}<small>{text.backups}</small></span><span>{results[id].policyUpdates}<small>{text.policyUpdates}</small></span><span>{formatScientific(results[id].maxValueError)}<small>{text.finalError}</small></span></div>)}
           </div>
         </section>
-      </div>
+      </div>}
 
-      <section className="planning-propagation">
+      {view === 'propagation' && <section className="planning-propagation">
         <header><span>{text.propagation}</span><small>{text.selectedCheckpoint}: k={activeCheckpoint} · {text.mapHint}</small></header>
         <div>{<PlanningMap step={checkpoints.vi} label={text.viShort} text={text} />}{<PlanningMap step={checkpoints.tpi} label={`${text.tpiShort} (${truncation})`} text={text} />}{<PlanningMap step={checkpoints.pi} label={text.piShort} text={text} />}</div>
-      </section>
+      </section>}
     </section>
   )
 }
