@@ -686,6 +686,31 @@ test('later experiments name their environment and keep summary evidence spatial
   assert.doesNotMatch(styles, /\.learning-compact-summary > div\s*\{/)
 })
 
+test('phase-two chapters keep one causal article spine and mechanism-faithful interactions', async () => {
+  const { copy } = await import('../content.js')
+  const { buildChapterArticleFlow } = await import('../content/article-flow.js')
+  const flowIds = (id, lang = 'zh') => buildChapterArticleFlow(id, copy[lang][id], lang).map((item) => item.id)
+
+  assert.deepEqual(flowIds('policygradient'), [
+    'value-policy', 'softmax', 'objectives-and-occupancy', 'chapter-derivation',
+    'theorem-to-samples', 'reinforce-complete', 'chapter-experiment', 'variance', 'forward',
+  ])
+  assert.ok(flowIds('actorcritic').indexOf('qac-to-baseline') < flowIds('actorcritic').indexOf('chapter-derivation'))
+  assert.doesNotMatch(read('content/article-flow.js'), /ppo:[\s\S]*?ref\('sections', 'update-cycle'\)/)
+  assert.ok(flowIds('dpo').indexOf('beta-meaning') < flowIds('dpo').indexOf('complete-dpo'))
+  assert.ok(flowIds('codingrl').indexOf('iterative-repair') < flowIds('codingrl').indexOf('complete-coding-loop'))
+
+  const learning = read('components/LearningLab.jsx')
+  const modern = read('components/ModernExtensionLab.jsx')
+  const ppo = read('components/PpoLab.jsx')
+  assert.match(learning, /className="pg-probability-ledger"/)
+  assert.match(modern, /className="dpo-update-ledger"/)
+  assert.match(modern, /className="coding-repair-tape"/)
+  assert.match(ppo, /tabIndex="0"/)
+  assert.match(ppo, /onKeyDown=/)
+  assert.match(ppo, /aria-pressed=/)
+})
+
 test('the return worked example remains attached to the shared course world', async () => {
   const { copy } = await import('../content.js')
   const zh = copy.zh.returns.deepening.find((item) => item.id === 'two-return-calculations')

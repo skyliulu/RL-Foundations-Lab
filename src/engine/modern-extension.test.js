@@ -4,10 +4,16 @@ import { buildAgentTrajectory, evaluateCodingReward, evaluateCredit } from './mo
 
 describe('modern extension experiments', () => {
   it('reveals a visible-test shortcut with hidden tests', () => {
-    assert.equal(evaluateCodingReward({ candidateId: 'B', mode: 'outcome' }).reward, 1)
+    const first = evaluateCodingReward({ candidateId: 'A', mode: 'partial' })
+    const visibleRepair = evaluateCodingReward({ candidateId: 'B', mode: 'outcome' })
+    assert.equal(visibleRepair.reward, 1)
+    assert.ok(visibleRepair.trajectory[1].visibleFailures < first.trajectory[0].visibleFailures)
     const hidden = evaluateCodingReward({ candidateId: 'B', mode: 'outcome', revealHidden: true })
     assert.equal(hidden.reward, 0)
     assert.equal(hidden.generalizes, false)
+    const principledRepair = evaluateCodingReward({ candidateId: 'C', mode: 'outcome', revealHidden: true })
+    assert.ok(principledRepair.trajectory[2].hiddenFailures < hidden.trajectory[1].hiddenFailures)
+    assert.equal(principledRepair.generalizes, true)
   })
 
   it('agent trajectories distinguish environment termination from success', () => {

@@ -7,6 +7,9 @@ describe('post-training method calculations', () => {
     const result = evaluateDpo({ beta: 1 })
     assert.ok(result.preferenceProbability > 0.5)
     assert.ok(result.loss < Math.log(2))
+    assert.ok(result.after.chosenShift > result.chosenShift)
+    assert.ok(result.after.rejectedShift < result.rejectedShift)
+    assert.ok(result.after.loss < result.loss)
   })
 
   it('GRPO group-relative advantages are centered and clipped', () => {

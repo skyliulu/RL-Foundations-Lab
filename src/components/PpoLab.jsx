@@ -25,8 +25,16 @@ function SamplePlane({ samples, clip, selectedId, onSelect, lang }) {
           key={sample.id}
           className={`sample-mark ${sample.clipped ? 'is-clipped' : ''} ${sample.id === selectedId ? 'is-selected' : ''}`}
           role="button"
+          tabIndex="0"
+          aria-pressed={sample.id === selectedId}
           aria-label={`${sample.id}, advantage ${sample.advantage.toFixed(2)}, ratio ${sample.ratio.toFixed(2)}`}
           onClick={() => onSelect(sample.id)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              onSelect(sample.id)
+            }
+          }}
         >
           {sample.clipped ? (
             <rect x={x(sample.advantage) - 7} y={y(sample.ratio) - 7} width="14" height="14" transform={`rotate(45 ${x(sample.advantage)} ${y(sample.ratio)})`} />

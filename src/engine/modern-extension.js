@@ -1,7 +1,40 @@
 export const codingCandidates = [
-  { id: 'A', label: '边界遗漏', visible: [1, 1, 1, 0], hidden: [0, 0], syntax: true, diff: ['+ if value > limit: return limit', '- return normalize(value)'], intent: 'clamp common inputs only' },
-  { id: 'B', label: '可见测试捷径', visible: [1, 1, 1, 1], hidden: [0, 0], syntax: true, diff: ['+ if value in FIXTURES: return EXPECTED[value]', '+ return normalize(value)'], intent: 'memorize visible fixtures' },
-  { id: 'C', label: '完整修复', visible: [1, 1, 1, 1], hidden: [1, 1], syntax: true, diff: ['+ bounded = min(limit, max(lower, value))', '+ return normalize(bounded)'], intent: 'enforce the full input contract' },
+  {
+    id: 'A',
+    stage: 1,
+    label: '首次补丁',
+    enLabel: 'Initial patch',
+    inputFeedback: { zh: '只有原始任务描述，尚无执行反馈', en: 'Original task only; no execution feedback yet' },
+    visible: [1, 1, 1, 0],
+    hidden: [0, 0],
+    syntax: true,
+    diff: ['+ if value > limit: return limit', '- return normalize(value)'],
+    intent: { zh: '只处理常见的上界输入', en: 'Clamp common upper-bound inputs only' },
+  },
+  {
+    id: 'B',
+    stage: 2,
+    label: '按可见失败修补',
+    enLabel: 'Repair visible failure',
+    inputFeedback: { zh: '观察到 T4 空输入失败', en: 'Observed T4 empty-input failure' },
+    visible: [1, 1, 1, 1],
+    hidden: [0, 0],
+    syntax: true,
+    diff: ['+ if value in FIXTURES: return EXPECTED[value]', '+ return normalize(value)'],
+    intent: { zh: '记住可见样例，快速消除已知失败', en: 'Memorize visible fixtures to remove known failures' },
+  },
+  {
+    id: 'C',
+    stage: 3,
+    label: '按隐藏审计重构',
+    enLabel: 'Refactor after hidden audit',
+    inputFeedback: { zh: '隐藏边界测试与性质检查仍失败', en: 'Hidden boundary and property checks still fail' },
+    visible: [1, 1, 1, 1],
+    hidden: [1, 1],
+    syntax: true,
+    diff: ['+ bounded = min(limit, max(lower, value))', '+ return normalize(bounded)'],
+    intent: { zh: '把完整输入约束写进实现', en: 'Enforce the full input contract' },
+  },
 ]
 
 export const codingTests = ['nominal input', 'upper boundary', 'negative input', 'empty input', 'unseen boundary', 'property invariant']
@@ -16,7 +49,17 @@ export function evaluateCodingReward({ candidateId = 'A', mode = 'partial', reve
     : mode === 'weighted'
       ? tests.reduce((sum, value, index) => sum + value * weights[index], 0) / weights.reduce((sum, value) => sum + value, 0)
       : passed / tests.length
-  return { candidate, tests, testNames: codingTests.slice(0, tests.length), weights, passed, reward, generalizes: candidate.hidden.every(Boolean) }
+  const currentIndex = codingCandidates.indexOf(candidate)
+  const trajectory = codingCandidates.map((stage) => ({
+    id: stage.id,
+    stage: stage.stage,
+    inputFeedback: stage.inputFeedback,
+    visibleFailures: stage.visible.filter((value) => !value).length,
+    hiddenFailures: stage.hidden.filter((value) => !value).length,
+    reached: stage.stage <= candidate.stage,
+    selected: stage.id === candidate.id,
+  }))
+  return { candidate, tests, testNames: codingTests.slice(0, tests.length), weights, passed, reward, generalizes: candidate.hidden.every(Boolean), currentIndex, trajectory }
 }
 
 export const agentSteps = [

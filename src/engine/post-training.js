@@ -1,13 +1,40 @@
 const sigmoid = (value) => 1 / (1 + Math.exp(-value))
 
-export function evaluateDpo({ beta = 0.1, contrast = 0.54, chosenShift = contrast / 2, rejectedShift = -contrast / 2 } = {}) {
+export function evaluateDpo({ beta = 0.1, contrast = 0.54, chosenShift = contrast / 2, rejectedShift = -contrast / 2, learningRate = 0.5 } = {}) {
   const pair = {
     chosen: { referenceLogp: -1.94, currentLogp: -1.94 + chosenShift },
     rejected: { referenceLogp: -2.16, currentLogp: -2.16 + rejectedShift },
   }
   const margin = beta * (chosenShift - rejectedShift)
   const preferenceProbability = sigmoid(margin)
-  return { pair, chosenShift, rejectedShift, margin, preferenceProbability, loss: -Math.log(preferenceProbability) }
+  const loss = -Math.log(preferenceProbability)
+  const updateMagnitude = learningRate * beta * (1 - preferenceProbability)
+  const nextChosenShift = chosenShift + updateMagnitude
+  const nextRejectedShift = rejectedShift - updateMagnitude
+  const nextMargin = beta * (nextChosenShift - nextRejectedShift)
+  const nextPreferenceProbability = sigmoid(nextMargin)
+  const nextLoss = -Math.log(nextPreferenceProbability)
+  return {
+    pair,
+    chosenShift,
+    rejectedShift,
+    margin,
+    preferenceProbability,
+    loss,
+    learningRate,
+    gradients: {
+      chosen: -beta * (1 - preferenceProbability),
+      rejected: beta * (1 - preferenceProbability),
+    },
+    updateMagnitude,
+    after: {
+      chosenShift: nextChosenShift,
+      rejectedShift: nextRejectedShift,
+      margin: nextMargin,
+      preferenceProbability: nextPreferenceProbability,
+      loss: nextLoss,
+    },
+  }
 }
 
 export function evaluateGrpo({ rewards = [0.2, 0.9, 0.55, -0.05], clip = 0.2, klBeta = 0.08 } = {}) {

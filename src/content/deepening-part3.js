@@ -112,11 +112,11 @@ export const policyGradientDeepeningZh = [
     handoff: '把概率导数写成概率乘对数概率导数后，这个加权和才可以直接用策略样本估计。',
   },
   {
-    id: 'theorem-to-samples', kicker: '从定理到采样', title: 'log-derivative trick 将求和改写为 on-policy 期望',
-    paragraphs: ['恒等式 ∇π=π∇logπ 把原本缺少采样概率的导数补成 π 加权。于是从当前策略抽到的状态—动作对，可以用 score function 乘价值构成 Monte Carlo 梯度估计。', 'score 的动作期望为零，这既解释了归一化约束，也证明任何不依赖当前动作的 baseline 在期望中消失。baseline 改变方差和单样本方向强度，却不改变期望梯度。'],
+    id: 'theorem-to-samples', kicker: '一个可计算的后果', title: '同样的正优势在低概率动作上产生更大的改变量',
+    paragraphs: ['前面的推导已经把策略梯度写成“对数概率的敏感度 × 优势”。现在只看它对一次样本意味着什么：被选动作越不常见，对数概率对参数越敏感；被选动作已经接近必然时，同样的正优势只会带来较小修正。', '因此，单步更新的强弱不只由回报决定，还由当前策略已经分给该动作多少概率决定。下表把这个可检验的后果固定下来，随后实验会把两动作示例扩展成三个动作之间的概率重新分配。'],
     formulas: [String.raw`\nabla_\theta\pi_\theta(a\mid s)=\pi_\theta(a\mid s)\nabla_\theta\log\pi_\theta(a\mid s)`, String.raw`\mathbb E_{A\sim\pi_\theta}[\nabla_\theta\log\pi_\theta(A\mid s)]=\nabla_\theta\sum_a\pi_\theta(a\mid s)=0`, String.raw`\nabla J(\theta)=\mathbb E[\nabla\log\pi_\theta(A_t\mid S_t)q^{\pi}(S_t,A_t)]`],
     example: example('同一正 advantage 在不同概率下的作用', '两动作 softmax 中，被选动作的 score 大小为 1−π。', ['被选动作概率', 'score 大小', '正 advantage 的更新'], [['0.1', '0.9', '较强上调'], ['0.5', '0.5', '中等上调'], ['0.9', '0.1', '较弱上调']]),
-    handoff: '用完整 return 替代未知 q^π，就得到 REINFORCE。',
+    handoff: '要把这个单样本贡献变成可运行算法，还需要用实际轨迹回报替代未知的动作价值。',
   },
   {
     id: 'reinforce-complete', kicker: '完整算法', title: 'REINFORCE 先收集轨迹，再反向计算各时刻的 return',
@@ -137,11 +137,11 @@ export const policyGradientDeepeningEn = [
     handoff: 'The log-derivative identity turns the weighted sum into an expectation that policy samples can estimate.',
   },
   {
-    id: 'theorem-to-samples', kicker: 'Theorem to samples', title: 'The log-derivative trick turns the sum into an on-policy expectation',
-    paragraphs: ['The identity ∇π=π∇logπ supplies exactly the π weighting used by sampling. A state-action pair from the current policy can therefore contribute score times value.', 'The expected score over actions is zero. This reflects normalization and proves that any action-independent baseline vanishes in expectation while changing variance.'],
+    id: 'theorem-to-samples', kicker: 'A computable consequence', title: 'The same positive advantage changes a rare action more than an already likely one',
+    paragraphs: ['The derivation above has already expressed the policy gradient as log-probability sensitivity times advantage. For one sample, the consequence is concrete: a selected action with low current probability has a larger score, while an action that is already nearly certain receives a smaller correction from the same positive advantage.', 'Update strength therefore depends on both return and the probability mass the policy already assigns. The table fixes this testable consequence; the experiment then extends the two-action example to probability redistribution across three actions.'],
     formulas: [String.raw`\nabla_\theta\pi_\theta(a\mid s)=\pi_\theta(a\mid s)\nabla_\theta\log\pi_\theta(a\mid s)`, String.raw`\mathbb E_{A\sim\pi_\theta}[\nabla_\theta\log\pi_\theta(A\mid s)]=\nabla_\theta\sum_a\pi_\theta(a\mid s)=0`, String.raw`\nabla J(\theta)=\mathbb E[\nabla\log\pi_\theta(A_t\mid S_t)q^{\pi}(S_t,A_t)]`],
     example: example('The same positive advantage at different probabilities', 'For a two-action softmax, the selected-action score magnitude is 1−π.', ['Selected probability', 'Score magnitude', 'Positive-advantage effect'], [['0.1', '0.9', 'Strong increase'], ['0.5', '0.5', 'Medium increase'], ['0.9', '0.1', 'Small increase']]),
-    handoff: 'Replacing unknown q^π with a complete return produces REINFORCE.',
+    handoff: 'A runnable algorithm still needs to replace the unknown action value with the observed trajectory return.',
   },
   {
     id: 'reinforce-complete', kicker: 'Complete algorithm', title: 'REINFORCE collects a trajectory before computing returns backward',
@@ -155,22 +155,22 @@ export const policyGradientDeepeningEn = [
 
 export const actorCriticDeepeningZh = [
   {
-    id: 'qac-to-baseline', kicker: '从 Q Actor–Critic 开始', title: 'State baseline 保持期望梯度并降低方差',
-    paragraphs: ['最直接的 Q Actor–Critic 用估计 q(S,A) 加权 score。问题是同一状态下所有动作共享的回报波动也会放大梯度。减去只依赖状态的 b(S)，其 score 乘积在动作期望下严格为零。', '取 b=v^π 后，权重变成 advantage。方差最小的标量 baseline 一般还会按 score 的平方加权，并不总严格等于 v^π；state value 是易学习且通常有效的近似。'],
+    id: 'qac-to-baseline', kicker: '先看最直接的方案', title: '动作价值仍会把状态层面的共同波动带入策略更新',
+    paragraphs: ['最直接的 Q Actor–Critic 让 Critic 估计当前动作的价值，再用它决定 Actor 更新的强弱。这个接口比整条轨迹结束后才更新及时，但同一状态下所有动作共享的回报起伏仍会进入梯度。', '要比较“这个动作是否比该状态下的通常选择更好”，需要减去一个只依赖状态、与当前动作无关的参照值。这样既去掉共同起伏，又不改变期望更新方向；下面的推导说明为什么这个减法成立，并把它连接到一步时序差分误差。'],
     formulas: [String.raw`\mathbb E[\nabla\log\pi(A\mid S)b(S)\mid S]=0`, String.raw`A^{\pi}(s,a)=q^{\pi}(s,a)-v^{\pi}(s)`, String.raw`b^*(s)=\frac{\mathbb E[q^{\pi}(s,A)\lVert\nabla\log\pi(A\mid s)\rVert^2]}{\mathbb E[\lVert\nabla\log\pi(A\mid s)\rVert^2]}`],
     theorem: theorem('任何不依赖当前动作的 baseline 都保持策略梯度期望。', '证明只使用策略概率归一化；baseline 可以依赖状态或时间，但若依赖当前动作，消去通常不再成立。', [String.raw`b\perp A_t\mid S_t`, String.raw`\sum_a\pi_\theta(a\mid s)=1`]),
-    handoff: '还需要一个及时、可学习的 advantage 样本；一步 TD error 正好满足这一接口。',
+    handoff: '问题已经转化为：怎样构造一个不引入偏移、又能在每一步得到的相对价值信号。',
   },
   {
-    id: 'a2c-shared-transition', kicker: '同一 transition，两种梯度', title: 'TD error 同时连接 Critic 残差与 Actor advantage',
-    paragraphs: ['Critic 用 δ 衡量当前 value 与一步 bootstrap target 的差，因此沿 ∇V 更新参数。给定状态和动作，如果 V=v^π，那么 δ 的条件期望恰好等于 q^π−v^π，也就是 advantage。', '两次更新共享标量 δ，却绝不能共享梯度对象：Critic 对 value 求导，Actor 对 log policy 求导。实现中把 advantage 对 Actor stop-gradient，可避免 Actor loss 意外反向修改 Critic。'],
+    id: 'a2c-shared-transition', kicker: '把推导落实为一步训练', title: '一次环境转移先修正价值估计，再更新动作概率',
+    paragraphs: ['推导得到的时序差分误差可以直接落到训练顺序：观察一条转移，先组成带终止掩码的一步目标，再计算误差并分别更新两个网络。这样每个环境步都产生学习信号，不必等整条轨迹结束。', '共享的是误差这个数值，不是计算图。Critic 对状态价值求导；Actor 对所选动作的对数概率求导，并把误差视作不参与反向传播的权重。若混用梯度对象，Actor 的损失会意外改动 Critic。'],
     formulas: [String.raw`\delta_t=R_{t+1}+\gamma V_\phi(S_{t+1})-V_\phi(S_t)`, String.raw`\mathbb E[\delta_t\mid S_t=s,A_t=a]=A^{\pi}(s,a)\quad\text{if }V_\phi=v^{\pi}`, String.raw`\Delta\phi\propto\delta_t\nabla_\phi V_\phi(S_t),\qquad\Delta\theta\propto\operatorname{stopgrad}(\delta_t)\nabla_\theta\log\pi_\theta(A_t\mid S_t)`],
     pseudocodeTitle: 'One-step Advantage Actor–Critic',
     pseudocode: ['初始化 Actor 参数 θ 与 Critic 参数 φ', '按 πθ 从状态 S 采样 A，并观察 R、S′、done', '计算 target y=R+γ(1−done)Vφ(S′)', '计算 δ=y−Vφ(S)', '用 value loss 或 δ∇Vφ 更新 Critic', '用 stop-gradient(δ)∇θ log πθ(A|S) 更新 Actor', '令 S←S′；终止时重置环境并继续采样'],
     handoff: '当 rollout 一次收集多步时，可以用 n-step return 或 GAE 在偏差与方差之间连续调节。',
   },
   {
-    id: 'off-policy-and-deterministic', kicker: '超出基础 A2C', title: 'Off-policy 修正与 deterministic policy gradient 解决的是两类不同问题',
+    id: 'off-policy-and-deterministic', kicker: '超出基础 A2C', title: '行为策略修正与确定性策略梯度针对不同问题',
     paragraphs: ['若动作来自 behavior policy b，随机策略梯度需用概率比 ρ=π/b 修正动作分布。大 ratio 会放大方差，裁剪或 trust region 因此成为现代策略优化的核心。', '连续动作下，确定性策略直接输出动作 μθ(s)。deterministic policy gradient 不使用 log probability，而是把 Critic 对动作的梯度经策略 Jacobian 反传给 Actor；它仍依赖 off-policy 状态分布与准确的 Q。'],
     formulas: [String.raw`\rho_t=\frac{\pi_\theta(A_t\mid S_t)}{b(A_t\mid S_t)}`, String.raw`\nabla_\theta J\approx\mathbb E_{s\sim d^b}\left[\nabla_\theta\mu_\theta(s)\nabla_a Q^{\mu}(s,a)\rvert_{a=\mu_\theta(s)}\right]`],
     example: example('三种 Actor 更新接口', '它们使用不同的数据契约，不能只替换一行公式。', ['方法', 'Actor 权重或方向', '数据要求'], [['On-policy A2C', 'TD / advantage', '当前策略 rollout'], ['Off-policy stochastic AC', 'importance-weighted advantage', 'behavior 概率可计算且覆盖 target'], ['Deterministic AC', 'Critic 的 action gradient', '连续动作与可微 Q']]),
@@ -180,15 +180,15 @@ export const actorCriticDeepeningZh = [
 
 export const actorCriticDeepeningEn = [
   {
-    id: 'qac-to-baseline', kicker: 'Begin with Q Actor–Critic', title: 'A state baseline preserves expected gradient while reducing variance',
-    paragraphs: ['Basic Q Actor–Critic weights the score by estimated q(S,A), including fluctuations shared by all actions at a state. Subtracting b(S) contributes exactly zero in expectation over actions.', 'With b=v^π the weight becomes advantage. The minimum-variance scalar baseline generally includes score-norm weighting, so state value is an effective learnable approximation rather than a universal exact optimum.'],
+    id: 'qac-to-baseline', kicker: 'Begin with the direct approach', title: 'Weighting by action value still passes shared fluctuations to the actor',
+    paragraphs: ['Basic Q Actor–Critic lets the critic estimate the selected action value and uses it to scale the actor update. This is timelier than waiting for a complete trajectory, but return fluctuations shared by every action at a state still enter the gradient.', 'The useful comparison is whether the action is better than the usual choice at that state. Subtracting a reference that depends on the state but not the current action removes the shared fluctuation without changing the expected update. The derivation below proves that cancellation and connects the result to one-step temporal-difference error.'],
     formulas: [String.raw`\mathbb E[\nabla\log\pi(A\mid S)b(S)\mid S]=0`, String.raw`A^{\pi}(s,a)=q^{\pi}(s,a)-v^{\pi}(s)`, String.raw`b^*(s)=\frac{\mathbb E[q^{\pi}(s,A)\lVert\nabla\log\pi(A\mid s)\rVert^2]}{\mathbb E[\lVert\nabla\log\pi(A\mid s)\rVert^2]}`],
     theorem: theorem('Any baseline independent of the current action preserves expected policy gradient.', 'The proof uses only probability normalization. A current-action-dependent baseline generally does not cancel.', [String.raw`b\perp A_t\mid S_t`, String.raw`\sum_a\pi_\theta(a\mid s)=1`]),
-    handoff: 'A timely learnable advantage sample is still needed; one-step TD error fits that interface.',
+    handoff: 'The remaining problem is to construct an unbiased relative-value signal available after every transition.',
   },
   {
-    id: 'a2c-shared-transition', kicker: 'One transition, two gradients', title: 'TD error connects critic residual and actor advantage',
-    paragraphs: ['The critic compares its value to a one-step bootstrap target and updates along ∇V. If V equals v^π, the conditional expected TD error given state and action equals q^π−v^π.', 'Both updates share scalar δ but not the differentiated function. The critic differentiates value; the actor differentiates log policy. Stop-gradient on advantage prevents the actor loss from accidentally changing the critic.'],
+    id: 'a2c-shared-transition', kicker: 'Turn the derivation into one training step', title: 'One transition corrects the critic before handing the same error to the actor',
+    paragraphs: ['The temporal-difference error maps directly to an execution order: observe one transition, form a termination-masked bootstrap target, compute the error, and update the two networks separately. Every environment step now yields a learning signal rather than waiting for the trajectory to end.', 'Only the scalar error is shared, not the computation graph. The critic differentiates state value; the actor differentiates the selected action log probability and treats the error as a stopped-gradient weight. Mixing those gradient objects would let the actor loss alter the critic accidentally.'],
     formulas: [String.raw`\delta_t=R_{t+1}+\gamma V_\phi(S_{t+1})-V_\phi(S_t)`, String.raw`\mathbb E[\delta_t\mid S_t=s,A_t=a]=A^{\pi}(s,a)\quad\text{if }V_\phi=v^{\pi}`, String.raw`\Delta\phi\propto\delta_t\nabla_\phi V_\phi(S_t),\qquad\Delta\theta\propto\operatorname{stopgrad}(\delta_t)\nabla_\theta\log\pi_\theta(A_t\mid S_t)`],
     pseudocodeTitle: 'One-step Advantage Actor–Critic',
     pseudocode: ['Initialize actor θ and critic φ', 'Sample A from πθ at S and observe R, S′, done', 'Compute y=R+γ(1−done)Vφ(S′)', 'Compute δ=y−Vφ(S)', 'Update critic with value loss or δ∇Vφ', 'Update actor with stop-gradient(δ)∇θ log πθ(A|S)', 'Set S←S′; reset at termination and continue'],

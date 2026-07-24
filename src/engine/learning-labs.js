@@ -478,15 +478,46 @@ export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, se
   }
 }
 
-export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, baseline = 0 } = {}) {
+export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, baseline = 0, advantage } = {}) {
   const returns = [2.4, 1.7, 0.6, -0.2]
-  const selectedReturn = returns[Math.max(0, Math.min(returns.length - 1, selectedStep))]
-  const probability = 1 / (1 + Math.exp(-theta))
-  const weight = selectedReturn - baseline
-  const gradient = (1 - probability) * weight
-  const nextTheta = theta + alpha * gradient
-  const nextProbability = 1 / (1 + Math.exp(-nextTheta))
-  return { series: [probability, nextProbability], probability, nextProbability, gradient, weight, nextTheta, selectedReturn, returns, selectedStep }
+  const boundedStep = Math.max(0, Math.min(returns.length - 1, selectedStep))
+  const selectedReturn = returns[boundedStep]
+  const actionIndices = [0, 1, 2, 0]
+  const actionIndex = actionIndices[boundedStep]
+  const logits = [0.35, -0.1, -0.6]
+  logits[actionIndex] = theta
+  const normalize = (values) => {
+    const maximum = Math.max(...values)
+    const exponentials = values.map((value) => Math.exp(value - maximum))
+    const total = exponentials.reduce((sum, value) => sum + value, 0)
+    return exponentials.map((value) => value / total)
+  }
+  const probabilities = normalize(logits)
+  const weight = Number.isFinite(advantage) ? advantage : selectedReturn - baseline
+  const gradientVector = probabilities.map((probabilityValue, index) => weight * ((index === actionIndex ? 1 : 0) - probabilityValue))
+  const nextLogits = logits.map((value, index) => value + alpha * gradientVector[index])
+  const nextProbabilities = normalize(nextLogits)
+  const probability = probabilities[actionIndex]
+  const nextProbability = nextProbabilities[actionIndex]
+  const gradient = gradientVector[actionIndex]
+  return {
+    series: [probability, nextProbability],
+    probability,
+    nextProbability,
+    probabilities,
+    nextProbabilities,
+    logits,
+    nextLogits,
+    gradient,
+    gradientVector,
+    weight,
+    nextTheta: nextLogits[actionIndex],
+    selectedReturn,
+    returns,
+    selectedStep: boundedStep,
+    actionIndex,
+    actionIndices,
+  }
 }
 
 export function runActorCritic({ reward = 1, gamma = 0.9, value = 2.2, nextValue = 2.8, actorAlpha = 0.12, criticAlpha = 0.18, ratio = 1 } = {}) {

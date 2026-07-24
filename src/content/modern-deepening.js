@@ -3,7 +3,7 @@ const example = (title, caption, headers, rows) => ({ title, caption, headers, r
 
 export const ppoDeepeningZh = [
   {
-    id: 'ratio-to-clipping-cases', kicker: '逐样本读懂裁剪', title: 'PPO 的 min 与 clip 必须按 advantage 符号分四种情况理解',
+    id: 'ratio-to-clipping-cases', kicker: '逐样本读懂裁剪', title: '裁剪目标必须结合优势符号分四种情况理解',
     paragraphs: ['概率比 r 衡量新策略对旧动作的相对概率。正 advantage 希望 r 增大，但超过 1+ε 后继续增大不再获益；负 advantage 希望 r 减小，但低于 1−ε 后继续减小不再获益。', '另一侧并不裁剪“坏方向”：正 advantage 的 r 过小、负 advantage 的 r 过大仍会降低目标并产生纠正梯度。PPO 因此不是简单把所有 ratio 截到区间，而是截断过度改进的乐观收益。'],
     formulas: [String.raw`\ell_t(\theta)=\min\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)`, String.raw`\widehat A_t>0:\ r_t>1+\epsilon\ \text{is capped}`, String.raw`\widehat A_t<0:\ r_t<1-\epsilon\ \text{is capped}`],
     example: example('四个样本的裁剪判断', '令 ε=0.2；先看 advantage 符号，再看对应边界。', ['Advantage', 'Ratio', '结果'], [['+2', '1.35', '在上边界裁剪'], ['+2', '0.70', '不裁剪，保留纠正'], ['−2', '0.70', '在下边界裁剪'], ['−2', '1.35', '不裁剪，保留惩罚']]),
@@ -11,13 +11,13 @@ export const ppoDeepeningZh = [
     handoff: '要安全复用一批旧数据，还必须说明 advantage、old log-probability 和 minibatch epoch 在何时冻结。',
   },
   {
-    id: 'full-objective', kicker: '完整损失', title: '实际 PPO 同时训练 policy 与 value，并用 entropy 保持探索',
+    id: 'full-objective', kicker: '完整损失', title: '完整 PPO 同时训练策略与价值，并用熵维持探索',
     paragraphs: ['裁剪目标只定义 Actor 项。Critic 用 return 或 GAE 对应的 value target 回归；entropy bonus 防止策略过早塌缩。三项共享 rollout，但参数和 stop-gradient 边界不同。', '优势通常在 batch 内标准化，这改变优化尺度但不改变符号排序。value clipping、gradient clipping 和 KL early stop 是额外稳定机制，不能与 policy ratio clipping 混为一件事。'],
     formulas: [String.raw`L(\theta,\phi)=L^{\mathrm{CLIP}}(\theta)-c_v\,\mathbb E[(V_\phi-\widehat R)^2]+c_e\,\mathbb E[\mathcal H(\pi_\theta)]`, String.raw`\widehat A\leftarrow\frac{\widehat A-\operatorname{mean}(\widehat A)}{\operatorname{std}(\widehat A)+\varepsilon_{\mathrm{num}}}`],
     handoff: '完整算法还需要严格区分 rollout 阶段与优化阶段。',
   },
   {
-    id: 'ppo-complete-loop', kicker: '完整训练循环', title: 'PPO 在有限 epoch 后刷新 rollout batch',
+    id: 'ppo-complete-loop', kicker: '完整训练循环', title: 'PPO 在有限轮优化后丢弃旧批次并重新采样',
     paragraphs: ['先复制 θ_old，再用它收集固定长度 rollout，保存 observation、action、reward、done、old log-probability 与 old value。反向计算 GAE 和 value target 后，才将样本打乱做 K 轮 minibatch。', '每次梯度步都重算新 log-probability 与 value，却始终使用保存的 old log-probability、advantage 和 target。K 太大时 ratio、KL 与 clip fraction 上升，旧优势不再代表新策略的数据分布。'],
     formulas: [String.raw`\widehat A_t=\delta_t+\gamma\lambda(1-d_{t+1})\widehat A_{t+1}`, String.raw`\widehat R_t=\widehat A_t+V_{\mathrm{old}}(S_t)`],
     pseudocodeTitle: 'PPO with GAE and minibatch epochs',

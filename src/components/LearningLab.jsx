@@ -80,9 +80,9 @@ const configs = {
   },
   policygradient: {
     formula: String.raw`\theta\leftarrow\theta+\alpha\,\nabla_\theta\log\pi_\theta(A\mid S)\,(G-b)`,
-    controls: [['theta', -2.5, 2.5, 0.1], ['baseline', -2, 2, 0.1]],
-    labels: { zh: ['当前 logit θ', 'Baseline b'], en: ['Current logit θ', 'Baseline b'] },
-    metrics: (r, zh) => [[zh ? '更新前概率' : 'Probability before', r.probability], [zh ? '更新后概率' : 'Probability after', r.nextProbability], [zh ? '样本梯度' : 'Sample gradient', r.gradient]],
+    controls: [['theta', -2.5, 2.5, 0.1], ['alpha', 0.02, 0.5, 0.02], ['baseline', -2, 2, 0.1]],
+    labels: { zh: ['所选动作 logit θ', '步长 α', '状态基线 b'], en: ['Selected-action logit θ', 'Step size α', 'State baseline b'] },
+    metrics: (r, zh) => [[zh ? '所选动作：更新前' : 'Selected: before', r.probability], [zh ? '所选动作：更新后' : 'Selected: after', r.nextProbability], [zh ? '概率总和' : 'Probability total', r.nextProbabilities.reduce((sum, value) => sum + value, 0)]],
   },
   actorcritic: {
     formula: String.raw`\delta=R+\gamma V_\phi(S')-V_\phi(S),\quad\theta\leftarrow\theta+\alpha_\theta\rho\,\delta\nabla_\theta\log\pi_\theta(A\mid S)`,
@@ -231,21 +231,32 @@ function DqnEvidenceStage({ params, result, zh }) {
 }
 
 function PolicyGradientEvidenceStage({ params, result, zh, set }) {
+  const actionLabels = zh ? ['上移', '右移', '等待'] : ['Up', 'Right', 'Wait']
   return (
     <div className="pg-evidence-stage">
       <section className="pg-trajectory">
         <header><span>{zh ? '选择一个时间步，检查其回报权重' : 'Select a time step and inspect its return weight'}</span><small>{zh ? '每个动作只使用其后的奖励' : 'Each action uses only later rewards'}</small></header>
         <div>{result.returns.map((value, index) => <button type="button" className={result.selectedStep === index ? 'is-selected' : ''} onClick={() => set('selectedStep', index)} key={index}>
           <b><MathFormula latex={String.raw`t=${index}`} /></b>
-          <span><MathFormula latex={String.raw`A_${index}=a_${index + 1}`} /></span>
+          <span><MathFormula latex={String.raw`A_${index}=a_${result.actionIndices[index] + 1}`} /></span>
           <span><MathFormula latex={String.raw`G_${index}=${value}`} /></span>
           <span><MathFormula latex={String.raw`G_${index}-b=${(value - params.baseline).toFixed(2)}`} /></span>
         </button>)}</div>
       </section>
       <aside className="pg-gradient-ledger">
-        <span>{zh ? `时间步 ${result.selectedStep} 的概率移动` : `Probability movement at step ${result.selectedStep}`}</span>
+        <span>{zh ? `时间步 ${result.selectedStep}：三个动作重新分配概率` : `Step ${result.selectedStep}: probability redistributes across three actions`}</span>
         <MathFormula block latex={String.raw`\nabla_\theta\log\pi_\theta(A_t\mid S_t)(G_t-b)`} />
-        <div><strong>{result.probability.toFixed(3)}</strong><i>→</i><strong>{result.nextProbability.toFixed(3)}</strong></div>
+        <div className="pg-probability-ledger">
+          {result.probabilities.map((probability, index) => (
+            <article className={index === result.actionIndex ? 'is-selected' : ''} key={actionLabels[index]}>
+              <header>
+                <span>{actionLabels[index]}{index === result.actionIndex ? (zh ? '（本次选择）' : ' (sampled)') : ''}</span>
+                <strong>{probability.toFixed(3)} → {result.nextProbabilities[index].toFixed(3)}</strong>
+              </header>
+              <div aria-hidden="true"><i style={{ width: `${probability * 100}%` }} /><b style={{ width: `${result.nextProbabilities[index] * 100}%` }} /></div>
+            </article>
+          ))}
+        </div>
         <p>{result.weight >= 0 ? (zh ? '结果高于基线，所选动作概率上升。' : 'Outcome exceeds baseline, so sampled-action probability rises.') : (zh ? '结果低于基线，所选动作概率下降。' : 'Outcome falls below baseline, so sampled-action probability falls.')}</p>
       </aside>
     </div>
