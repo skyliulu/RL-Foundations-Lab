@@ -57,6 +57,7 @@ export default function MonteCarloLab({ lang, content }) {
         <div><span>{content.figure}</span><h2>{zh ? '同一批经验，三种算法怎样逐步修复前一种方法？' : 'How does each algorithm repair the previous one?'}</h2><p><MathText>{content.instruction}</MathText></p></div>
         <button type="button" onClick={() => { setParams(defaults); setSampleSlot(2) }}>{zh ? '恢复基线' : 'Reset'}</button>
       </header>
+      <div className="experiment-environment"><span>{zh ? '共享的 5×5 网格世界' : 'Shared 5×5 grid world'}</span><MathFormula latex={String.raw`\tau=(S_0,A_0,R_1,\ldots,S_T)`} /><small>{zh ? '三种 Monte Carlo 变体都从同一个环境采集完整 episode；变化的是起点、经验复用方式与探索策略。' : 'All three Monte Carlo variants collect complete episodes from the same environment; starts, data reuse, and exploration are what change.'}</small></div>
 
       <div className="mc-variant-switch" role="group" aria-label={zh ? '算法变体' : 'Algorithm variant'}>
         {['basic', 'exploring', 'epsilon'].map((id, index) => (
@@ -112,7 +113,7 @@ export default function MonteCarloLab({ lang, content }) {
 
         {evidenceView === 'episode' && <aside className="mc-update-panel">
           <header><span><MathText>{zh ? '该 episode 的 Q 更新' : 'Q updates in this episode'}</MathText></span><small>{sample.updates.length} {zh ? '次更新' : 'updates'}</small></header>
-          <MathFormula block latex={String.raw`\begin{aligned}Q(S_t,A_t)&\leftarrow Q(S_t,A_t)\\&\quad+\frac{1}{N(S_t,A_t)}\\&\qquad\cdot\left(G_t-Q(S_t,A_t)\right)\end{aligned}`} />
+          <MathFormula latex={String.raw`Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\frac{G_t-Q(S_t,A_t)}{N(S_t,A_t)}`} />
           <div className="mc-update-list">
             {sample.updates.slice(0, 7).map((update) => <div key={`${update.time}-${update.state}-${update.action}`}><span>{update.state} · {ACTIONS[update.action].arrow}</span><strong><MathFormula latex={String.raw`${format(update.before)}\rightarrow${format(update.after)}`} /></strong><small><MathFormula latex={String.raw`G=${format(update.returnValue)}\;\cdot\;N=${update.visits}`} /></small></div>)}
           </div>

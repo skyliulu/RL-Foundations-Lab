@@ -48,12 +48,13 @@ export default function PpoLab({ lang, text }) {
 
   return (
     <section className="ppo-lab">
+      <div className="experiment-environment"><span>{lang === 'zh' ? '同一条 Actor–Critic 转移' : 'One Actor–Critic transition'}</span><MathFormula latex={String.raw`s_t\xrightarrow{a_t,\,r_{t+1}}s_{t+1}`} /><small>{lang === 'zh' ? 'PPO 复用这批已采样转移，但必须记录产生动作时的旧策略概率。' : 'PPO reuses this sampled transition batch while preserving the behavior-policy probability.'}</small></div>
       <div className="ac-bridge" aria-label="Actor Critic loop">
-        <div className="ac-node actor"><small>Actor</small><strong><MathFormula latex={String.raw`\pi_\theta(a\mid s)`} /></strong><span>{lang === 'zh' ? '产生动作概率' : 'action probabilities'}</span></div>
+        <div className="ac-node actor"><small>Actor</small><strong><MathFormula latex={String.raw`\pi_\theta(a\mid s)`} /></strong><span className="ac-node-copy">{lang === 'zh' ? '产生动作概率' : 'action probabilities'}</span></div>
         <div className="ac-arrow"><MathFormula latex={String.raw`a_t`} />→</div>
-        <div className="ac-node environment"><small>{lang === 'zh' ? '环境' : 'Environment'}</small><strong><MathFormula latex={String.raw`s_t\rightarrow s_{t+1}`} /></strong><MathFormula latex={String.raw`r_{t+1}`} /></div>
-        <div className="ac-arrow return-arrow"><span>TD error</span>↙</div>
-        <div className="ac-node critic"><small>Critic</small><strong><MathFormula latex={String.raw`V_\phi(s)`} /></strong><span>{lang === 'zh' ? '估计 baseline' : 'estimates baseline'}</span></div>
+        <div className="ac-node environment"><small>{lang === 'zh' ? '环境' : 'Environment'}</small><strong><MathFormula latex={String.raw`s_t\rightarrow s_{t+1}`} /></strong><MathFormula className="ac-node-reward" latex={String.raw`r_{t+1}`} /></div>
+        <div className="ac-arrow return-arrow"><span className="ac-arrow-label">TD error</span>↙</div>
+        <div className="ac-node critic"><small>Critic</small><strong><MathFormula latex={String.raw`V_\phi(s)`} /></strong><span className="ac-node-copy">{lang === 'zh' ? '估计 baseline' : 'estimates baseline'}</span></div>
         <div className="advantage-chip"><small>Advantage</small><strong><MathFormula latex={String.raw`\widehat{A}_t=\widehat{Q}_t-V_\phi(s_t)`} /></strong></div>
       </div>
       <p className="bridge-copy"><MathText>{text.ppo.acBridge}</MathText></p>

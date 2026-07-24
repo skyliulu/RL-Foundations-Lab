@@ -108,11 +108,11 @@ test('desktop reading width and long equations avoid unnecessary inner scrollbar
   assert.match(styles, /\.learning-lab-stage\s*\{[^}]*minmax\(410px,\.82fr\)/)
   assert.match(styles, /\.mc-stage\s*\{[^}]*minmax\(250px,\.85fr\)/)
   assert.doesNotMatch(styles, /\.return-formula-live\s*\{[^}]*white-space:\s*nowrap/)
-  assert.match(styles, /\.math-formula \.katex-display\s*\{[^}]*overflow:\s*visible/)
+  assert.match(styles, /\.math-formula > \.katex-display\s*\{[^}]*overflow:\s*visible/)
   assert.match(styles, /div\.math-formula\s*\{[^}]*overflow-x:\s*auto/)
   assert.match(returns, /visibleReturnTerms\.length \/ 4/)
   assert.match(returns, /\\begin\{aligned\}G_0&=/)
-  assert.match(monteCarlo, /\\begin\{aligned\}Q\(S_t,A_t\)&\\leftarrow/)
+  assert.match(monteCarlo, /Q\(S_t,A_t\)\\leftarrow Q\(S_t,A_t\)/)
 })
 
 test('all chapter explanations use continuous article sections rather than a card grid', () => {
@@ -458,6 +458,10 @@ test('interactive structural selectors cannot restyle nested MathText or KaTeX s
   assert.doesNotMatch(styles, /\.operator-formula span\s*\{/)
   assert.doesNotMatch(styles, /\.optimality-step-actions span\s*\{/)
   assert.doesNotMatch(styles, /\.mc-update-list span\s*[,\{]/)
+  assert.match(styles, /\.ac-node > \.ac-node-copy/)
+  assert.match(styles, /\.ac-arrow > \.ac-arrow-label/)
+  assert.doesNotMatch(styles, /\.ac-node span\s*[,\{]/)
+  assert.doesNotMatch(styles, /\.ac-arrow span\s*\{/)
 })
 
 test('token diagrams use isolated layout classes and responsive overflow ownership', () => {
@@ -593,6 +597,35 @@ test('chapters 08–13 expose algorithm-specific evidence without a generic aggr
   assert.match(styles, /\.dqn-evidence-stage/)
   assert.match(styles, /\.ac-two-updates/)
   assert.match(styles, /\.learning-compact-summary/)
+})
+
+test('later experiments name their environment and keep summary evidence spatially bounded', () => {
+  const learning = read('components/LearningLab.jsx')
+  const stochastic = read('components/StochasticApproximationLab.jsx')
+  const modern = read('components/ModernExtensionLab.jsx')
+  const ppo = read('components/PpoLab.jsx')
+  const monteCarlo = read('components/MonteCarloLab.jsx')
+  const styles = read('styles.css')
+
+  assert.match(learning, /const scenarioCopy =/)
+  ;['td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic'].forEach((id) => {
+    assert.match(learning, new RegExp(`\\b${id}:\\s*\\{`), `${id} environment`)
+  })
+  assert.match(stochastic, /className="experiment-environment"/)
+  assert.match(modern, /const environmentCopy =/)
+  ;['dpo', 'grpo', 'codingrl', 'agentmdp', 'credit'].forEach((id) => {
+    assert.match(modern, new RegExp(`\\b${id}:\\s*\\{`), `${id} environment`)
+  })
+  assert.match(ppo, /className="experiment-environment"/)
+  assert.match(monteCarlo, /共享的 5×5 网格世界/)
+  assert.match(styles, /\.experiment-environment\s*\{[^}]*grid-template-columns:/)
+  assert.match(styles, /\.mc-coverage-grid\s*\{[^}]*max-width:\s*300px/)
+  assert.match(styles, /\.mc-coverage-panel\s*\{[^}]*grid-template-columns:\s*minmax\(240px,300px\)/)
+  assert.match(monteCarlo, /\\frac\{G_t-Q\(S_t,A_t\)\}\{N\(S_t,A_t\)\}/)
+  assert.match(read('components/TokenMdpLab.jsx'), /className="experiment-environment"/)
+  assert.match(read('components/SystemLab.jsx'), /className="experiment-environment"/)
+  assert.match(learning, /className="learning-summary-metrics"/)
+  assert.doesNotMatch(styles, /\.learning-compact-summary > div\s*\{/)
 })
 
 test('the return worked example remains attached to the shared course world', async () => {

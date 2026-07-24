@@ -4,6 +4,29 @@ import { buildAgentTrajectory, codingCandidates, evaluateCodingReward, evaluateC
 import MathFormula from './MathFormula.jsx'
 import MathText from './MathText.jsx'
 
+const environmentCopy = {
+  dpo: {
+    zh: ['偏好数据环境', String.raw`x\mapsto(y_w,y_l)`, '同一个 prompt 下的 chosen / rejected 回答构成一条离线偏好证据。'],
+    en: ['Preference-data environment', String.raw`x\mapsto(y_w,y_l)`, 'Chosen and rejected responses to one prompt form a single offline preference observation.'],
+  },
+  grpo: {
+    zh: ['共享 prompt 的 rollout 组', String.raw`x\mapsto\{y_1,\ldots,y_G\}`, '所有回答面对同一任务，组内奖励才具有可比较的相对含义。'],
+    en: ['Rollout group for one prompt', String.raw`x\mapsto\{y_1,\ldots,y_G\}`, 'All responses face the same task, so group-relative rewards are comparable.'],
+  },
+  codingrl: {
+    zh: ['代码仓库与测试环境', String.raw`s_t\xrightarrow{\mathrm{patch}}s_{t+1}\xrightarrow{\mathrm{tests}}o_{t+1}`, '候选补丁改变仓库状态，测试结果是环境返回的可执行观察。'],
+    en: ['Repository and test environment', String.raw`s_t\xrightarrow{\mathrm{patch}}s_{t+1}\xrightarrow{\mathrm{tests}}o_{t+1}`, 'A patch changes repository state and tests return executable observations.'],
+  },
+  agentmdp: {
+    zh: ['多轮工具环境', String.raw`(h_t,m_t)\xrightarrow{a_t^{\mathrm{tool}}}o_{t+1}`, '历史与记忆构成状态，工具调用改变环境并产生下一条观察。'],
+    en: ['Multi-turn tool environment', String.raw`(h_t,m_t)\xrightarrow{a_t^{\mathrm{tool}}}o_{t+1}`, 'History and memory define state; tool calls change the environment and return observations.'],
+  },
+  credit: {
+    zh: ['同一条 Agent 轨迹', String.raw`\tau=(s_0,a_0,o_1,\ldots,s_T)`, '四种归因方法读取同一条工具轨迹，只改变结果如何分配到各步。'],
+    en: ['One shared agent trajectory', String.raw`\tau=(s_0,a_0,o_1,\ldots,s_T)`, 'All four schemes read the same tool trajectory and change only how outcome credit is assigned.'],
+  },
+}
+
 function DpoLab({ lang }) {
   const [beta, setBeta] = useState(0.4)
   const [chosenShift, setChosenShift] = useState(0.3)
@@ -73,5 +96,6 @@ function CreditLab({ lang }) {
 }
 
 export default function ModernExtensionLab({ id, lang, content }) {
-  return <section className={`modern-extension-lab modern-${id}`}><header><span>{content.figure}</span><strong><MathText>{content.instruction}</MathText></strong></header>{id === 'dpo' && <DpoLab lang={lang} />}{id === 'grpo' && <GrpoLab lang={lang} />}{id === 'codingrl' && <CodingLab lang={lang} />}{id === 'agentmdp' && <AgentLab lang={lang} />}{id === 'credit' && <CreditLab lang={lang} />}</section>
+  const environment = environmentCopy[id][lang]
+  return <section className={`modern-extension-lab modern-${id}`}><header><span>{content.figure}</span><strong><MathText>{content.instruction}</MathText></strong></header><div className="experiment-environment"><span>{environment[0]}</span><MathFormula latex={environment[1]} /><small>{environment[2]}</small></div>{id === 'dpo' && <DpoLab lang={lang} />}{id === 'grpo' && <GrpoLab lang={lang} />}{id === 'codingrl' && <CodingLab lang={lang} />}{id === 'agentmdp' && <AgentLab lang={lang} />}{id === 'credit' && <CreditLab lang={lang} />}</section>
 }

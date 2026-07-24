@@ -44,6 +44,7 @@ export default function TokenMdpLab({ lang, content }) {
   return (
     <section className="token-mdp-lab" aria-label={content.figure}>
       <header><div><span>{content.figure}</span><p>{content.instruction}</p></div><strong>{zh ? 'Prompt：用一句话解释强化学习' : 'Prompt: Explain reinforcement learning in one sentence'}</strong></header>
+      <div className="experiment-environment"><span>{zh ? '自回归生成环境' : 'Autoregressive generation environment'}</span><MathFormula latex={String.raw`s_t=(x,y_{<t})\xrightarrow{a_t=y_t}s_{t+1}`} /><small>{zh ? 'prompt 与已生成前缀构成状态；下一个 token 是动作，EOS 或长度边界决定轨迹如何终止。' : 'The prompt and generated prefix form the state; the next token is the action, and EOS or the length limit terminates the trajectory.'}</small></div>
       <div className="token-mdp-controls">
         <fieldset><legend>{zh ? '选择一条 response' : 'Choose a response'}</legend>{options.map((item) => <button type="button" className={variant === item.id ? 'active' : ''} key={item.id} onClick={() => setVariant(item.id)}>{item.label}</button>)}</fieldset>
         <label><span>{zh ? '终局奖励' : 'Terminal reward'} <output>{number(terminalReward)}</output></span><input type="range" min="-2" max="4" step="0.25" value={terminalReward} onChange={(event) => setTerminalReward(Number(event.target.value))} /></label>

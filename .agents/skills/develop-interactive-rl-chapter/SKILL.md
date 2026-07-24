@@ -139,6 +139,9 @@ Use the rebuilt stochastic-approximation chapter as the structural reference for
 - Include a counterfactual comparison that changes one mechanism while holding the evidence stream fixed whenever randomness or data order matters.
 - Reject an experiment that answers only "what happened". The visible state must also let the reader explain why it happened and which assumption or tradeoff caused it.
 - Do not reuse a generic slider-chart-metrics shell when it hides the chapter's distinctive data flow, update timing, memory, target construction, or policy change.
+- Name the experiment's environment or data-generating process at its entry. Classical-control experiments should preserve the shared grid world's states, transitions, or trajectories; modern post-training experiments should name their actual environment, such as a prompt and response group, repository and tests, or a multi-turn tool trajectory. Do not force a decorative grid-world analogy after the mathematical object has changed.
+- Treat spatial density as part of the argument. A map, chart, formula, or control region may occupy large area only when the reader must inspect correspondingly rich evidence there. Constrain summary maps and secondary diagrams, collapse unused space, and reject large default panels whose visible state could fit clearly in a compact strip.
+- Keep formula scale proportional to teaching role inside experiments. Split intrinsically long equations into meaningful aligned rows, but do not enlarge short formulas or let default display-math margins create empty bands that dominate the evidence.
 
 ## Content-Organization Review
 
@@ -276,6 +279,7 @@ Use this shape for derivation data:
 - Traverse all chapter interactions in both languages at narrow mobile, tablet, and desktop widths. Reject any experiment root whose `scrollWidth` exceeds its `clientWidth`, unless the excess belongs to an explicit inner scroll surface whose children remain internally legible.
 - Inspect nested `MathText` and KaTeX markup against component CSS. A rule intended for a structural badge, row, or label must not match the renderer's internal spans.
 - Capture each complete interaction, not only its header or one convenient state, and inspect dense formulas, tables, action lists, and scroll surfaces at their actual rendered size.
+- For every interaction, record its named environment, experiment-root height, largest formula-wrapper height, and largest intentionally empty region at desktop and mobile widths. Reject missing environments, decorative empty bands, and summary diagrams that expand merely because the parent column is wide.
 - List the first occurrence of every chapter-specific technical term and confirm that occurrence includes a definition or local explanation.
 - Confirm required teaching content forms a coherent article without relying on generic card grids.
 - List every main-path prose block with fewer than two complete explanatory sentences. Expand or merge it unless it qualifies for one of the explicit short-block exceptions.

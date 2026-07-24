@@ -7,8 +7,8 @@ const format = (value) => Number(value).toFixed(3)
 
 function ComparisonChart({ result, selected, lang }) {
   const width = 820
-  const height = 310
-  const pad = { left: 44, right: 18, top: 22, bottom: 30 }
+  const height = 230
+  const pad = { left: 44, right: 18, top: 18, bottom: 28 }
   const all = [...result.targets, ...result.observations, ...result.decaying.series, ...result.constant.series]
   const min = Math.min(...all) - 0.4
   const max = Math.max(...all) + 0.4
@@ -83,6 +83,7 @@ export default function StochasticApproximationLab({ lang, content }) {
   return <section className="sa-lab" aria-label={content.figure}>
     <header className="sa-lab-heading"><div><span>{content.figure}</span><h2><MathText>{content.question}</MathText></h2><p><MathText>{content.instruction}</MathText></p></div><button type="button" onClick={() => { setAlpha(0.18); setNoise(1.4); setBatchSize(1); setDrifting(false); setSelected(17) }}>{zh ? '恢复基线' : 'Reset baseline'}</button></header>
     <div className="sa-prediction"><span>{zh ? '先预测' : 'Predict first'}</span><p><MathText>{content.experimentIntro}</MathText></p></div>
+    <div className="experiment-environment"><span>{zh ? '网格状态的重复回报样本' : 'Repeated returns from one grid state'}</span><MathFormula latex={String.raw`s_1\mapsto X_k=G_0^{(k)}`} /><small>{zh ? '固定策略从同一状态反复出发；每条随机轨迹给出一个带噪回报观测。' : 'A fixed policy repeatedly starts from one state; each random trajectory yields one noisy return observation.'}</small></div>
     <div className="sa-controls">
       <fieldset><legend>{zh ? '目标类型' : 'Target type'}</legend><div><button type="button" className={!drifting ? 'active' : ''} onClick={() => setDrifting(false)}>{zh ? '固定目标' : 'Stationary'}</button><button type="button" className={drifting ? 'active' : ''} onClick={() => setDrifting(true)}>{zh ? '中途漂移' : 'Mid-run drift'}</button></div></fieldset>
       <label><span>{zh ? '固定步长' : 'Constant step'} <MathFormula latex={String.raw`\alpha`} /><output>{alpha.toFixed(2)}</output></span><input type="range" min="0.04" max="0.5" step="0.01" value={alpha} onChange={(event) => setAlpha(Number(event.target.value))} /></label>

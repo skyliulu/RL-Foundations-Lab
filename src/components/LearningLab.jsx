@@ -14,6 +14,33 @@ const defaults = {
   actorcritic: { reward: 1, gamma: 0.9, value: 2.2, nextValue: 2.8, actorAlpha: 0.12, criticAlpha: 0.18, ratio: 1 },
 }
 
+const scenarioCopy = {
+  td: {
+    zh: ['共享网格世界轨迹', String.raw`s_1\rightarrow s_2\rightarrow s_2\rightarrow s_7`, '三种 target 读取同一段状态与奖励，只改变等待长度和自举位置。'],
+    en: ['Shared grid-world trajectory', String.raw`s_1\rightarrow s_2\rightarrow s_2\rightarrow s_7`, 'All three targets read the same states and rewards; only the wait and bootstrap boundary change.'],
+  },
+  control: {
+    zh: ['悬崖网格环境', String.raw`s_{\mathrm{start}}\rightarrow s_{\mathrm{goal}}`, 'Sarsa 与 Q-learning 在同一悬崖环境训练，差异来自后继动作的选择方式。'],
+    en: ['Cliff-grid environment', String.raw`s_{\mathrm{start}}\rightarrow s_{\mathrm{goal}}`, 'Sarsa and Q-learning train in one cliff world; only successor-action selection differs.'],
+  },
+  vfa: {
+    zh: ['网格状态的共享表示', String.raw`s_{11}\leftrightarrow s_{12}\leftrightarrow s_{13}`, '相邻网格状态共享特征，因此一次更新会传播到未被直接采样的邻居。'],
+    en: ['Shared representation of grid states', String.raw`s_{11}\leftrightarrow s_{12}\leftrightarrow s_{13}`, 'Neighboring grid states share features, so one update propagates beyond the sampled state.'],
+  },
+  dqn: {
+    zh: ['网格转移进入回放缓冲区', String.raw`\mathcal D=\{(s_t,a_t,r_{t+1},s_{t+1})\}`, '状态先被编码成特征，再以真实转移的形式写入 replay buffer。'],
+    en: ['Grid transitions enter replay', String.raw`\mathcal D=\{(s_t,a_t,r_{t+1},s_{t+1})\}`, 'Grid states are encoded as features and stored as observed transitions in replay.'],
+  },
+  policygradient: {
+    zh: ['一条网格策略轨迹', String.raw`s_1\xrightarrow{a_1}s_2\xrightarrow{a_2}s_7\xrightarrow{a_3}s_8`, '选择时间步后，右侧只使用该动作之后的奖励构造梯度权重。'],
+    en: ['One grid-policy trajectory', String.raw`s_1\xrightarrow{a_1}s_2\xrightarrow{a_2}s_7\xrightarrow{a_3}s_8`, 'Selecting a step uses only rewards after that action to form its gradient weight.'],
+  },
+  actorcritic: {
+    zh: ['网格中的一步转移', String.raw`s_7\xrightarrow{a=\mathrm{right},\,r=1}s_8`, '同一条转移同时产生 Critic 的价值误差与 Actor 的更新方向。'],
+    en: ['One grid transition', String.raw`s_7\xrightarrow{a=\mathrm{right},\,r=1}s_8`, 'The same transition supplies the critic error and the actor update direction.'],
+  },
+}
+
 const configs = {
   montecarlo: {
     formula: String.raw`Q(s,a)\leftarrow Q(s,a)+\frac{1}{N(s,a)}\left(G-Q(s,a)\right)`,
@@ -34,7 +61,7 @@ const configs = {
     metrics: (r) => [['TD(0)', r.td], ['n-step', r.nStep], ['Monte Carlo', r.mc]],
   },
   control: {
-    formula: String.raw`\underbrace{R+\gamma Q(S',A')}_{\text{Sarsa}}\qquad\underbrace{R+\gamma\max_a Q(S',a)}_{\text{Q-learning}}`,
+    formula: String.raw`\text{Sarsa}:Q(S',A')\qquad \text{Q-learning}:\max_a Q(S',a)`,
     controls: [['epsilon', 0.02, 0.5, 0.02], ['alpha', 0.05, 0.8, 0.05]],
     labels: { zh: ['探索率 ε', '步长 α'], en: ['Exploration ε', 'Step size α'] },
     metrics: (r, zh) => [[zh ? 'Sarsa 危险率' : 'Sarsa danger', `${(r.sarsaDanger * 100).toFixed(1)}%`], [zh ? 'Q-learning 危险率' : 'Q-learning danger', `${(r.qDanger * 100).toFixed(1)}%`], [zh ? '目标差' : 'Target gap', r.targetGap]],
@@ -260,11 +287,13 @@ export default function LearningLab({ id, lang, content }) {
   const config = configs[id]
   const result = useMemo(() => learningLabRunners[id](params), [id, params])
   const metrics = config.metrics(result, zh)
+  const scenario = scenarioCopy[id]?.[lang]
   const set = (key, value) => setParams((current) => ({ ...current, [key]: value }))
   return (
     <section className={`learning-lab learning-lab-${id}`} aria-label={content.figure}>
       <header className="learning-lab-heading"><div><span>{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div><button type="button" onClick={() => setParams(defaults[id])}>{zh ? '恢复基线' : 'Reset baseline'}</button></header>
       <div className="learning-lab-question"><span>{zh ? '本实验回答' : 'Question'}</span><strong><MathText>{content.question}</MathText></strong></div>
+      {scenario && <div className="experiment-environment"><span>{scenario[0]}</span><MathFormula latex={scenario[1]} /><small>{scenario[2]}</small></div>}
       <div className="learning-lab-controls">
         {config.controls.map(([key, min, max, step], index) => <label key={key}><span><MathText>{config.labels[lang][index]}</MathText><output>{format(params[key])}</output></span><input aria-label={config.labels[lang][index]} type="range" min={min} max={max} step={step} value={params[key]} onChange={(event) => set(key, Number(event.target.value))} /></label>)}
         {id === 'montecarlo' && <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((value) => <button type="button" key={value} className={params.visit === value ? 'active' : ''} onClick={() => set('visit', value)}>{value === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>}
@@ -272,8 +301,8 @@ export default function LearningLab({ id, lang, content }) {
       </div>
       <DedicatedLearningStage id={id} params={params} result={result} zh={zh} set={set} />
       <aside className="learning-compact-summary">
-        <MathFormula block latex={config.formula} />
-        <div>{metrics.map(([label, value]) => <span key={label}><small><MathText>{label}</MathText></small><strong>{format(value)}</strong></span>)}</div>
+        <MathFormula latex={config.formula} />
+        <div className="learning-summary-metrics">{metrics.map(([label, value]) => <span key={label}><small><MathText>{label}</MathText></small><strong>{format(value)}</strong></span>)}</div>
       </aside>
       <footer><span>{zh ? '读图提示' : 'Reading cue'}</span><p><MathText>{content.explorer.cue}</MathText></p></footer>
     </section>

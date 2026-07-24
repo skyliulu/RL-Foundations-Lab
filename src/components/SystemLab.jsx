@@ -41,6 +41,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
 
   return (
     <section className="system-lab">
+      <div className="experiment-environment"><span>{lang === 'zh' ? '语言模型 rollout 环境' : 'Language-model rollout environment'}</span><MathFormula latex={String.raw`x\xrightarrow{\pi_\theta}y_{1:T}\xrightarrow{R,\,V}\widehat A_{1:T}`} /><small>{lang === 'zh' ? '同一个 prompt 先产生 token 轨迹，再由奖励、价值与参考策略把轨迹变成可训练信号。' : 'One prompt first produces a token trajectory; reward, value, and reference models then turn it into trainable signals.'}</small></div>
       {!ppoOnly && <div className="method-switch" role="group" aria-label={lang === 'zh' ? '后训练方法' : 'Post-training method'}>
         {[['ppo', 'PPO-based RLHF'], ['dpo', 'DPO'], ['grpo', 'GRPO']].map(([id, label]) => <button type="button" key={id} className={method === id ? 'active' : ''} onClick={() => setMethod(id)}>{label}</button>)}
       </div>}
