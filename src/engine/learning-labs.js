@@ -433,31 +433,54 @@ export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, se
     { id: 6, feature: 0.94, action: 1, reward: 2, nextFeature: 1 },
   ]
   const buffer = []
-  const sampledIds = []
+  const sampledKeys = []
   const sampledFeatures = []
   const series = []
   let online = [0.15, -0.08]
   let target = [...online]
+  let lastUpdate = null
   const predict = (weights, feature, action) => weights[0] * feature + weights[1] * (action ? 1 : -1)
 
   for (let step = 0; step < steps; step += 1) {
     const observed = stream[step % stream.length]
-    buffer.push({ ...observed, time: step })
+    const stored = { ...observed, time: step, key: `${step}:${observed.id}` }
+    buffer.push(stored)
     if (buffer.length > 24) buffer.shift()
     const sampleIndex = random() < replay ? Math.floor(random() * buffer.length) : buffer.length - 1
     const sample = buffer[sampleIndex]
-    sampledIds.push(sample.id)
+    sampledKeys.push(sample.key)
     sampledFeatures.push(sample.feature)
-    const nextBest = Math.max(predict(target, sample.nextFeature, 0), predict(target, sample.nextFeature, 1))
+    const onlineBefore = [...online]
+    const targetBefore = [...target]
+    const nextActionValues = [predict(targetBefore, sample.nextFeature, 0), predict(targetBefore, sample.nextFeature, 1)]
+    const nextBest = Math.max(...nextActionValues)
     const y = sample.reward + 0.9 * nextBest
-    const prediction = predict(online, sample.feature, sample.action)
+    const prediction = predict(onlineBefore, sample.feature, sample.action)
     const error = y - prediction
     const actionFeature = sample.action ? 1 : -1
+    const updateVector = [0.08 * error * sample.feature, 0.08 * error * actionFeature]
     online = [
-      online[0] + 0.08 * error * sample.feature,
-      online[1] + 0.08 * error * actionFeature,
+      onlineBefore[0] + updateVector[0],
+      onlineBefore[1] + updateVector[1],
     ]
-    if ((step + 1) % targetPeriod === 0) target = [...online]
+    const synced = (step + 1) % targetPeriod === 0
+    if (synced) target = [...online]
+    lastUpdate = {
+      number: step + 1,
+      sample,
+      sampleIndex,
+      onlineBefore,
+      targetBefore,
+      nextActionValues,
+      nextBest,
+      targetValue: y,
+      prediction,
+      error,
+      updateVector,
+      onlineAfter: [...online],
+      targetAfter: [...target],
+      synced,
+    }
     series.push(Math.abs(error))
   }
 
@@ -471,9 +494,11 @@ export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, se
     replaySize: buffer.length,
     targetPeriod,
     buffer: buffer.slice(-6),
-    sampledIds: sampledIds.slice(-6),
+    sampledKeys: sampledKeys.slice(-6),
     online,
     target,
+    lastUpdate,
+    updatesSinceSync: steps % targetPeriod,
     stepsUntilSync: targetPeriod - (steps % targetPeriod || targetPeriod),
   }
 }

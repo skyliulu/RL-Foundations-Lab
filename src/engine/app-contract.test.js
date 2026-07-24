@@ -699,11 +699,19 @@ test('phase-two chapters keep one causal article spine and mechanism-faithful in
   assert.doesNotMatch(read('content/article-flow.js'), /ppo:[\s\S]*?ref\('sections', 'update-cycle'\)/)
   assert.ok(flowIds('dpo').indexOf('beta-meaning') < flowIds('dpo').indexOf('complete-dpo'))
   assert.ok(flowIds('codingrl').indexOf('iterative-repair') < flowIds('codingrl').indexOf('complete-coding-loop'))
+  assert.deepEqual(flowIds('vfa'), [
+    'capacity', 'distribution', 'chapter-derivation', 'linear-sharing',
+    'chapter-experiment', 'interference', 'approximate-control', 'forward',
+  ])
+  assert.ok(!flowIds('dqn').includes('two-instabilities'))
+  assert.ok(flowIds('dqn').indexOf('moving-target') < flowIds('dqn').indexOf('chapter-derivation'))
 
   const learning = read('components/LearningLab.jsx')
   const modern = read('components/ModernExtensionLab.jsx')
   const ppo = read('components/PpoLab.jsx')
   assert.match(learning, /className="pg-probability-ledger"/)
+  assert.match(learning, /className="dqn-update-ledger"/)
+  assert.match(learning, /result\.sampledKeys/)
   assert.match(modern, /className="dpo-update-ledger"/)
   assert.match(modern, /className="coding-repair-tape"/)
   assert.match(ppo, /tabIndex="0"/)

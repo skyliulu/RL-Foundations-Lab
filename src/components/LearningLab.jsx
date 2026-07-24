@@ -9,7 +9,7 @@ const defaults = {
   td: { gamma: 0.9, n: 3, value: 2.4, nextValue: 3.1 },
   control: { epsilon: 0.12, alpha: 0.3, seed: 20260719 },
   vfa: { width: 1.2, alpha: 0.24, target: 5 },
-  dqn: { replay: 0.7, targetPeriod: 8, steps: 42 },
+  dqn: { replay: 0.7, targetPeriod: 8, steps: 40 },
   policygradient: { theta: 0, selectedStep: 0, alpha: 0.18, baseline: 0 },
   actorcritic: { reward: 1, gamma: 0.9, value: 2.2, nextValue: 2.8, actorAlpha: 0.12, criticAlpha: 0.18, ratio: 1 },
 }
@@ -74,8 +74,8 @@ const configs = {
   },
   dqn: {
     formula: String.raw`Y=R+\gamma\max_{a'}Q_{\bar\theta}(S',a'),\qquad\theta\leftarrow\theta-\alpha\nabla_\theta(Y-Q_\theta(S,A))^2`,
-    controls: [['replay', 0, 1, 0.05], ['targetPeriod', 2, 20, 1]],
-    labels: { zh: ['Replay 打散强度', 'Target 同步间隔'], en: ['Replay mixing', 'Target sync period'] },
+    controls: [['replay', 0, 1, 0.05], ['targetPeriod', 2, 20, 1], ['steps', 1, 60, 1]],
+    labels: { zh: ['经验回放强度', '目标同步间隔', '当前更新步'], en: ['Replay mixing', 'Target sync period', 'Current update'] },
     metrics: (r, zh) => [[zh ? '样本相关性' : 'Correlation', r.correlation], [zh ? '末段漂移' : 'Late drift', r.drift], [zh ? 'Replay 容量' : 'Replay size', r.replaySize]],
   },
   policygradient: {
@@ -207,13 +207,18 @@ function VfaEvidenceStage({ result, zh }) {
 }
 
 function DqnEvidenceStage({ params, result, zh }) {
-  const sampledIds = new Set(result.sampledIds)
+  const sampledKeys = new Set(result.sampledKeys)
+  const trackLength = Math.min(params.targetPeriod, 12)
+  const trackPosition = result.lastUpdate.synced
+    ? trackLength - 1
+    : Math.min(trackLength - 1, Math.floor((result.updatesSinceSync / params.targetPeriod) * trackLength))
+  const update = result.lastUpdate
   return (
     <div className="dqn-evidence-stage">
       <section className="dqn-buffer">
         <header><span>Replay buffer</span><small>{zh ? '轨迹顺序被保存，高亮项来自实际抽样' : 'Storage preserves time; highlighted rows were actually sampled'}</small></header>
-        <div>{result.buffer.map((item) => <article className={sampledIds.has(item.id) ? 'is-sampled' : ''} key={`${item.time}-${item.id}`}>
-          <b>{String(item.id).padStart(2, '0')}</b><MathFormula latex={String.raw`(x=${item.feature},a=${item.action},r=${item.reward},x'=${item.nextFeature})`} /><small>{sampledIds.has(item.id) ? (zh ? '近期抽中' : 'recently sampled') : (zh ? '留在缓冲区' : 'buffered')}</small>
+        <div>{result.buffer.map((item) => <article className={sampledKeys.has(item.key) ? 'is-sampled' : ''} key={item.key}>
+          <b>{String(item.time + 1).padStart(2, '0')}</b><MathFormula latex={String.raw`(x=${item.feature},a=${item.action},r=${item.reward},x'=${item.nextFeature})`} /><small>{sampledKeys.has(item.key) ? (zh ? '近期抽中' : 'recently sampled') : (zh ? '留在缓冲区' : 'buffered')}</small>
         </article>)}</div>
       </section>
       <section className="dqn-target-clock">
@@ -223,8 +228,18 @@ function DqnEvidenceStage({ params, result, zh }) {
           <i>→</i>
           <article><span>Target</span><MathFormula block latex={String.raw`\bar\theta=(${result.target.map((value) => value.toFixed(2)).join(',')})`} /><p>{zh ? '同步之间保持冻结' : 'frozen between syncs'}</p></article>
         </div>
-        <div className="dqn-sync-track">{Array.from({ length: Math.min(params.targetPeriod, 12) }, (_, index) => <i className={index === 0 ? 'is-sync' : ''} key={index} />)}</div>
+        <div className="dqn-sync-track">{Array.from({ length: trackLength }, (_, index) => <i className={`${index <= trackPosition ? 'is-complete' : ''} ${index === trackPosition ? 'is-current' : ''} ${update.synced && index === trackLength - 1 ? 'is-sync' : ''}`} key={index} />)}</div>
         <p>{zh ? '样本相关性' : 'Sample correlation'} <strong>{format(result.correlation)}</strong> · {zh ? '末段 target 漂移' : 'late target drift'} <strong>{format(result.drift)}</strong></p>
+      </section>
+      <section className="dqn-update-ledger">
+        <header><span>{zh ? `第 ${update.number} 次更新的完整数据流` : `Complete data flow for update ${update.number}`}</span><small>{update.synced ? (zh ? '本步触发目标同步' : 'This update triggers target sync') : (zh ? `距下次同步 ${result.stepsUntilSync} 步` : `${result.stepsUntilSync} updates until sync`)}</small></header>
+        <div>
+          <article><span>{zh ? '① 抽样转移' : '① Sampled transition'}</span><MathFormula block latex={String.raw`e=(${update.sample.feature},${update.sample.action},${update.sample.reward},${update.sample.nextFeature})`} /><small>{zh ? `缓冲区写入时刻 ${update.sample.time + 1}` : `stored at environment step ${update.sample.time + 1}`}</small></article>
+          <article><span>{zh ? '② 冻结目标' : '② Frozen target'}</span><MathFormula block latex={String.raw`Y=${update.sample.reward}+0.9\max Q_{\bar\theta}(x',a')=${update.targetValue.toFixed(3)}`} /><small>{zh ? '只读取目标网络' : 'reads target network only'}</small></article>
+          <article><span>{zh ? '③ 时序差分误差' : '③ TD error'}</span><MathFormula block latex={String.raw`\delta=Y-Q_\theta(x,a)=${update.error.toFixed(3)}`} /><small>{zh ? `更新前预测 ${update.prediction.toFixed(3)}` : `prediction before ${update.prediction.toFixed(3)}`}</small></article>
+          <article><span>{zh ? '④ 在线网络更新' : '④ Online update'}</span><MathFormula block latex={String.raw`\Delta\theta=(${update.updateVector.map((value) => value.toFixed(3)).join(',')})`} /><small>{update.onlineBefore.map((value) => value.toFixed(2)).join(', ')} → {update.onlineAfter.map((value) => value.toFixed(2)).join(', ')}</small></article>
+          <article className={update.synced ? 'is-synced' : ''}><span>{zh ? '⑤ 目标网络时钟' : '⑤ Target clock'}</span><MathFormula block latex={update.synced ? String.raw`\bar\theta\leftarrow\theta` : zh ? String.raw`\bar\theta\ \text{保持冻结}` : String.raw`\bar\theta\ \text{remains frozen}`} /><small>{update.synced ? (zh ? '复制更新后的在线参数' : 'copies updated online parameters') : (zh ? '本步不复制参数' : 'no parameter copy on this update')}</small></article>
+        </div>
       </section>
     </div>
   )
