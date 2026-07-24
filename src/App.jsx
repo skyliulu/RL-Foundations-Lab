@@ -225,15 +225,11 @@ function RightRail({ active, lang, open, onToggle, context, content }) {
 }
 
 function ProseTurn({ item, lang, formulas = item.formulas, formula = item.formula }) {
-  const [opening, ...rest] = item.paragraphs
   return (
     <div className={`chapter-prose-turn section-${item.id}`}>
       <p className="chapter-prose-opening">
-        <strong className="chapter-prose-lead"><MathText>{item.title}</MathText></strong>
-        <span className="chapter-prose-separator" aria-hidden="true">{lang === 'zh' ? '。' : '. '}</span>
-        <MathText>{opening}</MathText>
+        <MathText>{item.paragraphs.join(lang === 'zh' ? '' : ' ')}</MathText>
       </p>
-      {rest.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
       {formulas?.length && <div className="chapter-section-formulas">{formulas.map((entry) => <MathFormula block latex={entry} key={entry} />)}</div>}
       {formula && <MathFormula block className="section-formula" latex={formula} />}
     </div>

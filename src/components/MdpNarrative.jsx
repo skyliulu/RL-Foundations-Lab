@@ -31,13 +31,9 @@ export default function MdpNarrative({ sections, overview, lang }) {
                   <p><MathText>{opening}</MathText></p>
                 </>
               ) : (
-                <p className="narrative-turn-opening">
-                  <strong className="chapter-prose-lead"><MathText>{section.title}</MathText></strong>
-                  <span className="chapter-prose-separator" aria-hidden="true">{lang === 'zh' ? '。' : '. '}</span>
-                  <MathText>{opening}</MathText>
-                </p>
+                <p className="narrative-turn-opening"><MathText>{section.paragraphs.join(lang === 'zh' ? '' : ' ')}</MathText></p>
               )}
-              {rest.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
+              {isMajor && rest.map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
               {section.id === 'problem-setting' && <CourseWorldOverview content={overview} />}
               <FormulaStack formulas={section.formulas} layout={section.formulaLayout} />
               {section.compare && (

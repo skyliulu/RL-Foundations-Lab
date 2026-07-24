@@ -232,14 +232,23 @@ test('micro-sections are merged into running prose instead of merely demoting th
   const app = read('App.jsx')
   const mdp = read('components/MdpNarrative.jsx')
   const monteCarlo = read('components/MonteCarloChapter.jsx')
+  const articleFlow = read('components/ArticleFlow.jsx')
+  const articleFlowBuilder = read('content/article-flow.js')
   const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
 
   assert.match(app, /const \[opening, \.\.\.continuation\] = content\.prelude/)
   assert.match(app, /continuation\.map\(\(step\) => <ProseTurn/)
   assert.match(app, /sections\.map\(\(section\) => <ProseTurn/)
+  assert.doesNotMatch(app, /chapter-prose-lead|chapter-prose-separator/)
   assert.match(mdp, /isMajor \?/)
-  assert.match(mdp, /chapter-prose-lead/)
+  assert.doesNotMatch(mdp, /chapter-prose-lead|chapter-prose-separator/)
   assert.doesNotMatch(monteCarlo, /mc-reasoning-index|mc-reasoning-copy"><h3/)
+  assert.doesNotMatch(monteCarlo, /chapter-prose-lead|chapter-prose-separator/)
+  assert.doesNotMatch(articleFlow, /chapter-prose-lead|chapter-prose-separator/)
+  assert.match(app, /item\.paragraphs\.join\(lang === 'zh' \? '' : ' '\)/)
+  assert.match(mdp, /section\.paragraphs\.join\(lang === 'zh' \? '' : ' '\)/)
+  assert.match(monteCarlo, /section\.paragraphs\.join\(lang === 'zh' \? '' : ' '\)/)
+  assert.match(articleFlowBuilder, /descriptor\.mergeParagraphs \?\? descriptor\.type === 'turn'/)
   assert.match(skill, /Demoting a heading from `h2` to `h3`/)
   assert.match(skill, /must not normally open a new visible heading/)
   assert.match(skill, /Reject a refactor that changes only heading tags or CSS/)
@@ -344,12 +353,18 @@ test('continuous chapter prose has one spacing owner and stable inline leads', a
   const finalDeepeningRule = styles.match(/\.deepening-section:last-child\s*\{([^}]*)\}/)?.[1] || ''
   const proseSequenceRule = styles.match(/\.chapter-prose-sequence\s*\{([^}]*)\}/)?.[1] || ''
   const proseWrapRule = styles.match(/\.chapter-prose-opening \.math-text,[\s\S]*?\.mc-reasoning-opening \.math-text\s*\{([^}]*)\}/)?.[1] || ''
+  const articleBlockRule = styles.match(/\.article-flow-block\s*\{([^}]*)\}/)?.[1] || ''
+  const articleDerivationRule = styles.match(/\.article-flow > \.clickable-derivation\s*\{([^}]*)\}/)?.[1] || ''
 
   assert.doesNotMatch(deepeningRule, /margin:[^;]*46px/)
   assert.match(finalDeepeningRule, /padding-bottom:\s*0/)
   assert.match(proseSequenceRule, /var\(--flow-section-gap\)/)
   assert.match(proseWrapRule, /overflow-wrap:\s*normal/)
   assert.match(proseWrapRule, /word-break:\s*normal/)
+  assert.match(styles, /--flow-body-line-height:\s*1\.82/)
+  assert.match(styles, /html:lang\(zh\) main\s*\{\s*word-break:\s*auto-phrase;\s*\}/)
+  assert.match(articleBlockRule, /padding:[^;]*0/)
+  assert.match(articleDerivationRule, /margin-bottom:\s*0/)
   assert.doesNotMatch(app, /<br\s*\/?>/)
 
   assert.equal(copy.zh.dpo.sections[0].title, '同一提示词下的偏好对')
@@ -548,6 +563,11 @@ test('all rebuilt chapters expose one bilingual causal article flow with one exp
     assert.equal(zhFlow[0].type, 'section', `${id} must open with a motivated section`)
     assert.equal(zhFlow.filter((block) => block.type === 'experiment').length, 1, `${id} must contain one experiment`)
     assert.ok(zhFlow.findIndex((block) => block.type === 'derivation') < zhFlow.findIndex((block) => block.type === 'experiment'), `${id} derivation must prepare the experiment`)
+    for (const flow of [zhFlow, enFlow]) {
+      flow.filter((block) => ['section', 'topic', 'derivation', 'algorithm', 'theorem'].includes(block.type)).forEach((block) => {
+        assert.ok(block.title?.trim(), `${id}:${block.id} visible heading must not be empty`)
+      })
+    }
     zhFlow.flatMap((block) => block.formulas || []).forEach((formula) => {
       assert.equal(typeof formula.latex, 'string', `${id} article formula must be explicit LaTeX`)
       assert.ok(['definition', 'transition', 'result', 'support'].includes(formula.role), `${id} article formula needs a semantic role`)

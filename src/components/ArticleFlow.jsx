@@ -22,15 +22,9 @@ function FlowProse({ block }) {
   </div>
 }
 
-function FlowTurn({ block, lang }) {
-  const [opening, ...rest] = block.paragraphs
+function FlowTurn({ block }) {
   return <div className={`article-flow-prose article-flow-turn flow-${block.id}`}>
-    <p className="article-flow-turn-opening">
-      <strong className="chapter-prose-lead"><RichContent value={block.title} /></strong>
-      <span className="chapter-prose-separator" aria-hidden="true">{lang === 'zh' ? '。' : '. '}</span>
-      <RichContent value={opening} />
-    </p>
-    {rest.map((paragraph, index) => <p key={`${block.id}-p-${index + 1}`}><RichContent value={paragraph} /></p>)}
+    {block.paragraphs.map((paragraph, index) => <p className={index === 0 ? 'article-flow-turn-opening' : undefined} key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
     {block.formulas?.length > 0 && <div className="article-flow-equations">{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
   </div>
 }
@@ -38,7 +32,7 @@ function FlowTurn({ block, lang }) {
 function FlowTopic({ block, lang }) {
   return <ChapterDeepening
     lang={lang}
-    sections={[{ ...block, formulas: block.formulas?.map((formula) => formula.latex) || [] }]}
+    sections={[{ ...block, handoff: null, formulas: block.formulas?.map((formula) => formula.latex) || [] }]}
   />
 }
 
@@ -79,7 +73,7 @@ export default function ArticleFlow({ blocks, lang, onSelect, renderExperiment }
     {blocks.map((block) => {
       if (block.type === 'section') return <FlowSection block={block} key={block.id} />
       if (block.type === 'prose') return <FlowProse block={block} key={block.id} />
-      if (block.type === 'turn') return <FlowTurn block={block} lang={lang} key={block.id} />
+      if (block.type === 'turn') return <FlowTurn block={block} key={block.id} />
       if (block.type === 'topic') return <FlowTopic block={block} lang={lang} key={block.id} />
       if (block.type === 'derivation') return <ClickableDerivation eyebrow={block.level === 'embedded' ? null : block.kicker} title={block.title} intro={block.intro} steps={block.steps} onSelect={onSelect} variant={block.level === 'embedded' ? 'embedded' : 'major'} key={block.id} />
       if (block.type === 'example' || block.type === 'comparison') return <FlowTable block={block} label={block.title} key={block.id} />

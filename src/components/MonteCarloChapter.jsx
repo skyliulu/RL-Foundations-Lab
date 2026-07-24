@@ -10,12 +10,7 @@ function ReasoningPath({ content, lang }) {
       {content.reasoningPath.map((section) => (
         <article key={section.id}>
           <div className="mc-reasoning-copy">
-            <p className="mc-reasoning-opening">
-              <strong className="chapter-prose-lead"><MathText>{section.title}</MathText></strong>
-              <span className="chapter-prose-separator" aria-hidden="true">{lang === 'zh' ? '。' : '. '}</span>
-              <MathText>{section.paragraphs[0]}</MathText>
-            </p>
-            {section.paragraphs.slice(1).map((paragraph) => <p key={paragraph}><MathText>{paragraph}</MathText></p>)}
+            <p className="mc-reasoning-opening"><MathText>{section.paragraphs.join(lang === 'zh' ? '' : ' ')}</MathText></p>
             {section.formula && <MathFormula block latex={section.formula} />}
           </div>
         </article>

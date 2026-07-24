@@ -31,9 +31,10 @@
   --font-code: .875rem;
   --font-table: .875rem;
   --flow-paragraph-gap: 12px;
-  --flow-prose-turn-gap: 20px;
+  --flow-prose-turn-gap: 18px;
   --flow-section-gap: 28px;
   --flow-major-gap: 40px;
+  --flow-body-line-height: 1.82;
   font-size: 16px;
 }
 
@@ -58,6 +59,7 @@ body { margin: 0; min-width: 0; min-height: 100vh; background:
   linear-gradient(90deg, rgba(120,97,62,.018) 1px, transparent 1px) 0 0 / 6px 100%,
   var(--paper);
 }
+html:lang(zh) main { word-break: auto-phrase; }
 button, input, select { font: inherit; }
 button { color: inherit; }
 small { font-size: inherit; }
@@ -208,8 +210,8 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .chapter-shell { width: 100%; max-width: var(--chapter-frame); margin: 0 auto; }
 .chapter-header { max-width: var(--reading-column); margin: 0 auto; }
 .chapter-eyebrow { color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: .86rem; letter-spacing: .09em; }
-.chapter-header h1 { max-width: 820px; margin: 15px 0 17px; font-size: clamp(2rem, 3.2vw, 3.3rem); line-height: 1.24; font-weight: 500; letter-spacing: .035em; }
-.chapter-intro { max-width: 780px; margin: 0; color: #3f433d; font-size: 1.02rem; line-height: 2; }
+.chapter-header h1 { max-width: 820px; margin: 15px 0 17px; font-size: clamp(2rem, 3.2vw, 3.3rem); line-height: 1.24; font-weight: 500; letter-spacing: .035em; overflow-wrap: normal; word-break: normal; text-wrap: balance; }
+.chapter-intro { max-width: 780px; margin: 0; color: #3f433d; font-size: 1.02rem; line-height: 1.88; text-wrap: pretty; }
 .prerequisite { display: inline-block; margin-top: 18px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); }
 .chapter-continuity { max-width: var(--reading-column); margin: 30px auto 38px; padding: 18px 21px 17px; border-left: 3px solid var(--teal); background: rgba(24,119,107,.045); }
 .chapter-continuity > header { display: flex; flex-wrap: wrap; gap: 8px 13px; align-items: baseline; }
@@ -225,7 +227,7 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .chapter-continuity.is-compact { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 20px; padding: 14px 0 0; border-top: 1px solid var(--line); border-left: 0; background: transparent; }
 .chapter-context-prerequisite { color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); line-height: 1.65; }
 .chapter-continuity.is-compact .chapter-phase-chain { padding-top: 0; border-top: 0; }
-.article-copy { max-width: var(--reading-column); margin: 0 auto 24px; color: var(--body-copy); font-size: .94rem; line-height: 1.95; }
+.article-copy { max-width: var(--reading-column); margin: 0 auto 24px; color: var(--body-copy); font-size: .94rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
 
 /* Long-form chapter narrative: the conceptual sequence stays visible instead of becoming a card mosaic. */
 .mdp-narrative { max-width: var(--reading-column); margin: 0 auto 38px; }
@@ -238,7 +240,8 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .narrative-kicker { color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: .78rem; letter-spacing: .07em; }
 .narrative-body h2 { margin: 8px 0 0; font-size: 1.42rem; line-height: 1.48; font-weight: 500; }
 .narrative-body h3 { margin: 8px 0 0; font-size: 1.16rem; line-height: 1.55; font-weight: 500; }
-.narrative-body p { margin: 0 0 11px; color: var(--body-copy); font-size: .94rem; line-height: 1.92; }
+.narrative-body p { margin: 0 0 var(--flow-paragraph-gap); color: var(--body-copy); font-size: .94rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
+.narrative-body > p:last-of-type { margin-bottom: 0; }
 .narrative-formulas { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(250px,100%),1fr)); gap: 10px 24px; margin: 17px 0 0; padding: 7px 0; color: var(--ink); font-size: .9rem; line-height: 1.55; overflow-x: auto; overflow-y: hidden; }
 .narrative-formulas.is-stacked { grid-template-columns: minmax(0,1fr); gap: 8px; }
 .narrative-formulas .math-formula { min-width: 0; text-align: center; }
@@ -284,7 +287,7 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .chapter-interpretation { margin-top: 30px; margin-bottom: 34px; color: #454b44; }
 
 /* Article-native derivation: the complete chain stays visible; selection only adds context. */
-.clickable-derivation { max-width: var(--reading-column); margin: 0 auto 42px; }
+.clickable-derivation { max-width: var(--reading-column); margin: 0 auto var(--flow-major-gap); }
 .clickable-derivation > header { max-width: none; padding: 25px 0 22px; }
 .clickable-derivation > header > span { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: .76rem; letter-spacing: .08em; }
 .clickable-derivation > header h2, .clickable-derivation > header h3 { margin: 9px 0 8px; font-size: 1.35rem; font-weight: 500; }
@@ -307,7 +310,7 @@ a { color: var(--navy); text-decoration-thickness: 1px; text-underline-offset: 3
 .derivation-line-math .katex-display { margin: .2em 0; text-align: left; }
 .math-formula > .katex-display { margin: .25em 0; overflow: visible; }
 div.math-formula { min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
-.math-text { display: inline; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.math-text { display: inline; min-width: 0; max-width: 100%; overflow-wrap: normal; word-break: normal; }
 .math-text > span { display: inline; }
 .math-text .math-formula { display: inline-block; max-width: 100%; margin-inline: .08em; font-size: 1em; vertical-align: -.04em; }
 .context-label { display: block; margin: 16px 0 7px; color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-dense); letter-spacing: .07em; }
@@ -500,15 +503,16 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 .chapter-article-section { padding: 27px 0 30px; border-top: 1px solid var(--line); }
 .chapter-article-section > span { color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: .76rem; letter-spacing: .1em; }
 .chapter-article-section h2 { margin: 10px 0 14px; font-size: 1.3rem; line-height: 1.5; font-weight: 500; }
-.chapter-article-section h3 { margin: 9px 0 13px; font-size: 1.14rem; line-height: 1.55; font-weight: 500; overflow-wrap: anywhere; }
-.chapter-article-section p { margin: 0 0 12px; color: var(--body-copy); font-size: .9rem; line-height: 1.9; }
+.chapter-article-section h3 { margin: 9px 0 13px; font-size: 1.14rem; line-height: 1.55; font-weight: 500; overflow-wrap: normal; word-break: normal; text-wrap: balance; }
+.chapter-article-section p { margin: 0 0 var(--flow-paragraph-gap); color: var(--body-copy); font-size: .9rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
+.chapter-article-section > p:last-of-type { margin-bottom: 0; }
 .chapter-prelude { margin-top: 0; margin-bottom: 8px; }
 .chapter-prelude-section:first-child { padding-top: 0; border-top: 0; }
 .chapter-prose-sequence { margin-top: var(--flow-section-gap); }
 .chapter-prose-turn { min-width: 0; }
 .chapter-prose-turn + .chapter-prose-turn { margin-top: var(--flow-prose-turn-gap); }
 .chapter-prelude-section > .chapter-prose-turn { margin-top: 22px; }
-.chapter-prose-turn p { margin: 0 0 var(--flow-paragraph-gap); color: var(--body-copy); font-size: .9rem; line-height: 1.9; }
+.chapter-prose-turn p { margin: 0; color: var(--body-copy); font-size: .9rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
 .chapter-prose-opening, .narrative-turn-opening, .mc-reasoning-opening { text-wrap: pretty; }
 .chapter-prose-lead { color: var(--ink); font-weight: 600; }
 .chapter-prose-opening .math-text,
@@ -817,13 +821,15 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 .planning-propagation { padding: 16px; }.planning-propagation > div { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }.planning-map { min-width: 0; margin: 0; }.planning-map figcaption { display: flex; justify-content: space-between; gap: 6px; min-height: 31px; margin-bottom: 7px; }.planning-map figcaption strong { color: var(--navy); font-size: var(--font-floor); font-weight: 500; }.planning-map figcaption span { color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); text-align: right; }.planning-value-grid { display: grid; grid-template-columns: repeat(5,1fr); border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }.planning-value-grid > span { position: relative; display: grid; place-items: center; aspect-ratio: 1; min-width: 0; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }.planning-value-grid b { font-family: Cambria,serif; font-size: clamp(var(--font-floor),.58vw,var(--font-floor)); font-weight: 500; }.planning-value-grid i { position: absolute; right: 3px; bottom: 1px; color: var(--navy); font-size: var(--font-floor); font-style: normal; }.planning-map > small { display: block; margin-top: 7px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); }
 
 /* Continuous source-completeness blocks */
-.chapter-deepening { max-width: var(--reading-column); margin: 0 auto; }
+.chapter-deepening { display: flow-root; max-width: var(--reading-column); margin: 0 auto; }
 .deepening-section { padding: 25px 0 30px; }
 .deepening-section:last-child { padding-bottom: 0; }
 .deepening-section + .deepening-section { margin-top: 8px; }
 .deepening-section > header > span { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: .76rem; letter-spacing: .09em; }
 .deepening-section > header h3 { margin: 9px 0 15px; font-size: 1.16rem; line-height: 1.55; font-weight: 500; }
-.deepening-section > p { margin: 0 0 12px; color: var(--body-copy); font-size: .9rem; line-height: 1.9; }
+.deepening-section > p { margin: 0 0 var(--flow-paragraph-gap); color: var(--body-copy); font-size: .9rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
+.deepening-section > p:last-of-type { margin-bottom: 0; }
+.deepening-section:last-child > :last-child { margin-bottom: 0; }
 .deepening-formulas { display: grid; gap: 8px; margin: 18px 0; padding: 7px 0; color: var(--ink); font-size: .86rem; text-align: center; overflow-x: auto; }
 .deepening-theorem { margin: 19px 0; padding: 17px 19px; border-block: 1px solid var(--line-strong); background: rgba(24,119,107,.04); }
 .deepening-theorem > span, .deepening-pseudocode > span, .deepening-example figcaption > span { display: block; color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-dense); letter-spacing: .08em; }
@@ -865,7 +871,7 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 .mc-reasoning-path > header h2, .mc-algorithm-family > header h2 { margin: 9px 0 0; font-size: 1.35rem; font-weight: 500; }
 .mc-reasoning-path > article { padding: 22px 0 0; }
 .mc-reasoning-path > article + article { padding-top: 9px; }
-.mc-reasoning-copy p { margin: 0 0 11px; color: var(--muted); font-size: .84rem; line-height: 1.9; }
+.mc-reasoning-copy p { margin: 0; color: var(--body-copy); font-size: .9rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
 .mc-reasoning-copy .math-formula { margin-top: 17px; padding: 7px 0; color: var(--ink); font-size: .86rem; text-align: center; }
 .mc-algorithm-family > header p { max-width: 690px; margin: 10px 0 0; color: var(--muted); font-size: .78rem; line-height: 1.75; }
 .mc-algorithm-stack { margin-top: 24px; }
@@ -935,15 +941,19 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 
 /* Ordered article flow: prose, mathematics, evidence, and experiments share one argument. */
 .article-flow { min-width: 0; }
-.article-flow-block { max-width: var(--reading-column); margin: 0 auto; padding: 31px 0 36px; border-top: 1px solid var(--line-strong); }
+.article-flow-block { max-width: var(--reading-column); margin: 0 auto; padding: 31px 0 0; border-top: 1px solid var(--line-strong); }
 .article-flow > .article-flow-block:first-child { padding-top: 0; border-top: 0; }
 .article-flow-heading > span { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); letter-spacing: .08em; }
-.article-flow-heading h2 { margin: 9px 0 15px; font-size: 1.34rem; line-height: 1.5; font-weight: 500; }
-.article-flow-block > p { margin: 0 0 12px; color: var(--body-copy); font-size: .94rem; line-height: 1.92; }
+.article-flow-heading h2 { margin: 9px 0 15px; font-size: 1.34rem; line-height: 1.5; font-weight: 500; overflow-wrap: normal; word-break: normal; text-wrap: balance; }
+.article-flow-block > p { margin: 0 0 var(--flow-paragraph-gap); color: var(--body-copy); font-size: .94rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
+.article-flow-block > p:last-of-type { margin-bottom: 0; }
 .article-flow-block > p .math-formula { margin-inline: .12em; color: var(--ink); }
 .article-flow-prose, .article-flow-evidence { max-width: var(--reading-column); margin: 0 auto; }
-.article-flow-prose { padding: 4px 0 29px; }
-.article-flow-prose > p, .article-flow-evidence > p { margin: 0 0 12px; color: var(--body-copy); font-size: .94rem; line-height: 1.92; }
+.article-flow-prose { padding: 0; }
+.article-flow-prose + .article-flow-prose { margin-top: var(--flow-prose-turn-gap); }
+.article-flow-turn-opening { text-wrap: pretty; }
+.article-flow-prose > p, .article-flow-evidence > p { margin: 0 0 var(--flow-paragraph-gap); color: var(--body-copy); font-size: .94rem; line-height: var(--flow-body-line-height); text-wrap: pretty; }
+.article-flow-prose > p:last-of-type, .article-flow-evidence > p:last-of-type { margin-bottom: 0; }
 .article-flow-prose > p .math-formula, .article-flow-evidence > p .math-formula { margin-inline: .12em; color: var(--ink); }
 .article-flow-evidence { margin-bottom: 31px; }
 .article-flow-evidence > figcaption, .article-flow-evidence-heading { margin: 0 0 10px; }
@@ -975,7 +985,11 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 .article-flow-conditions > div { display: grid; grid-template-columns: minmax(300px,.9fr) minmax(0,1.1fr); gap: 22px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
 .article-flow-conditions > div > .math-formula { min-width: 0; overflow-x: auto; font-size: var(--font-support); text-align: center; }
 .article-flow-conditions > div > p { margin: 0; color: var(--body-copy); font-size: var(--font-support); line-height: 1.7; }
-.article-flow-experiment { margin: 10px 0 38px; }
+.article-flow-experiment { margin: var(--flow-section-gap) 0 var(--flow-major-gap); }
+.article-flow > .clickable-derivation { margin-bottom: 0; }
+.article-flow > .clickable-derivation + .article-flow-prose { margin-top: var(--flow-prose-turn-gap); }
+.article-flow > .clickable-derivation + .article-flow-evidence { margin-top: var(--flow-section-gap); }
+.article-flow > .chapter-deepening + .article-flow-prose { margin-top: var(--flow-prose-turn-gap); }
 
 /* Stochastic-approximation lab exposes the evidence behind every update. */
 .sa-lab { max-width: var(--chapter-frame); margin: 0 auto; border: 1px solid var(--line-strong); background: rgba(251,248,240,.76); box-shadow: var(--shadow); }
@@ -1614,7 +1628,7 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 }
 
 @media (max-width: 820px) {
-  .article-flow-block { padding: 25px 0 29px; }
+  .article-flow-block { padding: 25px 0 0; }
   .article-flow-heading h2 { font-size: 1.24rem; }
   .article-flow-conditions > div { grid-template-columns: 1fr; gap: 8px; }
   .article-flow-conditions > div > .math-formula { text-align: left; }

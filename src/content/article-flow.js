@@ -254,7 +254,8 @@ function formulaEntries(item, descriptor) {
 }
 
 function paragraphEntries(item, descriptor, lang) {
-  if (!descriptor.mergeParagraphs) return item.paragraphs
+  const mergeParagraphs = descriptor.mergeParagraphs ?? descriptor.type === 'turn'
+  if (!mergeParagraphs) return item.paragraphs
   return [item.paragraphs.join(lang === 'zh' ? '' : ' ')]
 }
 
