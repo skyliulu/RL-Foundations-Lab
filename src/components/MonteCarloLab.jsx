@@ -57,7 +57,7 @@ export default function MonteCarloLab({ lang, content }) {
         <div><span>{content.figure}</span><h2>{zh ? '同一批经验，三种算法怎样逐步修复前一种方法？' : 'How does each algorithm repair the previous one?'}</h2><p><MathText>{content.instruction}</MathText></p></div>
         <button type="button" onClick={() => { setParams(defaults); setSampleSlot(2) }}>{zh ? '恢复基线' : 'Reset'}</button>
       </header>
-      <div className="experiment-environment"><span>{zh ? '共享的 5×5 网格世界' : 'Shared 5×5 grid world'}</span><MathFormula latex={String.raw`\tau=(S_0,A_0,R_1,\ldots,S_T)`} /><small>{zh ? '三种 Monte Carlo 变体都从同一个环境采集完整 episode；变化的是起点、经验复用方式与探索策略。' : 'All three Monte Carlo variants collect complete episodes from the same environment; starts, data reuse, and exploration are what change.'}</small></div>
+      <div className="experiment-environment"><span>{zh ? '共享的 5×5 网格世界 · episodic 版本' : 'Shared 5×5 grid world · episodic version'}</span><MathFormula latex={String.raw`S_T=s_{\mathrm{goal}},\qquad V(S_T)=0`} /><small>{zh ? '本实验保留共享网格的状态、动作、转移与奖励，但明确把首次进入目标格设为真正终止。只有到达该终止状态的完整回合才进入 Monte Carlo 更新；达到步数上限的截断轨迹会被丢弃。' : 'This lab keeps the shared grid states, actions, transitions, and rewards but makes first entry into the goal a true termination. Only completed episodes update Monte Carlo estimates; trajectories cut by the step limit are discarded.'}</small></div>
 
       <div className="mc-variant-switch" role="group" aria-label={zh ? '算法变体' : 'Algorithm variant'}>
         {['basic', 'exploring', 'epsilon'].map((id, index) => (
@@ -79,9 +79,9 @@ export default function MonteCarloLab({ lang, content }) {
       </div>
 
       <div className="mc-metrics">
-        <div><span>{zh ? '已覆盖状态—动作对' : 'Covered state-action pairs'}</span><strong>{result.visitedPairs} / 125</strong></div>
+        <div><span>{zh ? '已覆盖非终止状态—动作对' : 'Covered nonterminal state-action pairs'}</span><strong>{result.visitedPairs} / {result.totalPairs}</strong></div>
         <div><span>{zh ? '覆盖率' : 'Coverage'}</span><strong>{(result.coverage * 100).toFixed(1)}%</strong></div>
-        <div><span>{zh ? '观察中的起始状态' : 'Focus start state'}</span><strong>{result.focusState}</strong></div>
+        <div><span>{zh ? '完整 / 截断回合' : 'Completed / truncated'}</span><strong>{result.episodes} / {result.truncatedEpisodes}</strong></div>
       </div>
 
       <div className="evidence-view-switch" role="group" aria-label={zh ? '证据视图' : 'Evidence view'}>
@@ -104,10 +104,10 @@ export default function MonteCarloLab({ lang, content }) {
         </section>}
 
         {evidenceView === 'episode' && <section className="mc-episode-panel">
-          <header><span>{zh ? 'Episode tape' : 'Episode tape'}</span><div>{result.samples.map((item, index) => <button type="button" key={item.index} className={sampleSlot === index ? 'active' : ''} onClick={() => setSampleSlot(index)}>#{item.index + 1}</button>)}</div></header>
+          <header><span>{zh ? '完整回合 tape' : 'Complete-episode tape'}</span><div>{result.samples.map((item, index) => <button type="button" key={item.index} className={sampleSlot === index ? 'active' : ''} onClick={() => setSampleSlot(index)}>#{item.index + 1}</button>)}</div></header>
           <div className="mc-tape-head"><span><MathFormula latex={String.raw`t`} /></span><span><MathFormula latex={String.raw`S_t`} /></span><span><MathFormula latex={String.raw`A_t`} /></span><span><MathFormula latex={String.raw`R_{t+1}`} /></span><span><MathFormula latex={String.raw`G_t`} /></span><span>{zh ? '用于更新' : 'Used'}</span></div>
           <div className="mc-tape-body">
-            {sample.steps.map((step) => <div key={step.time} className={step.used ? 'used' : 'skipped'}><span>{step.time}</span><strong>s{indexOf(step.state) + 1}</strong><span>{ACTIONS[step.action].arrow} {actionCopy[lang][step.action]}</span><span className={step.reward < 0 ? 'negative' : step.reward > 0 ? 'positive' : ''}>{step.reward > 0 ? '+' : ''}{step.reward}</span><span>{format(step.returnValue)}</span><span>{step.used ? '●' : '—'}</span></div>)}
+            {sample.steps.map((step) => <div key={step.time} className={step.used ? 'used' : 'skipped'}><span>{step.time}</span><strong>s{indexOf(step.state) + 1}</strong><span>{ACTIONS[step.action].arrow} {actionCopy[lang][step.action]}{step.terminated ? (zh ? ' · 终止' : ' · terminal') : ''}</span><span className={step.reward < 0 ? 'negative' : step.reward > 0 ? 'positive' : ''}>{step.reward > 0 ? '+' : ''}{step.reward}</span><span>{format(step.returnValue)}</span><span>{step.used ? '●' : '—'}</span></div>)}
           </div>
         </section>}
 

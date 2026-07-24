@@ -250,13 +250,23 @@ function formulaEntries(item, descriptor) {
   if (descriptor.formulas === false) return []
   const formulas = [...(item.formulas || []), ...(item.formula ? [item.formula] : [])]
   const selected = descriptor.formulaIndices ? descriptor.formulaIndices.map((index) => formulas[index]).filter(Boolean) : formulas
-  return selected.map((latex) => ({ role: descriptor.formulaRole || 'support', latex }))
+  const before = item.paragraphs?.length ? item.paragraphs.at(-2) || item.paragraphs[0] : item.intro
+  const after = item.paragraphs?.length > 1 ? item.paragraphs.at(-1) : item.handoff || item.note
+  return selected.map((formula) => ({
+    role: formula?.role || descriptor.formulaRole || 'support',
+    latex: formula?.latex || formula,
+    before,
+    after,
+  }))
 }
 
-function paragraphEntries(item, descriptor, lang) {
+function paragraphEntries(item, descriptor, lang, hasFormulaContract) {
+  const paragraphs = hasFormulaContract && item.paragraphs?.length > 1
+    ? item.paragraphs.slice(0, -1)
+    : item.paragraphs
   const mergeParagraphs = descriptor.mergeParagraphs ?? descriptor.type === 'turn'
-  if (!mergeParagraphs) return item.paragraphs
-  return [item.paragraphs.join(lang === 'zh' ? '' : ' ')]
+  if (!mergeParagraphs || hasFormulaContract) return paragraphs
+  return [paragraphs.join(lang === 'zh' ? '' : ' ')]
 }
 
 function materialize(content, descriptor, lang) {
@@ -277,11 +287,13 @@ function materialize(content, descriptor, lang) {
   }
   const item = sourceItem(content, descriptor)
   if (!item) throw new Error(`Missing article-flow source ${descriptor.source}:${descriptor.id}`)
+  const formulas = formulaEntries(item, descriptor)
   const block = {
     ...item,
     type: descriptor.type,
-    paragraphs: paragraphEntries(item, descriptor, lang),
-    formulas: formulaEntries(item, descriptor),
+    paragraphs: paragraphEntries(item, descriptor, lang, formulas.length > 0),
+    formulas,
+    formulaAfter: formulas.at(-1)?.after || null,
   }
   delete block.formula
   return block

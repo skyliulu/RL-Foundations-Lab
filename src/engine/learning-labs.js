@@ -4,6 +4,7 @@ import {
   attemptMove,
   fixedPolicyAction,
   indexOf,
+  isGoal,
   rewardForTransition,
 } from './gridworld.js'
 
@@ -80,11 +81,12 @@ export function runMonteCarloCourse({
   epsilon = 0.2,
   visit = 'every',
   seed = 20260719,
-  horizon = 24,
+  maxEpisodeSteps = 120,
   gamma = 0.9,
 } = {}) {
   const random = lcg(seed)
   const states = allStates()
+  const startStates = states.filter((state) => !isGoal(state))
   const q = states.map((state) => ACTION_NAMES.map((action) => (
     action === fixedPolicyAction(state) ? 0.05 : 0
   )))
@@ -92,28 +94,40 @@ export function runMonteCarloCourse({
   const returnsSums = states.map(() => ACTION_NAMES.map(() => 0))
   const episodeRecords = []
 
-  for (let episodeIndex = 0; episodeIndex < episodes; episodeIndex += 1) {
-    const enumeratedPair = episodeIndex % (states.length * ACTION_NAMES.length)
+  let attempts = 0
+  let truncatedEpisodes = 0
+  while (episodeRecords.length < episodes && attempts < episodes * 30) {
+    const episodeIndex = episodeRecords.length
+    const enumeratedPair = attempts % (startStates.length * ACTION_NAMES.length)
     let state = variant === 'basic'
-      ? states[Math.floor(enumeratedPair / ACTION_NAMES.length)]
+      ? startStates[Math.floor(enumeratedPair / ACTION_NAMES.length)]
       : variant === 'exploring'
-        ? states[Math.floor(random() * states.length)]
-        : states[0]
+        ? startStates[Math.floor(random() * startStates.length)]
+        : startStates[0]
     let forcedAction = variant === 'basic'
       ? ACTION_NAMES[enumeratedPair % ACTION_NAMES.length]
       : variant === 'exploring'
         ? ACTION_NAMES[Math.floor(random() * ACTION_NAMES.length)]
         : null
     const steps = []
+    let terminated = false
 
-    for (let time = 0; time < horizon; time += 1) {
+    for (let time = 0; time < maxEpisodeSteps; time += 1) {
       const distribution = actionDistribution(state, q, variant, epsilon)
       const action = forcedAction || sampleAction(distribution, random)
       forcedAction = null
       const outcome = attemptMove(state, action)
       const reward = rewardForTransition(outcome.state, outcome.boundary)
-      steps.push({ time, state, action, reward, nextState: outcome.state })
+      terminated = isGoal(outcome.state)
+      steps.push({ time, state, action, reward, nextState: outcome.state, terminated })
       state = outcome.state
+      if (terminated) break
+    }
+    attempts += 1
+
+    if (!terminated) {
+      truncatedEpisodes += 1
+      continue
     }
 
     let returnValue = 0
@@ -147,10 +161,17 @@ export function runMonteCarloCourse({
         visits: counts[stateIndex][actionIndex],
       })
     }
-    episodeRecords.push({ index: episodeIndex, steps, updates })
+    episodeRecords.push({ index: episodeIndex, steps, updates, terminated: true, truncated: false })
   }
 
-  const visitedPairs = counts.flat().filter((count) => count > 0).length
+  if (episodeRecords.length < episodes) {
+    throw new Error(`Unable to collect ${episodes} complete Monte Carlo episodes within the attempt budget`)
+  }
+
+  const visitedPairs = counts.flatMap((row, stateIndex) => (
+    isGoal(states[stateIndex]) ? [] : row
+  )).filter((count) => count > 0).length
+  const totalPairs = startStates.length * ACTION_NAMES.length
   const stateCoverage = counts.map((row) => row.reduce((sum, count) => sum + count, 0))
   const sampleIndices = [...new Set([0, Math.floor((episodes - 1) / 2), episodes - 1])]
   const samples = sampleIndices.map((index) => episodeRecords[index])
@@ -162,10 +183,16 @@ export function runMonteCarloCourse({
     epsilon,
     visit,
     gamma,
+    environmentContract: 'episodic-target-terminal',
+    terminationState: stateLabel(states.find((state) => isGoal(state))),
+    maxEpisodeSteps,
+    attemptedEpisodes: attempts,
+    truncatedEpisodes,
     q,
     counts,
-    coverage: visitedPairs / (states.length * ACTION_NAMES.length),
+    coverage: visitedPairs / totalPairs,
     visitedPairs,
+    totalPairs,
     stateCoverage,
     samples,
     focusState: stateLabel(focusState),
@@ -357,11 +384,17 @@ export function compareControl({ epsilon = 0.12, alpha = 0.3, seed = 20260719 } 
   const qLearning = trainCliffControl('qlearning', { epsilon, alpha, seed })
   const focusState = (CLIFF_HEIGHT - 2) * CLIFF_WIDTH
   const nextState = focusState + 1
-  const sarsaNextAction = epsilon >= 0.18 ? 'up' : sarsa.policy[nextState]
-  const sarsaNextIndex = CLIFF_ACTIONS.indexOf(sarsaNextAction)
-  const qGreedyIndex = greedyIndex(qLearning.q[nextState])
-  const sarsaTarget = -1 + 0.9 * sarsa.q[nextState][Math.max(0, sarsaNextIndex)]
-  const qTarget = -1 + 0.9 * qLearning.q[nextState][qGreedyIndex]
+  const qSnapshot = sarsa.q.map((row) => [...row])
+  const successorRow = qSnapshot[nextState]
+  const qGreedyIndex = greedyIndex(successorRow)
+  const rankedActions = successorRow
+    .map((value, index) => ({ value, index }))
+    .sort((first, second) => second.value - first.value)
+  const sarsaNextIndex = epsilon > 0 ? rankedActions[1].index : qGreedyIndex
+  const sarsaNextAction = CLIFF_ACTIONS[sarsaNextIndex]
+  const qGreedyAction = CLIFF_ACTIONS[qGreedyIndex]
+  const sarsaTarget = -1 + 0.9 * successorRow[sarsaNextIndex]
+  const qTarget = -1 + 0.9 * successorRow[qGreedyIndex]
   return {
     series: [sarsa.meanReturn, qLearning.meanReturn],
     sarsaDanger: sarsa.danger,
@@ -371,7 +404,9 @@ export function compareControl({ epsilon = 0.12, alpha = 0.3, seed = 20260719 } 
     targetGap: Math.abs(sarsaTarget - qTarget),
     sarsaTarget,
     qTarget,
-    transition: { state: focusState, action: 'right', reward: -1, nextState, sarsaNextAction },
+    qSnapshot,
+    successorValues: successorRow.map((value, index) => ({ action: CLIFF_ACTIONS[index], value })),
+    transition: { state: focusState, action: 'right', reward: -1, nextState, sarsaNextAction, qGreedyAction },
     sarsa,
     qLearning,
     grid: { width: CLIFF_WIDTH, height: CLIFF_HEIGHT, start: CLIFF_START, goal: CLIFF_GOAL },

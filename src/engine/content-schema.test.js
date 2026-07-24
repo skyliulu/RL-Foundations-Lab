@@ -12,8 +12,49 @@ import { agentMdpChapter, codingRlChapter, creditChapter, dpoChapter, grpoChapte
 import { tokenMdpChapter } from '../content/token-mdp.js'
 import { actorCriticChapter, approximationChapter, controlChapter, dqnChapter, monteCarloChapter, policyGradientChapter, tdChapter, vfaChapter } from '../content/part23.js'
 import { glossary } from '../content/glossary.js'
+import { coverageClassifications, coverageItemTypes, sourceCoverageMatrix } from '../content/source-coverage.js'
+import { terminologyPolicy } from '../content/terminology.js'
 import { validateChapterDefinition, validateFoundationChapterDefinition } from '../content/schema.js'
 import { copy } from '../content.js'
+
+function collectVisibleIds(value, result = new Set()) {
+  if (!value || typeof value !== 'object') return result
+  if (typeof value.id === 'string') result.add(value.id)
+  Object.entries(value).forEach(([key, child]) => {
+    if (key === 'sources') return
+    if (Array.isArray(child)) child.forEach((item) => collectVisibleIds(item, result))
+    else if (child && typeof child === 'object') collectVisibleIds(child, result)
+  })
+  return result
+}
+
+function findVisibleNode(value, id) {
+  if (!value || typeof value !== 'object') return null
+  if (value.id === id) return value
+  for (const [key, child] of Object.entries(value)) {
+    if (key === 'sources') continue
+    if (Array.isArray(child)) {
+      for (const item of child) {
+        const found = findVisibleNode(item, id)
+        if (found) return found
+      }
+    } else if (child && typeof child === 'object') {
+      const found = findVisibleNode(child, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function visibleText(value) {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.map(visibleText).join(' ')
+  if (!value || typeof value !== 'object') return ''
+  return Object.entries(value)
+    .filter(([key]) => !['latex', 'formulas', 'formula', 'sources'].includes(key))
+    .map(([, child]) => visibleText(child))
+    .join(' ')
+}
 
 test('the Bellman golden chapter satisfies the structured content contract', () => {
   assert.deepEqual(validateChapterDefinition(bellmanChapter), [])
@@ -180,6 +221,53 @@ test('source-coverage review preserves bilingual why chains and complete algorit
   assert.ok(dqnChapter.zh.deepening.some((item) => item.id === 'dqn-complete'))
   assert.ok(ppoChapter.zh.deepening.some((item) => item.id === 'ppo-complete-loop'))
   assert.ok(rlhfChapter.zh.deepening.some((item) => item.id === 'batch-contract-and-failures'))
+})
+
+test('the 21-chapter source-coverage matrix maps every required source item to visible bilingual destinations', () => {
+  const chapterIds = copy.zh.chapters.map((chapter) => chapter.id)
+  assert.deepEqual(Object.keys(sourceCoverageMatrix), chapterIds)
+
+  chapterIds.forEach((chapterId) => {
+    const coverage = sourceCoverageMatrix[chapterId]
+    assert.ok(coverage.sourceBasis.length > 0, `${chapterId} source basis`)
+    assert.ok(coverage.items.length >= 5, `${chapterId} coverage breadth`)
+
+    const zhIds = collectVisibleIds(copy.zh[chapterId])
+    const enIds = collectVisibleIds(copy.en[chapterId])
+    const sourceIds = new Set(copy.zh[chapterId].sources.map((source) => source.id))
+    const itemIds = new Set()
+
+    coverage.items.forEach((item) => {
+      assert.ok(!itemIds.has(item.id), `${chapterId}.${item.id} must be unique`)
+      itemIds.add(item.id)
+      assert.ok(coverageClassifications.includes(item.classification), `${chapterId}.${item.id} classification`)
+      assert.ok(coverageItemTypes.includes(item.type), `${chapterId}.${item.id} type`)
+      assert.ok(item.label.length > 8, `${chapterId}.${item.id} label`)
+      assert.ok(item.destinations.length > 0, `${chapterId}.${item.id} destinations`)
+      item.destinations.forEach((destination) => {
+        assert.ok(zhIds.has(destination), `${chapterId}.${item.id} missing zh destination ${destination}`)
+        assert.ok(enIds.has(destination), `${chapterId}.${item.id} missing en destination ${destination}`)
+      })
+      item.sourceIds.forEach((sourceId) => {
+        assert.ok(sourceIds.has(sourceId), `${chapterId}.${item.id} unknown source ${sourceId}`)
+      })
+    })
+  })
+})
+
+test('the site terminology policy fixes preferred Chinese terms and auditable first-use definitions', () => {
+  Object.entries(terminologyPolicy).forEach(([termId, term]) => {
+    assert.ok(term.zh.length > 0, `${termId} preferred Chinese term`)
+    assert.ok(term.en.length > 0, `${termId} preferred English term`)
+    assert.ok(term.aliases.length > 0, `${termId} aliases`)
+
+    const { chapterId, destinationId } = term.firstUse
+    const zhNode = findVisibleNode(copy.zh[chapterId], destinationId)
+    const enNode = findVisibleNode(copy.en[chapterId], destinationId)
+    assert.ok(zhNode, `${termId} missing zh first-use destination`)
+    assert.ok(enNode, `${termId} missing en first-use destination`)
+    assert.match(`${visibleText(zhNode)} ${visibleText(enNode)}`, term.definitionCue, `${termId} first use must define the concept`)
+  })
 })
 
 test('chapter sources are public and traceable to precise PDF pages', () => {

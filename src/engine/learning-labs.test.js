@@ -35,6 +35,10 @@ test('the Monte Carlo family lab reuses the course world and exposes coverage, v
   assert.deepEqual(baseline, runMonteCarloCourse())
   assert.equal(baseline.counts.length, 25)
   assert.equal(baseline.counts[0].length, 5)
+  assert.equal(baseline.environmentContract, 'episodic-target-terminal')
+  assert.equal(baseline.totalPairs, 120)
+  assert.equal(baseline.samples.every((episode) => episode.terminated && episode.steps.at(-1).terminated), true)
+  assert.equal(baseline.samples.every((episode) => episode.steps.length <= baseline.maxEpisodeSteps), true)
   assert.ok(Math.abs(baseline.policy.reduce((sum, item) => sum + item.probability, 0) - 1) < 1e-12)
   assert.ok(baseline.policy.every((item) => item.probability > 0))
 
@@ -46,6 +50,19 @@ test('the Monte Carlo family lab reuses the course world and exposes coverage, v
 
   const greedy = runMonteCarloCourse({ variant: 'exploring' })
   assert.equal(greedy.policy.filter((item) => item.probability === 1).length, 1)
+})
+
+test('Sarsa and Q-learning targets are a controlled counterfactual over one Q snapshot', () => {
+  const result = compareControl({ epsilon: 0.12, alpha: 0.3, seed: 20260719 })
+  const { nextState, sarsaNextAction, qGreedyAction, reward } = result.transition
+  const actions = ['up', 'right', 'down', 'left']
+  const row = result.qSnapshot[nextState]
+  const sarsaValue = row[actions.indexOf(sarsaNextAction)]
+  const greedyValue = row[actions.indexOf(qGreedyAction)]
+  assert.equal(result.sarsaTarget, reward + 0.9 * sarsaValue)
+  assert.equal(result.qTarget, reward + 0.9 * greedyValue)
+  assert.equal(result.qTarget, reward + 0.9 * Math.max(...row))
+  assert.notEqual(sarsaNextAction, qGreedyAction)
 })
 
 test('Part III labs expose sharing, stability, policy, and actor-critic effects', () => {

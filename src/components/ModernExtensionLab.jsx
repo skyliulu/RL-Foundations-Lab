@@ -22,8 +22,8 @@ const environmentCopy = {
     en: ['Multi-turn tool environment', String.raw`(h_t,m_t)\xrightarrow{a_t^{\mathrm{tool}}}o_{t+1}`, 'History and memory define state; tool calls change the environment and return observations.'],
   },
   credit: {
-    zh: ['同一条 Agent 轨迹', String.raw`\tau=(s_0,a_0,o_1,\ldots,s_T)`, '四种归因方法读取同一条工具轨迹，只改变结果如何分配到各步。'],
-    en: ['One shared agent trajectory', String.raw`\tau=(s_0,a_0,o_1,\ldots,s_T)`, 'All four schemes read the same tool trajectory and change only how outcome credit is assigned.'],
+    zh: ['同一条 Agent 轨迹', String.raw`\tau=(s_0,a_0,o_1,\ldots,s_T)`, '五种归因方法读取同一条工具轨迹；分段方法显式使用工具边界，反事实方法重放合理替代动作。'],
+    en: ['One shared agent trajectory', String.raw`\tau=(s_0,a_0,o_1,\ldots,s_T)`, 'Five schemes read one tool trajectory; segment credit uses tool boundaries and counterfactual credit replays plausible alternatives.'],
   },
 }
 
@@ -76,8 +76,15 @@ function AgentLab({ lang }) {
   return <div className="modern-lab-body">
     <div className="modern-controls"><div className="modern-segmented"><button type="button" className={failureAt === 'none' ? 'active' : ''} onClick={() => setFailureAt('none')}>{lang === 'zh' ? '完整成功轨迹' : 'Successful trajectory'}</button><button type="button" className={failureAt === 'inspect' ? 'active' : ''} onClick={() => setFailureAt('inspect')}>{lang === 'zh' ? '错误定位' : 'Bad localization'}</button><button type="button" className={failureAt === 'test' ? 'active' : ''} onClick={() => setFailureAt('test')}>{lang === 'zh' ? '测试后终止' : 'Stop after test'}</button></div></div>
     <div className="agent-tree">
-      <div className="agent-trajectory">{trajectory.steps.map((step, index) => <article key={step.id} className={step.status}><span>{String(index + 1).padStart(2, '0')}</span><small>A{index}</small><strong>{step.tool}</strong><i>→</i><small>O{index + 1}</small><p>{step.observation}</p></article>)}</div>
-      <aside><span>{lang === 'zh' ? '第一个分支点' : 'First branch point'}</span><strong>{lang === 'zh' ? '定位到边界分支' : 'Inspect boundary branch'}</strong><i>↙</i><strong>{lang === 'zh' ? '误判为解析器问题' : 'Misdiagnose parser'}</strong><p>{lang === 'zh' ? '轨迹不是预先给定的直线；观察会改变下一动作及可达终局。' : 'The trajectory is not a fixed line: observations change the next action and reachable terminal states.'}</p></aside>
+      <div className="agent-tree-scroll">
+        <div className="agent-tree-grid">
+          {trajectory.nodes.map((node) => <article key={node.id} className={`${node.selected ? 'is-selected' : ''} ${node.branchAlternative ? 'is-alternative' : ''} ${node.terminal ? node.success ? 'is-success' : 'is-failure' : ''}`} style={{ gridColumn: node.depth + 1 }}>
+            <span>{node.tool}</span><strong>{node.action}</strong><small>{node.observation}</small>
+            {node.parentId && <em>{node.parentId}</em>}
+          </article>)}
+        </div>
+      </div>
+      <aside><span>{lang === 'zh' ? '当前选择的真实路径' : 'Current realized path'}</span><strong>{trajectory.pathIds.join(' → ')}</strong><p>{lang === 'zh' ? '每个分支共享此前状态，但选择不同动作后会收到不同观察，并改变后续可达终局。浅色节点是当前状态下没有选择的反事实分支。' : 'Branches share the preceding state. Different actions produce different observations and reachable outcomes. Muted nodes are counterfactual branches not selected on this run.'}</p></aside>
     </div>
     <div className={`trajectory-result ${trajectory.success ? 'success' : 'failed'}`}><b>{trajectory.success ? (lang === 'zh' ? '任务成功' : 'Task success') : (lang === 'zh' ? '轨迹失败' : 'Trajectory failure')}</b><span>{trajectory.terminal} · cost {trajectory.cost.toFixed(1)}</span></div>
   </div>
@@ -89,9 +96,11 @@ function CreditLab({ lang }) {
   const [trust, setTrust] = useState(0.7)
   const result = useMemo(() => evaluateCredit({ scheme, gamma, trust }), [scheme, gamma, trust])
   return <div className="modern-lab-body">
-    <div className="modern-controls stacked"><div className="modern-segmented">{['terminal', 'discounted', 'process', 'hindsight'].map((id) => <button type="button" key={id} className={scheme === id ? 'active' : ''} onClick={() => setScheme(id)}>{({ terminal: lang === 'zh' ? '终局广播' : 'Terminal', discounted: lang === 'zh' ? '折扣回报' : 'Discounted', process: lang === 'zh' ? '过程奖励' : 'Process', hindsight: 'Hindsight' })[id]}</button>)}</div><label><span><MathFormula latex={String.raw`\gamma`} /> <output>{gamma.toFixed(2)}</output></span><input type="range" min="0.5" max="1" step="0.02" value={gamma} onChange={(event) => setGamma(Number(event.target.value))} /></label><label><span>{lang === 'zh' ? '局部信号可信度' : 'Local-signal trust'} <MathFormula latex={String.raw`\eta`} /> <output>{trust.toFixed(2)}</output></span><input type="range" min="0" max="1" step="0.05" value={trust} onChange={(event) => setTrust(Number(event.target.value))} /></label></div>
-    <div className="credit-track-scroll"><div className="credit-track">{result.credits.map((step) => <article key={step.id}><small>{step.tool}</small><span><MathFormula latex={String.raw`e_t=${step.evidence.toFixed(2)}`} /></span><div><i style={{ height: `${Math.max(4, Math.abs(step.credit) * 70)}px` }} className={step.credit < 0 ? 'negative' : ''} /></div><strong>{step.credit.toFixed(2)}</strong></article>)}</div></div>
-    <div className="modern-equation"><MathFormula block latex={scheme === 'terminal' ? String.raw`\widehat A_t=R(\tau)` : scheme === 'discounted' ? String.raw`G_t=\gamma^{T-t}R_T` : scheme === 'process' ? String.raw`G_t=\sum_k\gamma^{k-t}(R_k^{\rm outcome}+\eta R_k^{\rm process})` : String.raw`C_t=(1-\eta)G_t+\eta C_t^{\rm hind}`} /><strong>{lang === 'zh' ? '信用总量' : 'Total assigned credit'} {result.total.toFixed(2)}</strong></div>
+    <div className="modern-controls stacked"><div className="modern-segmented">{['terminal', 'discounted', 'process', 'segment', 'counterfactual'].map((id) => <button type="button" key={id} className={scheme === id ? 'active' : ''} onClick={() => setScheme(id)}>{({ terminal: lang === 'zh' ? '终局广播' : 'Terminal', discounted: lang === 'zh' ? '折扣回报' : 'Discounted', process: lang === 'zh' ? '过程奖励' : 'Process', segment: lang === 'zh' ? '工具分段' : 'Segments', counterfactual: lang === 'zh' ? '反事实重放' : 'Counterfactual' })[id]}</button>)}</div><label><span><MathFormula latex={String.raw`\gamma`} /> <output>{gamma.toFixed(2)}</output></span><input type="range" min="0.5" max="1" step="0.02" value={gamma} onChange={(event) => setGamma(Number(event.target.value))} /></label><label><span>{lang === 'zh' ? '局部 / 反事实证据可信度' : 'Local / replay evidence trust'} <MathFormula latex={String.raw`\eta`} /> <output>{trust.toFixed(2)}</output></span><input type="range" min="0" max="1" step="0.05" value={trust} onChange={(event) => setTrust(Number(event.target.value))} /></label></div>
+    <div className="credit-track-scroll"><div className="credit-track">{result.credits.map((step) => <article key={step.id}><small>{step.tool}</small><span>{scheme === 'segment' ? step.segment : <MathFormula latex={String.raw`e_t=${step.evidence.toFixed(2)}`} />}</span><div><i style={{ height: `${Math.max(4, Math.abs(step.credit) * 70)}px` }} className={step.credit < 0 ? 'negative' : ''} /></div><strong>{step.credit.toFixed(2)}</strong></article>)}</div></div>
+    {scheme === 'segment' && <div className="credit-evidence-ledger"><span>{lang === 'zh' ? '分段价值账本' : 'Segment-value ledger'}</span>{Object.values(result.segments).map((segment) => <article key={segment.label}><strong>{segment.label}</strong><MathFormula latex={String.raw`G^{\rm seg}=${segment.outcome.toFixed(2)}`} /><MathFormula latex={String.raw`V^{\rm base}=${segment.baseline.toFixed(2)}`} /><MathFormula latex={String.raw`A^{\rm seg}=${(segment.outcome - segment.baseline).toFixed(2)}`} /></article>)}</div>}
+    {scheme === 'counterfactual' && <div className="credit-evidence-ledger"><span>{lang === 'zh' ? '同状态替代动作重放' : 'Same-state alternative-action replay'}</span>{result.replays.map((replay) => <article key={replay.stepId}><strong>{replay.stepId}</strong><small>{replay.chosen} ↔ {replay.alternative}</small><MathFormula latex={String.raw`\Delta R=${(replay.chosenOutcome - replay.alternativeOutcome).toFixed(2)}`} /></article>)}</div>}
+    <div className="modern-equation"><MathFormula block latex={scheme === 'terminal' ? String.raw`\widehat A_t=R(\tau)` : scheme === 'discounted' ? String.raw`G_t=\gamma^{T-t}R_T` : scheme === 'process' ? String.raw`G_t=\sum_k\gamma^{k-t}(R_k^{\rm outcome}+\eta R_k^{\rm process})` : scheme === 'segment' ? String.raw`A_j^{\rm seg}=G_j^{\rm seg}-V(s_j)` : String.raw`C_t=(1-\eta)G_t+\eta\left(R_{\rm chosen}-R_{\rm alternative}\right)`} /><strong>{lang === 'zh' ? '信用总量' : 'Total assigned credit'} {result.total.toFixed(2)}</strong></div>
   </div>
 }
 

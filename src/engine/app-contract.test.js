@@ -425,8 +425,8 @@ test('right-workbench notation is rendered through MathFormula', () => {
 
 test('algorithms, tables, experiments, and the right workbench share a readable type floor', () => {
   const styles = read('styles.css')
-  assert.match(styles, /--font-floor:\s*\.75rem/)
-  assert.match(styles, /--font-dense:\s*\.75rem/)
+  assert.match(styles, /--font-floor:\s*\.8125rem/)
+  assert.match(styles, /--font-dense:\s*\.8125rem/)
   assert.match(styles, /--font-support:\s*\.875rem/)
   assert.match(styles, /--font-ui:\s*\.8125rem/)
   assert.match(styles, /--font-table:\s*\.875rem/)
@@ -571,7 +571,29 @@ test('all rebuilt chapters expose one bilingual causal article flow with one exp
     zhFlow.flatMap((block) => block.formulas || []).forEach((formula) => {
       assert.equal(typeof formula.latex, 'string', `${id} article formula must be explicit LaTeX`)
       assert.ok(['definition', 'transition', 'result', 'support'].includes(formula.role), `${id} article formula needs a semantic role`)
+      assert.equal(typeof formula.before, 'string', `${id} article formula needs a preceding explanation`)
+      assert.equal(typeof formula.after, 'string', `${id} article formula needs a following interpretation`)
     })
+  }
+})
+
+test('short article turns keep formula interpretation separate from the preceding claim', async () => {
+  const { copy } = await import('../content.js')
+  for (const lang of ['zh', 'en']) {
+    for (const chapter of copy[lang].chapters) {
+      const turns = (copy[lang][chapter.id].articleFlow || []).filter((block) => block.type === 'turn')
+      turns.forEach((turn) => {
+        if (turn.formulas?.length) {
+          assert.ok(turn.formulaAfter?.length > 20, `${lang}.${chapter.id}.${turn.id} formula interpretation`)
+          turn.formulas.forEach((formula) => {
+            assert.ok(formula.before.length > 20, `${lang}.${chapter.id}.${turn.id} formula before`)
+            assert.ok(formula.after.length > 20, `${lang}.${chapter.id}.${turn.id} formula after`)
+          })
+        } else {
+          assert.ok(turn.paragraphs.join('').length >= 70, `${lang}.${chapter.id}.${turn.id} merged prose turn`)
+        }
+      })
+    }
   }
 })
 

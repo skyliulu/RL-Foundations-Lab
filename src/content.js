@@ -140,49 +140,6 @@ export const copy = {
   },
 }
 
-const visibleSectionTitles = {
-  zh: {
-    returns: { 'reward-to-return': '从即时奖励到长期回报', 'two-return-calculations': 'Return 的两种等价计算', 'return-distribution': 'Return 分布与状态价值' },
-    bellman: { 'return-recursion': 'Return 的一步递推', 'four-state-worked-system': '四状态 Bellman 方程组', 'matrix-and-iteration': '矩阵形式与迭代策略评价', 'state-to-action-value': '从状态价值到动作价值' },
-    optimality: { 'evaluation-control': '从策略评价到最优控制', 'contraction-proof': 'Bellman 最优算子的压缩性', 'greedy-policy-proof': '由最优价值构造贪心策略', 'reward-transformations': '奖励变换如何影响最优策略' },
-    planning: { 'value-iteration': '评估深度决定算法形式', 'vi-complete-loop': 'Value Iteration', 'pi-four-whys': 'Policy Iteration', 'tpi-continuum': 'Truncated Policy Iteration' },
-    td: { timing: '一次转移即可产生学习目标', 'bellman-sample-logic': '从 Bellman 期望到单步样本', 'td-zero-complete': 'TD(0) 完整算法', 'mc-td-matched-comparison': 'Monte Carlo 与 TD 的差异' },
-    control: { 'prediction-control': '在学习价值的同时改进策略', 'sarsa-complete-loop': 'Sarsa', 'q-learning-off-policy': 'Q-learning', 'n-step-and-cliff': 'n-step Sarsa 与悬崖世界' },
-    vfa: { capacity: '用共享参数表示价值函数', 'objective-and-semi-gradient': '加权近似误差与 semi-gradient', 'linear-sharing': '线性特征与参数共享', 'approximate-control': '近似动作价值控制' },
-    dqn: { coupling: '神经网络使 Q-learning 产生新的不稳定性', 'moving-target': '移动目标为何导致不稳定', 'replay-why': '经验回放的作用', 'dqn-complete': 'DQN 完整训练循环' },
-    policygradient: { 'value-policy': '把策略写成可微概率模型', 'objectives-and-occupancy': '策略优化目标与状态分布', 'theorem-to-samples': 'Policy Gradient Theorem', 'reinforce-complete': 'REINFORCE' },
-    actorcritic: { roles: '用 Critic 估计动作的相对好坏', 'qac-to-baseline': '从 Q Actor–Critic 到状态基线', 'a2c-shared-transition': 'A2C 的双更新', 'off-policy-and-deterministic': 'Off-policy 与确定性策略梯度' },
-    ppo: { 'actor-critic-loop': '在旧策略数据上控制更新幅度', 'ratio-to-clipping-cases': 'Clipped surrogate objective 的四种情况', 'full-objective': 'PPO 的完整目标', 'ppo-complete-loop': 'PPO 训练循环' },
-    tokenmdp: { bridge: '把语言生成写成 MDP', 'markov-sufficiency': '状态的 Markov 充分性', 'reward-placement': '序列奖励与 token 级奖励', 'rollout-record': 'Token 轨迹的数据契约' },
-    rlhf: { 'pipeline-level': 'RLHF 的三个训练阶段', 'model-provenance': '五类模型的来源与冻结关系', 'sequence-to-token-reward': '从序列分数到 token 奖励', 'batch-contract-and-failures': 'PPO batch 的一致性约束' },
-    dpo: { 'why-offline': '从在线 PPO 转向离线偏好优化', 'complete-dpo': 'DPO 的 minibatch 更新', 'failure-modes': '偏好数据的失效模式' },
-    grpo: { 'why-online': '在线验证恢复探索', 'complete-grpo': 'GRPO 的完整训练循环', 'stability-family': 'GRPO 的稳定化改进' },
-    codingrl: { 'code-as-action': '代码执行结果提供可验证反馈', 'complete-coding-loop': 'Coding RL 的完整训练循环', 'reward-hacking': '奖励投机与测试覆盖' },
-    agentmdp: { 'beyond-response': '工具调用把回答扩展成环境交互', 'complete-agent-rollout': 'Agent rollout 的完整执行循环', 'partial-observability': '部分可观测性' },
-    credit: { 'sparse-delay': '终局奖励不能区分各步贡献', 'bias-audit': '稠密信用的偏差审计', 'solution-toolbox': '长程信用分配的方法组合' },
-  },
-  en: {
-    returns: { 'reward-to-return': 'From Immediate Reward to Long-Term Return', 'two-return-calculations': 'Two Equivalent Return Calculations', 'return-distribution': 'Return Distributions and State Value' },
-    bellman: { 'return-recursion': 'The One-Step Recursion of Return', 'four-state-worked-system': 'A Four-State Bellman System', 'matrix-and-iteration': 'Matrix Form and Iterative Policy Evaluation', 'state-to-action-value': 'From State Value to Action Value' },
-    optimality: { 'evaluation-control': 'From Policy Evaluation to Optimal Control', 'contraction-proof': 'Contraction of the Bellman Optimality Operator', 'greedy-policy-proof': 'Recovering a Greedy Policy from Optimal Value', 'reward-transformations': 'Effects of Reward Transformations on Optimal Policies' },
-    planning: { 'value-iteration': 'Evaluation Depth Determines the Algorithm', 'vi-complete-loop': 'Value Iteration', 'pi-four-whys': 'Policy Iteration', 'tpi-continuum': 'Truncated Policy Iteration' },
-    td: { timing: 'One Transition Is Enough to Form a Learning Target', 'bellman-sample-logic': 'From a Bellman Expectation to One Transition Sample', 'td-zero-complete': 'The Complete TD(0) Algorithm', 'mc-td-matched-comparison': 'Monte Carlo and TD Compared' },
-    control: { 'prediction-control': 'Improving the Policy While Learning Value', 'sarsa-complete-loop': 'Sarsa', 'q-learning-off-policy': 'Q-learning', 'n-step-and-cliff': 'n-step Sarsa and the Cliff World' },
-    vfa: { capacity: 'Representing Value with Shared Parameters', 'objective-and-semi-gradient': 'Weighted Approximation Error and Semi-Gradients', 'linear-sharing': 'Linear Features and Parameter Sharing', 'approximate-control': 'Approximate Action-Value Control' },
-    dqn: { coupling: 'Neural Networks Introduce New Q-learning Instabilities', 'moving-target': 'Moving Targets and Learning Instability', 'replay-why': 'The Role of Experience Replay', 'dqn-complete': 'The Complete DQN Training Loop' },
-    policygradient: { 'value-policy': 'Writing the Policy as a Differentiable Probability Model', 'objectives-and-occupancy': 'Policy Objectives and State Distributions', 'theorem-to-samples': 'The Policy Gradient Theorem', 'reinforce-complete': 'REINFORCE' },
-    actorcritic: { roles: 'Using a Critic to Estimate Relative Action Quality', 'qac-to-baseline': 'From Q Actor–Critic to a State Baseline', 'a2c-shared-transition': 'The Two Updates in A2C', 'off-policy-and-deterministic': 'Off-Policy and Deterministic Policy Gradients' },
-    ppo: { 'actor-critic-loop': 'Controlling Updates on Old-Policy Data', 'ratio-to-clipping-cases': 'The Four Cases of the Clipped Surrogate Objective', 'full-objective': 'The Complete PPO Objective', 'ppo-complete-loop': 'The PPO Training Loop' },
-    tokenmdp: { bridge: 'Writing Language Generation as an MDP', 'markov-sufficiency': 'Markov Sufficiency of the State', 'reward-placement': 'Sequence Rewards and Token-Level Rewards', 'rollout-record': 'The Token-Trajectory Data Contract' },
-    rlhf: { 'pipeline-level': 'The Three Training Stages of RLHF', 'model-provenance': 'Origins and Freeze States of the Five Model Roles', 'sequence-to-token-reward': 'From a Sequence Score to Token Rewards', 'batch-contract-and-failures': 'Consistency Requirements of a PPO Batch' },
-    dpo: { 'why-offline': 'From Online PPO to Offline Preference Optimization', 'complete-dpo': 'DPO Minibatch Updates', 'failure-modes': 'Failure Modes in Preference Data' },
-    grpo: { 'why-online': 'Online Verification Restores Exploration', 'complete-grpo': 'The Complete GRPO Training Loop', 'stability-family': 'Stabilizing GRPO' },
-    codingrl: { 'code-as-action': 'Execution Results Provide Verifiable Feedback', 'complete-coding-loop': 'The Complete Coding RL Training Loop', 'reward-hacking': 'Reward Hacking and Test Coverage' },
-    agentmdp: { 'beyond-response': 'Tool Calls Turn Responses into Environment Interaction', 'complete-agent-rollout': 'The Complete Agent Rollout Loop', 'partial-observability': 'Partial Observability' },
-    credit: { 'sparse-delay': 'Terminal Rewards Cannot Distinguish Step Contributions', 'bias-audit': 'Auditing Bias in Dense Credit', 'solution-toolbox': 'Combining Methods for Long-Horizon Credit' },
-  },
-}
-
 const derivationLabels = {
   zh: {
     returns: ['核心推导', '从奖励序列得到回报与状态价值'],
@@ -217,9 +174,5 @@ for (const lang of ['zh', 'en']) {
       copy[lang][id].derivationTitle = labels[1]
     }
     copy[lang][id].articleFlow = buildChapterArticleFlow(id, copy[lang][id], lang)
-    const titleOverrides = visibleSectionTitles[lang][id] || {}
-    copy[lang][id].articleFlow.forEach((block) => {
-      if (titleOverrides[block.id]) block.title = titleOverrides[block.id]
-    })
   }
 }

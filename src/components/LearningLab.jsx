@@ -151,11 +151,15 @@ function ControlEvidenceStage({ result, zh }) {
   return (
     <div className="control-evidence-stage">
       <section className="control-shared-transition">
-        <header><span>{zh ? '同一条经验，不同的后继动作' : 'Same experience, different successor actions'}</span><small>{zh ? '差异只来自更新目标' : 'Only the update target changes'}</small></header>
+        <header><span>{zh ? '同一条经验、同一张冻结 Q 表' : 'Same experience and one frozen Q table'}</span><small>{zh ? '只替换后继动作的读取规则' : 'Only the successor-action readout changes'}</small></header>
         <div className="control-transition-row">
           <b><MathFormula latex={String.raw`S_t=s_{${transition.state}}`} /></b><i>→</i><b><MathFormula latex={String.raw`A_t=\mathrm{right}`} /></b><i>→</i><b><MathFormula latex={String.raw`R_{t+1}=${transition.reward}`} /></b><i>→</i><b><MathFormula latex={String.raw`S_{t+1}=s_{${transition.nextState}}`} /></b>
         </div>
-        <p>{zh ? 'Sarsa 使用行为策略实际采样的后继动作；Q-learning 则使用后继状态中价值最大的动作。' : 'Sarsa uses the successor action sampled by the behavior policy; Q-learning uses the highest-valued action at the successor state.'}</p>
+        <p>{zh ? '下面两个 target 都读取同一个 Q snapshot。Sarsa 使用行为策略可能采到的探索动作；Q-learning 在同一行上读取最大值，因此数值差只能来自后继动作规则。' : 'Both targets below read one Q snapshot. Sarsa uses an exploratory action that the behavior policy can sample; Q-learning reads the maximum from the same row, so only the successor-action rule can create a difference.'}</p>
+      </section>
+      <section className="control-q-snapshot">
+        <header><span>{zh ? '冻结的后继状态动作价值' : 'Frozen successor-state action values'}</span><small><MathFormula latex={String.raw`Q_{\mathrm{shared}}(S_{t+1},\cdot)`} /></small></header>
+        <div>{result.successorValues.map((item) => <span className={item.action === transition.sarsaNextAction ? 'is-behavior' : item.action === transition.qGreedyAction ? 'is-greedy' : ''} key={item.action}><b>{cliffArrows[item.action]}</b><MathFormula latex={String.raw`${item.value.toFixed(2)}`} /></span>)}</div>
       </section>
       <section className="control-target-comparison">
         <article>
@@ -166,7 +170,7 @@ function ControlEvidenceStage({ result, zh }) {
         <article>
           <span>Q-learning · off-policy</span>
           <MathFormula block latex={String.raw`U_t=R_{t+1}+\gamma\max_aQ(S_{t+1},a)`} />
-          <p>{zh ? '以贪心动作构造反事实后续' : 'Counterfactual greedy continuation'} · <strong><MathFormula latex={String.raw`U_t=${result.qTarget.toFixed(2)}`} /></strong></p>
+          <p><MathFormula latex={String.raw`a^*=\mathrm{${transition.qGreedyAction}}`} /> · <strong><MathFormula latex={String.raw`U_t=${result.qTarget.toFixed(2)}`} /></strong></p>
         </article>
       </section>
       <section className="control-policy-comparison">
