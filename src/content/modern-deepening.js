@@ -53,22 +53,22 @@ export const ppoDeepeningEn = [
 
 export const rlhfDeepeningZh = [
   {
-    id: 'model-provenance', kicker: '模型来源与冻结关系', title: 'Policy、old、reference、reward 与 value 不只是五个名字，而是五种数据血缘',
-    paragraphs: ['Policy 通常从 SFT 初始化并持续更新；old 是每轮 rollout 时 policy 的短期快照；reference 常由同一 SFT 模型复制并长期冻结；reward 来自独立偏好比较训练；value 可从 policy/SFT 权重初始化，但使用回报回归更新。', 'old 用于统计上正确的 PPO ratio，reference 用于行为约束。把二者合并会让 KL 锚点随每轮更新漂移，改变正则目标；反过来用长期 reference 充当 old，又会使 ratio 与真实采样分布不匹配。'],
+    id: 'model-provenance', kicker: '生成分布与长期锚点', title: '一次 rollout 需要短期 old 快照，也需要长期冻结的 reference',
+    paragraphs: ['当前 policy 从 SFT 权重出发并持续更新。每次收集回答之前，系统复制一份短期 old 快照，用它实际生成这一批 token，并把当时的 log-probability 保存下来；与此同时，reference 通常保留 SFT 权重并在整个 PPO 阶段冻结，用来衡量策略相对原始行为的偏离。', '两者都输出 token 概率，却回答不同问题：old 说明“这条样本从哪里来”，reference 说明“当前策略离长期锚点多远”。若 reference 随每批数据一起刷新，KL 约束会失去固定参照；若让长期 reference 充当 old，PPO 比值的分母又不再等于真实生成概率。Reward model 只对完整回答打分，value model 则学习每个前缀的未来 shaped return，这两个角色也由后续计算需要分别引出。'],
     formulas: [String.raw`\theta_0\leftarrow\theta_{\mathrm{SFT}},\quad\theta_{\mathrm{old}}\leftarrow\theta\ \text{per rollout}`, String.raw`\theta_{\mathrm{ref}}\leftarrow\theta_{\mathrm{SFT}}\ \text{and frozen}`, String.raw`\psi\leftarrow\operatorname{TrainRM}(x,y^+,y^-)`],
     theorem: theorem('PPO ratio 的分母必须对应生成该 token 的策略概率。', '这是重要性修正的数据血缘要求；任何 worker 滞后或 token 对齐错误都会让 ratio 失真。', [String.raw`y_t\sim\pi_{\mathrm{old}}(\cdot\mid x,y_{<t})`, String.raw`\log\pi_{\mathrm{old},t}\ \text{stored at generation}`]),
     handoff: '模型角色明确后，下一步是把序列级偏好分数分配到 token 轨迹。',
   },
   {
-    id: 'sequence-to-token-reward', kicker: '奖励整形', title: '序列级 reward 与逐 token KL 代价的对齐方式',
-    paragraphs: ['Reward model 读取完整 prompt-response 才能给出序列分数，因此最自然的 MDP 实现是在 EOS 或截断位置注入终局奖励。Reference KL 可在每个已采样 token 上由 log-probability 差估计，因此形成稠密代价。', '总 return 会把终局偏好向前传播，而逐 token KL 立即惩罚每一步偏离。若 padding mask、EOS 位置或长度惩罚处理错误，模型可能优化格式和长度而非偏好。'],
+    id: 'sequence-to-token-reward', kicker: '序列分数进入 token 轨迹', title: '终局偏好分数与逐 token KL 共同形成 shaped reward',
+    paragraphs: ['Reward model 必须读完整个 prompt-response 才能判断偏好，因此它的序列分数只在有效回答结束位置加入轨迹；reference KL 则能在每个已采样 token 上由 policy/reference 的 log-probability 差计算，形成沿途代价。两者相加后，前面的 token 通过 return 和 GAE 接收到终局偏好，同时每一步都立即承担偏离 reference 的成本。', '例如一条三 token 回答得到 2.0 的终局偏好，而三个位置的 KL 代价为 −0.1、−0.2、−0.1，那么 shaped reward 依次为 −0.1、−0.2、1.9。这个计算依赖正确的 response mask 和结束位置；若 padding、EOS 或长度截断错位，训练就可能奖励格式或长度，而不是回答质量。'],
     formulas: [String.raw`r_t^{\mathrm{KL}}=-\beta\left(\log\pi_\theta(y_t\mid s_t)-\log\pi_{\mathrm{ref}}(y_t\mid s_t)\right)`, String.raw`r_t=r_t^{\mathrm{KL}}+\mathbf 1[t=T-1]r_\psi(x,y)`],
     example: example('一条三 token response 的 shaped reward', '终局偏好分数为 2.0，逐 token KL 代价分别为 −0.1、−0.2、−0.1。', ['位置', 'KL 代价', '最终 token reward'], [['token 1', '−0.1', '−0.1'], ['token 2', '−0.2', '−0.2'], ['token 3 / EOS', '−0.1', '1.9']]),
     handoff: 'GAE 再把这条 shaped reward 序列与 prefix value 合成为逐 token advantage。',
   },
   {
-    id: 'batch-contract-and-failures', kicker: '端到端批次契约', title: 'RLHF 工程稳定性的核心是同一 token 位置贯穿生成、打分、GAE 与更新',
-    paragraphs: ['每条样本至少需要 prompt/response token、attention 与 response mask、终止原因、old/reference log-probability、old value、token reward、advantage 和 return。只有 response 的有效位置进入 policy loss。', '常见失败可按契约定位：reward 飙升而 KL 失控通常是约束过弱或 reward hacking；value loss 爆炸可能来自终止 mask/尺度；ratio 异常常来自旧权重滞后或 token 重算不一致；吞吐下降则要区分生成、打分与优化瓶颈。'],
+    id: 'batch-contract-and-failures', kicker: '完整更新循环', title: '同一 token 位置必须贯穿生成、打分、GAE 与 PPO 更新',
+    paragraphs: ['一条可训练样本至少保存 prompt/response token、attention mask、response mask、终止原因、old/reference log-probability、old value、token reward、advantage、return 和模型版本。Reference 与 reward model 可以在生成后批量前向，但必须复用同一 tokenization；只有 response 的有效位置进入 policy loss。', '这些字段也给故障定位提供了因果线索：reward 上升而 KL 失控，通常要检查约束强度和 reward hacking；value loss 爆炸时，应先检查终止 mask 与奖励尺度；ratio 异常则常来自 worker 权重滞后或 token 重算不一致。完整循环因此不是把五个模型接在一起，而是让每个阶段都读写同一份可核对的样本证据。'],
     formulas: [String.raw`\mathcal B_t=(y_t,m_t,\log\pi_{\mathrm{old},t},\log\pi_{\mathrm{ref},t},V_{\mathrm{old},t},r_t,\widehat A_t,\widehat R_t)`, String.raw`L_{\mathrm{policy}}=\frac{\sum_t m_t\ell_t}{\sum_t m_t}`],
     pseudocodeTitle: 'One PPO-based RLHF iteration',
     pseudocode: ['冻结本轮 old policy；rollout workers 生成 response 并保存 token 证据', 'Reference 与 reward model 对同一 tokenization 批量前向打分', '构造逐 token KL 代价，并在有效终点加入序列 reward', 'Value model 为每个有效 prefix 产生 old value', '按终止 mask 反向计算 GAE advantage 与 return', '固定 batch，执行有限 PPO minibatch epoch 更新 policy/value', '发布新 policy 到 workers；记录 reward、KL、clip、value、长度与吞吐诊断'],
@@ -78,22 +78,22 @@ export const rlhfDeepeningZh = [
 
 export const rlhfDeepeningEn = [
   {
-    id: 'model-provenance', kicker: 'Model provenance and freezing', title: 'Policy, old, reference, reward, and value represent five data lineages',
-    paragraphs: ['Policy usually starts from SFT and keeps updating; old is a short-lived rollout snapshot; reference is commonly an SFT copy frozen long-term; reward comes from preference comparisons; value may initialize from policy weights but trains on returns.', 'Old supplies the statistically correct PPO denominator, while reference supplies behavioral regularization. Merging them either moves the KL anchor or mismatches the sampling distribution.'],
+    id: 'model-provenance', kicker: 'Generating distribution and long-lived anchor', title: 'A rollout needs both a short-lived old snapshot and a frozen reference',
+    paragraphs: ['The current policy starts from SFT and keeps updating. Before collecting responses, the system copies a short-lived old snapshot, generates the batch with it, and stores generation-time token log-probabilities. The reference normally retains SFT weights throughout PPO and measures drift from the original behavior.', 'Both output probabilities but answer different questions: old identifies where a sample came from, while reference measures distance from a long-lived anchor. Refreshing reference every batch removes that anchor; using the frozen reference as old mismatches the true sampler. Reward scores complete responses, while value learns future shaped return at each prefix because later computations require those separate roles.'],
     formulas: [String.raw`\theta_0\leftarrow\theta_{\mathrm{SFT}},\quad\theta_{\mathrm{old}}\leftarrow\theta\ \text{per rollout}`, String.raw`\theta_{\mathrm{ref}}\leftarrow\theta_{\mathrm{SFT}}\ \text{and frozen}`, String.raw`\psi\leftarrow\operatorname{TrainRM}(x,y^+,y^-)`],
     theorem: theorem('The PPO denominator must be the probability from the policy that generated that token.', 'This is the provenance requirement for importance correction; worker lag or token misalignment corrupts the ratio.', [String.raw`y_t\sim\pi_{\mathrm{old}}(\cdot\mid x,y_{<t})`, String.raw`\log\pi_{\mathrm{old},t}\ \text{stored at generation}`]),
     handoff: 'With model roles clear, a sequence preference score must be assigned to the token trajectory.',
   },
   {
-    id: 'sequence-to-token-reward', kicker: 'Reward shaping', title: 'Aligning sequence rewards with tokenwise KL costs',
-    paragraphs: ['The reward model needs the complete response, so its score naturally arrives at EOS or truncation. Reference KL can be estimated at every sampled token from log-probability differences, creating dense cost.', 'Return propagates terminal preference backward while token KL penalizes local drift. Incorrect padding, EOS, or length handling can make the model optimize formatting rather than preference.'],
+    id: 'sequence-to-token-reward', kicker: 'Sequence score enters the token trajectory', title: 'Terminal preference and token KL jointly define shaped reward',
+    paragraphs: ['The reward model must read the complete response, so its sequence score enters at the valid endpoint. Policy/reference log-probability differences provide KL cost at every sampled token. Return and GAE propagate terminal preference backward while every step immediately pays for drift.', 'For a three-token response with terminal preference 2.0 and KL costs −0.1, −0.2, and −0.1, shaped rewards are −0.1, −0.2, and 1.9. This depends on correct response masks and endpoints; misaligned padding, EOS, or truncation can reward format or length instead of answer quality.'],
     formulas: [String.raw`r_t^{\mathrm{KL}}=-\beta\left(\log\pi_\theta(y_t\mid s_t)-\log\pi_{\mathrm{ref}}(y_t\mid s_t)\right)`, String.raw`r_t=r_t^{\mathrm{KL}}+\mathbf 1[t=T-1]r_\psi(x,y)`],
     example: example('Shaped reward for a three-token response', 'Terminal preference is 2.0; token KL costs are −0.1, −0.2, and −0.1.', ['Position', 'KL cost', 'Final token reward'], [['Token 1', '−0.1', '−0.1'], ['Token 2', '−0.2', '−0.2'], ['Token 3 / EOS', '−0.1', '1.9']]),
     handoff: 'GAE combines this shaped reward sequence with prefix values into token advantages.',
   },
   {
-    id: 'batch-contract-and-failures', kicker: 'End-to-end batch contract', title: 'RLHF stability depends on one token position surviving generation, scoring, GAE, and update',
-    paragraphs: ['Each sample needs prompt/response tokens, attention and response masks, termination reason, old/reference probabilities, old value, token reward, advantage, and return. Only valid response positions enter policy loss.', 'Failures map to the contract: rising reward with runaway KL suggests weak regularization or reward hacking; exploding value loss suggests terminal masks or scale; abnormal ratios suggest stale weights or token mismatch; throughput needs stage-level diagnosis.'],
+    id: 'batch-contract-and-failures', kicker: 'Complete update loop', title: 'The same token position must survive generation, scoring, GAE, and PPO update',
+    paragraphs: ['A trainable sample stores prompt/response tokens, attention and response masks, termination reason, old/reference log-probabilities, old value, token reward, advantage, return, and model versions. Reference and reward may run later, but they must reuse identical tokenization; only valid response positions enter policy loss.', 'The contract also localizes failures. Rising reward with runaway KL suggests weak regularization or reward hacking; exploding value loss suggests terminal masks or scale; abnormal ratios suggest stale workers or inconsistent token recomputation. The loop is not merely five connected models: every stage must read and write one auditable sample record.'],
     formulas: [String.raw`\mathcal B_t=(y_t,m_t,\log\pi_{\mathrm{old},t},\log\pi_{\mathrm{ref},t},V_{\mathrm{old},t},r_t,\widehat A_t,\widehat R_t)`, String.raw`L_{\mathrm{policy}}=\frac{\sum_t m_t\ell_t}{\sum_t m_t}`],
     pseudocodeTitle: 'One PPO-based RLHF iteration',
     pseudocode: ['Freeze old policy and let rollout workers generate token evidence', 'Run reference and reward models on exactly the same tokenization', 'Build token KL costs and add sequence reward at the valid endpoint', 'Produce old prefix values with the value model', 'Compute GAE advantages and returns backward with terminal masks', 'Run finite PPO minibatch epochs on the fixed batch', 'Publish policy weights and record reward, KL, clip, value, length, and throughput'],

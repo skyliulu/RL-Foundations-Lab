@@ -597,17 +597,14 @@ test('short article turns keep formula interpretation separate from the precedin
   }
 })
 
-test('long-horizon credit derivations appear beside the mechanism they justify', async () => {
+test('long-horizon credit uses one evidence ladder instead of restarting the derivation four times', async () => {
   const { copy } = await import('../content.js')
   const expected = [
-    ['terminal-credit', 'derivation'],
-    ['curriculum', 'turn'],
-    ['process-credit', 'derivation'],
     ['segmentation', 'turn'],
-    ['segment-credit', 'derivation'],
+    ['credit-evidence-ladder', 'derivation'],
     ['bias-audit', 'topic'],
+    ['curriculum', 'turn'],
     ['hindsight-risk', 'turn'],
-    ['hindsight-credit', 'derivation'],
   ]
   for (const lang of ['zh', 'en']) {
     const flow = copy[lang].credit.articleFlow
@@ -615,7 +612,26 @@ test('long-horizon credit derivations appear beside the mechanism they justify',
       flow.filter((block) => expected.some(([id]) => id === block.id)).map((block) => [block.id, block.type]),
       expected,
     )
-    assert.deepEqual(flow.filter((block) => block.type === 'derivation').map((block) => block.steps.length), [2, 1, 1, 1])
+    assert.deepEqual(flow.filter((block) => block.type === 'derivation').map((block) => block.steps.length), [5])
+  }
+})
+
+test('phase-two priority chapters follow causal rather than glossary-first article order', async () => {
+  const { copy } = await import('../content.js')
+  for (const lang of ['zh', 'en']) {
+    const rlhf = copy[lang].rlhf.articleFlow.map((block) => block.id)
+    assert.ok(rlhf.indexOf('pipeline-level') < rlhf.indexOf('model-provenance'))
+    assert.ok(rlhf.indexOf('model-provenance') < rlhf.indexOf('rlhf-derivation'))
+    assert.equal(rlhf.includes('role-separation'), false)
+
+    const grpo = copy[lang].grpo.articleFlow.map((block) => block.id)
+    assert.ok(grpo.indexOf('verifier') < grpo.indexOf('group-baseline'))
+    assert.ok(grpo.indexOf('zero-variance') < grpo.indexOf('informative-group-repair'))
+    assert.ok(grpo.indexOf('informative-group-repair') < grpo.indexOf('stability-family'))
+
+    const agent = copy[lang].agentmdp.articleFlow.map((block) => block.id)
+    assert.ok(agent.indexOf('branching') < agent.indexOf('chapter-experiment'))
+    assert.ok(agent.indexOf('chapter-experiment') < agent.indexOf('partial-observability'))
   }
 })
 
