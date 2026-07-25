@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { ACTIONS, allStates, indexOf, isForbidden, isGoal, isSame, keyOf } from '../engine/gridworld'
 import { estimateStateValue } from '../engine/returns'
 import { returnPresetConfigs } from '../content/returns'
+import { activateOnEnterOrSpace } from '../accessibility'
 import MathFormula from './MathFormula'
 import MathText from './MathText'
 
@@ -41,7 +42,16 @@ function ValueChart({ result, selectedIndex, onSelect, text }) {
       <text x={width - margin.right} y={y(result.exact) - 7} textAnchor="end" className="exact-value-label">{text.exact} {formatValue(result.exact)}</text>
       {result.runningMeans.length > 1 && <polyline points={line} className="running-mean-line" />}
       {result.samples.map((sample, index) => (
-        <g key={sample.seed} onClick={() => onSelect(index)} className={index === selectedIndex ? 'selected-sample-point' : 'sample-point'}>
+        <g
+          key={sample.seed}
+          role="button"
+          tabIndex={0}
+          aria-pressed={index === selectedIndex}
+          aria-label={`${text.selectedRun} ${index + 1}: ${text.return} ${formatValue(sample.discountedReturn)}`}
+          onClick={() => onSelect(index)}
+          onKeyDown={(event) => activateOnEnterOrSpace(event, () => onSelect(index))}
+          className={index === selectedIndex ? 'selected-sample-point' : 'sample-point'}
+        >
           <circle cx={x(index)} cy={y(sample.discountedReturn)} r={index === selectedIndex ? 6 : 4} />
           {index === selectedIndex && <text x={x(index)} y={y(sample.discountedReturn) - 10} textAnchor="middle">G={formatValue(sample.discountedReturn)}</text>}
         </g>
@@ -94,16 +104,16 @@ export default function ReturnObservatory({ lang, content }) {
       <header className="return-heading">
         <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
         <div className="return-mode-switch" role="group" aria-label={text.valueLens}>
-          <button type="button" className={mode === 'trajectory' ? 'active' : ''} onClick={() => setMode('trajectory')}>{text.modeTrajectory}</button>
-          <button type="button" className={mode === 'value' ? 'active' : ''} onClick={() => setMode('value')}>{text.modeValue}</button>
-          <button type="button" onClick={() => setShowPresets((value) => !value)}>{showPresets ? (lang === 'zh' ? '收起预设' : 'Hide presets') : (lang === 'zh' ? '教学预设' : 'Presets')}</button>
+          <button type="button" className={mode === 'trajectory' ? 'active' : ''} aria-pressed={mode === 'trajectory'} onClick={() => setMode('trajectory')}>{text.modeTrajectory}</button>
+          <button type="button" className={mode === 'value' ? 'active' : ''} aria-pressed={mode === 'value'} onClick={() => setMode('value')}>{text.modeValue}</button>
+          <button type="button" aria-expanded={showPresets} aria-controls="return-presets" onClick={() => setShowPresets((value) => !value)}>{showPresets ? (lang === 'zh' ? '收起预设' : 'Hide presets') : (lang === 'zh' ? '教学预设' : 'Presets')}</button>
         </div>
       </header>
 
-      {showPresets && <div className="return-presets">
+      {showPresets && <div className="return-presets" id="return-presets">
         <span>{text.preset}</span>
         {Object.keys(returnPresetConfigs).map((id) => (
-          <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}>
+          <button type="button" key={id} className={presetId === id ? 'active' : ''} aria-pressed={presetId === id} onClick={() => applyPreset(id)}>
             <strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small>
           </button>
         ))}
@@ -112,7 +122,7 @@ export default function ReturnObservatory({ lang, content }) {
       <div className="return-control-row">
         <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>
         <label><span>{text.noise}<output>{noise.toFixed(2)}</output></span><input type="range" min="0" max="0.4" step="0.1" value={noise} onChange={(event) => customize(() => setNoise(Number(event.target.value)))} /></label>
-        <fieldset><legend>{text.sampleCount}</legend><div>{sampleOptions.map((count) => <button type="button" key={count} className={sampleCount === count ? 'active' : ''} onClick={() => customize(() => { setSampleCount(count); setSelectedRun(0) })}>{count}</button>)}</div></fieldset>
+        <fieldset><legend>{text.sampleCount}</legend><div>{sampleOptions.map((count) => <button type="button" key={count} className={sampleCount === count ? 'active' : ''} aria-pressed={sampleCount === count} onClick={() => customize(() => { setSampleCount(count); setSelectedRun(0) })}>{count}</button>)}</div></fieldset>
       </div>
 
       <div className="return-metrics">
@@ -126,7 +136,7 @@ export default function ReturnObservatory({ lang, content }) {
           <header><span>{text.startState}</span><small>{text.chooseState}</small></header>
           <div className="return-world-grid">
             {allStates().map((state) => (
-              <button type="button" key={keyOf(state)} className={`${isForbidden(state) ? 'forbidden' : ''}${isGoal(state) ? ' goal' : ''}${isSame(state, start) ? ' selected' : ''}`} onClick={() => customize(() => { setStart(state); setSelectedRun(0) })}>
+              <button type="button" key={keyOf(state)} className={`${isForbidden(state) ? 'forbidden' : ''}${isGoal(state) ? ' goal' : ''}${isSame(state, start) ? ' selected' : ''}`} aria-pressed={isSame(state, start)} onClick={() => customize(() => { setStart(state); setSelectedRun(0) })}>
                 <span>{stateLabel(state, text.statePrefix)}</span>
                 <strong>{isSame(state, start) ? formatValue(result.exact) : ''}</strong>
               </button>
@@ -160,7 +170,7 @@ export default function ReturnObservatory({ lang, content }) {
             <header><span>{text.valueLens}</span><small>{text.clickSample}</small></header>
             <ValueChart result={result} selectedIndex={selectedIndex} onSelect={setSelectedRun} text={text} />
             <div className="value-chart-legend"><span><i className="sample-dot" />{text.return}</span><span><i className="mean-line" />{text.runningMean}</span><span><i className="exact-line" />{text.exactLine}</span></div>
-            <div className="sample-selector" aria-label={text.selectedRun}>{result.samples.map((item, index) => <button type="button" key={item.seed} className={index === selectedIndex ? 'active' : ''} onClick={() => setSelectedRun(index)} aria-label={`${text.selectedRun} ${index + 1}`}>{index + 1}</button>)}</div>
+            <div className="sample-selector" aria-label={text.selectedRun}>{result.samples.map((item, index) => <button type="button" key={item.seed} className={index === selectedIndex ? 'active' : ''} aria-pressed={index === selectedIndex} onClick={() => setSelectedRun(index)} aria-label={`${text.selectedRun} ${index + 1}`}>{index + 1}</button>)}</div>
           </section>
         )}
       </div>

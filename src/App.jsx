@@ -213,9 +213,9 @@ function ChapterGuideRail({ content, lang }) {
 function RightRail({ active, lang, open, onToggle, context, content }) {
   return (
     <aside className={`right-rail ${open ? 'is-open' : ''}`}>
-      <button type="button" className="right-rail-toggle" aria-expanded={open} onClick={onToggle}>{lang === 'zh' ? '学习工作台' : 'Study workspace'}</button>
+      <button type="button" className="right-rail-toggle" aria-expanded={open} aria-controls="right-rail-panel" onClick={onToggle}>{lang === 'zh' ? '学习工作台' : 'Study workspace'}</button>
       {open && (
-        <div className="right-rail-panel">
+        <div className="right-rail-panel" id="right-rail-panel">
           <header><span>{lang === 'zh' ? '随当前对象变化' : 'Follows the current object'}</span><button type="button" onClick={onToggle}>{lang === 'zh' ? '收起' : 'Close'}</button></header>
           {context ? <FormulaContextRail context={context} lang={lang} /> : ({ mdp: <MdpRail lang={lang} />, returns: <ReturnRail lang={lang} />, bellman: <BellmanRail lang={lang} />, optimality: <OptimalityRail lang={lang} />, planning: <PlanningRail lang={lang} />, ppo: <PpoRail lang={lang} />, rlhf: <RlhfRail lang={lang} /> }[active] || <ChapterGuideRail content={content} lang={lang} />)}
         </div>
@@ -331,11 +331,11 @@ export default function App() {
       <aside className={`left-nav ${navCompact ? 'is-compact' : ''}`}>
         <div className="nav-head"><span className="nav-label">{text.toc}</span><button type="button" className="nav-collapse" aria-expanded={!navCompact} onClick={() => setNavCompact((value) => !value)}>{navCompact ? (lang === 'zh' ? '展开' : 'Expand') : (lang === 'zh' ? '缩进' : 'Collapse')}</button></div>
         <nav>
-          <button type="button" className={`home-nav-item ${active === 'home' ? 'active' : ''}`} onClick={() => setActive('home')}>
+          <button type="button" className={`home-nav-item ${active === 'home' ? 'active' : ''}`} aria-current={active === 'home' ? 'page' : undefined} onClick={() => setActive('home')}>
             <span className="nav-number">⌂</span><span className="nav-copy"><small>{lang === 'zh' ? '课程入口' : 'Course entry'}</small><strong>{lang === 'zh' ? '学习全景' : 'Learning map'}</strong><em>{lang === 'zh' ? '从网格世界到大语言模型后训练' : 'From grid worlds to LLM post-training'}</em></span>
           </button>
           {text.chapters.map((item) => (
-            <button type="button" key={item.id} className={active === item.id ? 'active' : ''} onClick={() => setActive(item.id)}>
+            <button type="button" key={item.id} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined} onClick={() => setActive(item.id)}>
               <span className="nav-number">{item.number}</span><span className="nav-copy"><small>{item.kicker}</small><strong>{item.title}</strong><em>{item.subtitle}</em></span>
             </button>
           ))}

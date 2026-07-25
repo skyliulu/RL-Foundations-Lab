@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
+import { activateOnEnterOrSpace } from '../accessibility'
 import MathFormula from './MathFormula'
 import MathText from './MathText'
 
@@ -25,16 +26,13 @@ function SamplePlane({ samples, clip, selectedId, onSelect, lang }) {
           key={sample.id}
           className={`sample-mark ${sample.clipped ? 'is-clipped' : ''} ${sample.id === selectedId ? 'is-selected' : ''}`}
           role="button"
-          tabIndex="0"
+          tabIndex={0}
           aria-pressed={sample.id === selectedId}
-          aria-label={`${sample.id}, advantage ${sample.advantage.toFixed(2)}, ratio ${sample.ratio.toFixed(2)}`}
+          aria-label={lang === 'zh'
+            ? `样本 ${sample.id}，优势 ${sample.advantage.toFixed(2)}，新旧策略比 ${sample.ratio.toFixed(2)}`
+            : `Sample ${sample.id}, advantage ${sample.advantage.toFixed(2)}, ratio ${sample.ratio.toFixed(2)}`}
           onClick={() => onSelect(sample.id)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              onSelect(sample.id)
-            }
-          }}
+          onKeyDown={(event) => activateOnEnterOrSpace(event, () => onSelect(sample.id))}
         >
           {sample.clipped ? (
             <rect x={x(sample.advantage) - 7} y={y(sample.ratio) - 7} width="14" height="14" transform={`rotate(45 ${x(sample.advantage)} ${y(sample.ratio)})`} />

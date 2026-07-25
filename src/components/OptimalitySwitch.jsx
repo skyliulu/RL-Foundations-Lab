@@ -74,20 +74,20 @@ export default function OptimalitySwitch({ content }) {
       <header className="optimality-heading">
         <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
         <div className="operator-switch" role="group" aria-label={text.chosen}>
-          <button type="button" className={operator === 'policy' ? 'active' : ''} onClick={() => setOperator('policy')}>{text.policyMode}</button>
-          <button type="button" className={operator === 'optimal' ? 'active' : ''} onClick={() => setOperator('optimal')}>{text.optimalMode}</button>
+          <button type="button" className={operator === 'policy' ? 'active' : ''} aria-pressed={operator === 'policy'} onClick={() => setOperator('policy')}>{text.policyMode}</button>
+          <button type="button" className={operator === 'optimal' ? 'active' : ''} aria-pressed={operator === 'optimal'} onClick={() => setOperator('optimal')}>{text.optimalMode}</button>
         </div>
       </header>
 
       <div className="optimality-presets">
         <span>{text.preset}</span>
-        {Object.keys(optimalityPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}><strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small></button>)}
+        {Object.keys(optimalityPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} aria-pressed={presetId === id} onClick={() => applyPreset(id)}><strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small></button>)}
       </div>
 
       <div className="optimality-controls">
         <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.1" max="0.95" step="0.05" value={gamma} onChange={(event) => { const value = Number(event.target.value); customize(() => setGamma(value), { gamma: value }) }} /></label>
         <label><span>{text.noise}<output>{noise.toFixed(2)}</output></span><input type="range" min="0" max="0.4" step="0.1" value={noise} onChange={(event) => { const value = Number(event.target.value); customize(() => setNoise(value), { noise: value }) }} /></label>
-        <fieldset><legend>{text.forbiddenReward}</legend><div>{[-1, -5, -10].map((reward) => <button type="button" key={reward} className={forbiddenReward === reward ? 'active' : ''} onClick={() => customize(() => setForbiddenReward(reward), { forbiddenReward: reward })}>{reward}</button>)}</div></fieldset>
+        <fieldset><legend>{text.forbiddenReward}</legend><div>{[-1, -5, -10].map((reward) => <button type="button" key={reward} className={forbiddenReward === reward ? 'active' : ''} aria-pressed={forbiddenReward === reward} onClick={() => customize(() => setForbiddenReward(reward), { forbiddenReward: reward })}>{reward}</button>)}</div></fieldset>
       </div>
 
       <div className="optimality-metrics">
@@ -102,7 +102,7 @@ export default function OptimalitySwitch({ content }) {
           <div className="optimality-grid">
             {allStates().map((state) => {
               const index = indexOf(state)
-              return <button type="button" key={keyOf(state)} className={`${isForbidden(state) ? 'forbidden' : ''}${isGoal(state) ? ' goal' : ''}${isSame(state, selected) ? ' selected' : ''}`} onClick={() => microscope.select(state, { focusTerm: 'state', phase: 'select' })}><span>{stateLabel(state)}</span><strong>{format(values[index])}</strong><b>{ACTIONS[mapActions[index]].arrow}</b></button>
+              return <button type="button" key={keyOf(state)} className={`${isForbidden(state) ? 'forbidden' : ''}${isGoal(state) ? ' goal' : ''}${isSame(state, selected) ? ' selected' : ''}`} aria-pressed={isSame(state, selected)} onClick={() => microscope.select(state, { focusTerm: 'state', phase: 'select' })}><span>{stateLabel(state)}</span><strong>{format(values[index])}</strong><b>{ACTIONS[mapActions[index]].arrow}</b></button>
             })}
           </div>
               <p>{text.courseWorld} · <MathFormula latex={String.raw`\gamma=${gamma.toFixed(2)}`} /> · <MathFormula latex={String.raw`r_{\mathrm{forbidden}}=${forbiddenReward}`} /></p>

@@ -18,7 +18,7 @@ const nodeDetail = {
 
 function PipelineNode({ id, label, active, onClick, iconLatex }) {
   return (
-    <button type="button" className={`pipeline-node ${active ? 'active' : ''}`} onClick={() => onClick(id)}>
+    <button type="button" className={`pipeline-node ${active ? 'active' : ''}`} aria-pressed={active} onClick={() => onClick(id)}>
       <span className="node-icon"><MathFormula latex={iconLatex} /></span>
       <strong>{label}</strong>
       <small><MathFormula latex={nodeDetail[id][0]} /></small>
@@ -45,7 +45,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
     <section className="system-lab">
       <div className="experiment-environment"><span>{lang === 'zh' ? '语言模型 rollout 环境' : 'Language-model rollout environment'}</span><MathFormula latex={String.raw`x\xrightarrow{\pi_\theta}y_{1:T}\xrightarrow{R,\,V}\widehat A_{1:T}`} /><small>{lang === 'zh' ? '同一个 prompt 先产生 token 轨迹，再由奖励、价值与参考策略把轨迹变成可训练信号。' : 'One prompt first produces a token trajectory; reward, value, and reference models then turn it into trainable signals.'}</small></div>
       {!ppoOnly && <div className="method-switch" role="group" aria-label={lang === 'zh' ? '后训练方法' : 'Post-training method'}>
-        {[['ppo', 'PPO-based RLHF'], ['dpo', 'DPO'], ['grpo', 'GRPO']].map(([id, label]) => <button type="button" key={id} className={method === id ? 'active' : ''} onClick={() => setMethod(id)}>{label}</button>)}
+        {[['ppo', 'PPO-based RLHF'], ['dpo', 'DPO'], ['grpo', 'GRPO']].map(([id, label]) => <button type="button" key={id} className={method === id ? 'active' : ''} aria-pressed={method === id} onClick={() => setMethod(id)}>{label}</button>)}
       </div>}
       {!ppoOnly && <div className="method-contract">
         {(lang === 'zh' ? {
@@ -60,8 +60,8 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
       </div>}
       <div className="system-toolbar">
         {method === 'ppo' && <div className="view-switch" role="group" aria-label={lang === 'zh' ? '视图切换' : 'View switch'}>
-          <button type="button" className={view === 'algorithm' ? 'active' : ''} onClick={() => setView('algorithm')}>{c.algorithm}</button>
-          <button type="button" className={view === 'system' ? 'active' : ''} onClick={() => setView('system')}>{c.system}</button>
+          <button type="button" className={view === 'algorithm' ? 'active' : ''} aria-pressed={view === 'algorithm'} onClick={() => setView('algorithm')}>{c.algorithm}</button>
+          <button type="button" className={view === 'system' ? 'active' : ''} aria-pressed={view === 'system'} onClick={() => setView('system')}>{c.system}</button>
         </div>}
         <label><span><MathText>{c.clip}</MathText><output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
         <label><span><MathText>{c.klBeta}</MathText><output>{klBeta.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={klBeta} onChange={(event) => setKlBeta(Number(event.target.value))} /></label>
@@ -167,7 +167,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
 
       {method === 'ppo' && <div className="response-group">
         {result.samples.map((sample) => (
-          <button type="button" key={sample.id} className={sample.id === selectedId ? 'active' : ''} onClick={() => setSelectedId(sample.id)}>
+          <button type="button" key={sample.id} className={sample.id === selectedId ? 'active' : ''} aria-pressed={sample.id === selectedId} onClick={() => setSelectedId(sample.id)}>
             <b>{sample.id}</b><span>{sample.token}</span><small><MathFormula latex={String.raw`R=${sample.reward.toFixed(1)}`} /></small><small><MathFormula latex={String.raw`\widehat A=${sample.advantage.toFixed(2)}`} /></small><small>{c.adjustedReward} {sample.adjustedReward.toFixed(2)}</small>
           </button>
         ))}

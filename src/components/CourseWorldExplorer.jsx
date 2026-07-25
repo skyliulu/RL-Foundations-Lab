@@ -72,10 +72,10 @@ export default function CourseWorldExplorer({ lang, content }) {
     <section className="world-explorer" aria-label={content.figure}>
       <header className="world-explorer-heading">
         <div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div>
-        <button type="button" className="progressive-toggle" onClick={() => setShowContract((value) => !value)}>{showContract ? (lang === 'zh' ? '收起 MDP 接口' : 'Hide MDP contract') : (lang === 'zh' ? '展开 MDP 五要素' : 'Show five MDP elements')}</button>
+        <button type="button" className="progressive-toggle" aria-expanded={showContract} aria-controls="mdp-interface-strip" onClick={() => setShowContract((value) => !value)}>{showContract ? (lang === 'zh' ? '收起 MDP 接口' : 'Hide MDP contract') : (lang === 'zh' ? '展开 MDP 五要素' : 'Show five MDP elements')}</button>
       </header>
 
-      {showContract && <><div className="mdp-interface-strip" aria-label={text.tupleTitle}>
+      {showContract && <><div className="mdp-interface-strip" id="mdp-interface-strip" aria-label={text.tupleTitle}>
         <div><span>S</span><strong>{text.stateSpace}</strong><small>{labelState(current, text.statePrefix)}</small></div>
         <div><span>A</span><strong>{text.actionSpace}</strong><small>{ACTIONS[action].arrow} {actionCopy[lang][action]}</small></div>
         <div><span>P</span><strong><MathFormula latex={String.raw`p(s'\mid s,a)`} /></strong><small>{branches.length} {text.possible}</small></div>
@@ -86,8 +86,8 @@ export default function CourseWorldExplorer({ lang, content }) {
 
       <div className="world-explorer-stage">
         <section className="world-map-panel">
-          <header><div><span>{text.world}</span><small>5 × 5 · {text.continuing}</small></div><button type="button" onClick={() => setShowPolicy((value) => !value)}>{showPolicy ? text.hidePolicy : text.showPolicy}</button></header>
-          <div className="course-world-grid">
+          <header><div><span>{text.world}</span><small>5 × 5 · {text.continuing}</small></div><button type="button" aria-expanded={showPolicy} aria-controls="course-world-grid" onClick={() => setShowPolicy((value) => !value)}>{showPolicy ? text.hidePolicy : text.showPolicy}</button></header>
+          <div className="course-world-grid" id="course-world-grid">
             {allStates().map((state) => {
               const selected = isSame(state, current)
               const possible = branchKeys.has(keyOf(state))
@@ -97,8 +97,9 @@ export default function CourseWorldExplorer({ lang, content }) {
                   type="button"
                   key={keyOf(state)}
                   className={`course-world-cell${isForbidden(state) ? ' forbidden' : ''}${isGoal(state) ? ' goal' : ''}${selected ? ' current' : ''}${possible ? ' possible' : ''}`}
-                  onClick={() => restartAt(state)}
                   aria-label={`${text.state} ${labelState(state, text.statePrefix)}`}
+                  aria-pressed={selected}
+                  onClick={() => restartAt(state)}
                 >
                   <span className="world-state-id">{labelState(state, text.statePrefix)}</span>
                   {showPolicy && <span className="world-policy-arrow" aria-hidden="true">{ACTIONS[cellAction].arrow}</span>}
@@ -121,7 +122,7 @@ export default function CourseWorldExplorer({ lang, content }) {
           <header><span>{text.selectAction}</span><small>{labelState(current, text.statePrefix)} → ?</small></header>
           <div className="action-pad">
             {ACTION_NAMES.map((name) => (
-              <button type="button" key={name} className={action === name ? 'active' : ''} onClick={() => setAction(name)}>
+              <button type="button" key={name} className={action === name ? 'active' : ''} aria-pressed={action === name} onClick={() => setAction(name)}>
                 <b>{ACTIONS[name].arrow}</b><span>{actionCopy[lang][name]}</span>
               </button>
             ))}

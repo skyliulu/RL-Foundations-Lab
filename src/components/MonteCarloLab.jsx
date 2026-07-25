@@ -61,7 +61,7 @@ export default function MonteCarloLab({ lang, content }) {
 
       <div className="mc-variant-switch" role="group" aria-label={zh ? '算法变体' : 'Algorithm variant'}>
         {['basic', 'exploring', 'epsilon'].map((id, index) => (
-          <button type="button" key={id} className={params.variant === id ? 'active' : ''} onClick={() => set('variant', id)}>
+          <button type="button" key={id} className={params.variant === id ? 'active' : ''} aria-pressed={params.variant === id} onClick={() => set('variant', id)}>
             <small>{index + 1}</small><strong><MathText>{variantCopy[lang][id][0]}</MathText></strong><span>{index === 0 ? (zh ? '定义直译' : 'Definition') : index === 1 ? (zh ? '提高复用' : 'Reuse data') : (zh ? '取消起点假设' : 'Remove start assumption')}</span>
           </button>
         ))}
@@ -75,7 +75,7 @@ export default function MonteCarloLab({ lang, content }) {
       <div className="mc-controls">
         <label><span>{zh ? 'Episode 数' : 'Episodes'}<output>{params.episodes}</output></span><input type="range" min="8" max="72" step="8" value={params.episodes} onChange={(event) => set('episodes', Number(event.target.value))} /></label>
         <label className={params.variant === 'epsilon' ? '' : 'disabled'}><span>{zh ? '探索率' : 'Exploration'} <MathFormula latex={String.raw`\epsilon`} /><output>{params.epsilon.toFixed(2)}</output></span><input type="range" min="0.05" max="0.5" step="0.05" value={params.epsilon} disabled={params.variant !== 'epsilon'} onChange={(event) => set('epsilon', Number(event.target.value))} /></label>
-        <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((id) => <button type="button" key={id} className={params.visit === id ? 'active' : ''} onClick={() => set('visit', id)}>{id === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>
+        <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((id) => <button type="button" key={id} className={params.visit === id ? 'active' : ''} aria-pressed={params.visit === id} onClick={() => set('visit', id)}>{id === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>
       </div>
 
       <div className="mc-metrics">
@@ -85,9 +85,9 @@ export default function MonteCarloLab({ lang, content }) {
       </div>
 
       <div className="evidence-view-switch" role="group" aria-label={zh ? '证据视图' : 'Evidence view'}>
-        <button type="button" className={evidenceView === 'coverage' ? 'active' : ''} onClick={() => setEvidenceView('coverage')}>{zh ? '覆盖范围' : 'Coverage'}</button>
-        <button type="button" className={evidenceView === 'episode' ? 'active' : ''} onClick={() => setEvidenceView('episode')}>{zh ? 'Episode 与更新' : 'Episode and updates'}</button>
-        <button type="button" className={evidenceView === 'policy' ? 'active' : ''} onClick={() => setEvidenceView('policy')}>{zh ? '策略结果' : 'Policy result'}</button>
+        <button type="button" className={evidenceView === 'coverage' ? 'active' : ''} aria-pressed={evidenceView === 'coverage'} onClick={() => setEvidenceView('coverage')}>{zh ? '覆盖范围' : 'Coverage'}</button>
+        <button type="button" className={evidenceView === 'episode' ? 'active' : ''} aria-pressed={evidenceView === 'episode'} onClick={() => setEvidenceView('episode')}>{zh ? 'Episode 与更新' : 'Episode and updates'}</button>
+        <button type="button" className={evidenceView === 'policy' ? 'active' : ''} aria-pressed={evidenceView === 'policy'} onClick={() => setEvidenceView('policy')}>{zh ? '策略结果' : 'Policy result'}</button>
       </div>
 
       {evidenceView !== 'policy' && <div className={`mc-stage view-${evidenceView}`}>
@@ -104,7 +104,7 @@ export default function MonteCarloLab({ lang, content }) {
         </section>}
 
         {evidenceView === 'episode' && <section className="mc-episode-panel">
-          <header><span>{zh ? '完整回合 tape' : 'Complete-episode tape'}</span><div>{result.samples.map((item, index) => <button type="button" key={item.index} className={sampleSlot === index ? 'active' : ''} onClick={() => setSampleSlot(index)}>#{item.index + 1}</button>)}</div></header>
+          <header><span>{zh ? '完整回合 tape' : 'Complete-episode tape'}</span><div>{result.samples.map((item, index) => <button type="button" key={item.index} className={sampleSlot === index ? 'active' : ''} aria-pressed={sampleSlot === index} onClick={() => setSampleSlot(index)}>#{item.index + 1}</button>)}</div></header>
           <div className="mc-tape-head"><span><MathFormula latex={String.raw`t`} /></span><span><MathFormula latex={String.raw`S_t`} /></span><span><MathFormula latex={String.raw`A_t`} /></span><span><MathFormula latex={String.raw`R_{t+1}`} /></span><span><MathFormula latex={String.raw`G_t`} /></span><span>{zh ? '用于更新' : 'Used'}</span></div>
           <div className="mc-tape-body">
             {sample.steps.map((step) => <div key={step.time} className={step.used ? 'used' : 'skipped'}><span>{step.time}</span><strong>s{indexOf(step.state) + 1}</strong><span>{ACTIONS[step.action].arrow} {actionCopy[lang][step.action]}{step.terminated ? (zh ? ' · 终止' : ' · terminal') : ''}</span><span className={step.reward < 0 ? 'negative' : step.reward > 0 ? 'positive' : ''}>{step.reward > 0 ? '+' : ''}{step.reward}</span><span>{format(step.returnValue)}</span><span>{step.used ? '●' : '—'}</span></div>)}

@@ -265,7 +265,7 @@ function PolicyGradientEvidenceStage({ params, result, zh, set }) {
     <div className="pg-evidence-stage">
       <section className="pg-trajectory">
         <header><span>{zh ? '一条轨迹中的逐步梯度贡献' : 'Per-step gradient contributions along one trajectory'}</span><small>{zh ? '每个状态都有自己的动作分布' : 'Every state has its own action distribution'}</small></header>
-        <div>{result.stepContributions.map((item) => <button type="button" className={result.selectedStep === item.step ? 'is-selected' : ''} onClick={() => set('selectedStep', item.step)} key={item.step}>
+        <div>{result.stepContributions.map((item) => <button type="button" className={result.selectedStep === item.step ? 'is-selected' : ''} aria-pressed={result.selectedStep === item.step} onClick={() => set('selectedStep', item.step)} key={item.step}>
           <b><MathFormula latex={String.raw`S_${item.step}=s_{${item.stateId}}`} /></b>
           <span><MathFormula latex={String.raw`A_${item.step}=a_${item.actionIndex + 1}`} /></span>
           <span><MathFormula latex={String.raw`G_${item.step}=${item.return}`} /></span>
@@ -376,8 +376,8 @@ export default function LearningLab({ id, lang, content }) {
       {scenario && <div className="experiment-environment"><span>{scenario[0]}</span><MathFormula latex={scenario[1]} /><small>{scenario[2]}</small></div>}
       <div className="learning-lab-controls">
         {config.controls.map(([key, min, max, step], index) => <label key={key}><span><MathText>{config.labels[lang][index]}</MathText><output>{format(params[key])}</output></span><input aria-label={config.labels[lang][index]} type="range" min={min} max={max} step={step} value={params[key]} onChange={(event) => set(key, Number(event.target.value))} /></label>)}
-        {id === 'montecarlo' && <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((value) => <button type="button" key={value} className={params.visit === value ? 'active' : ''} onClick={() => set('visit', value)}>{value === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>}
-        {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} onClick={() => set('decay', value)}><MathText>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</MathText></button>)}</div></fieldset>}
+        {id === 'montecarlo' && <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((value) => <button type="button" key={value} className={params.visit === value ? 'active' : ''} aria-pressed={params.visit === value} onClick={() => set('visit', value)}>{value === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>}
+        {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} aria-pressed={params.decay === value} onClick={() => set('decay', value)}><MathText>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</MathText></button>)}</div></fieldset>}
       </div>
       <DedicatedLearningStage id={id} params={params} result={result} zh={zh} set={set} />
       <aside className="learning-compact-summary">

@@ -96,7 +96,7 @@ export default function PlanningLab({ content }) {
       <header className="planning-heading"><div><span className="figure-number">{content.figure}</span><p><MathText>{content.instruction}</MathText></p></div><span className="planning-protocol"><b>◇</b>{text.protocol}</span></header>
       <p className="planning-protocol-text"><strong>{text.protocol}</strong><MathText>{text.protocolText}</MathText></p>
 
-      <div className="planning-presets"><span>{text.preset}</span>{Object.keys(planningPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} onClick={() => applyPreset(id)}><strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small></button>)}</div>
+      <div className="planning-presets"><span>{text.preset}</span>{Object.keys(planningPresetConfigs).map((id) => <button type="button" key={id} className={presetId === id ? 'active' : ''} aria-pressed={presetId === id} onClick={() => applyPreset(id)}><strong><MathText>{text.presetItems[id].title}</MathText></strong><small><MathText>{text.presetItems[id].note}</MathText></small></button>)}</div>
 
       <div className="planning-controls">
         <label><span><MathText>{text.gamma}</MathText><output>{gamma.toFixed(2)}</output></span><input type="range" min="0.5" max="0.95" step="0.05" value={gamma} onChange={(event) => customize(() => setGamma(Number(event.target.value)))} /></label>
@@ -106,8 +106,8 @@ export default function PlanningLab({ content }) {
       </div>
 
       <div className="evidence-view-switch" role="group">
-        <button type="button" className={view === 'cost' ? 'active' : ''} onClick={() => setView('cost')}>{text.residualChart}</button>
-        <button type="button" className={view === 'propagation' ? 'active' : ''} onClick={() => setView('propagation')}>{text.propagation}</button>
+        <button type="button" className={view === 'cost' ? 'active' : ''} aria-pressed={view === 'cost'} onClick={() => setView('cost')}>{text.residualChart}</button>
+        <button type="button" className={view === 'propagation' ? 'active' : ''} aria-pressed={view === 'propagation'} onClick={() => setView('propagation')}>{text.propagation}</button>
       </div>
       {view === 'cost' && <div className="planning-main-stage">
         <section className="planning-chart-panel">

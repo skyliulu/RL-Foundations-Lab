@@ -714,7 +714,7 @@ test('phase-two chapters keep one causal article spine and mechanism-faithful in
   assert.match(learning, /result\.sampledKeys/)
   assert.match(modern, /className="dpo-update-ledger"/)
   assert.match(modern, /className="coding-repair-tape"/)
-  assert.match(ppo, /tabIndex="0"/)
+  assert.match(ppo, /tabIndex=\{0\}/)
   assert.match(ppo, /onKeyDown=/)
   assert.match(ppo, /aria-pressed=/)
 })
