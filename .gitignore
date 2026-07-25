@@ -8,6 +8,8 @@ dist/
 /src/review.css
 /design-qa.md
 /.audit/
+/reviews/
+/*_REVIEW.md
 /test-results/
 /playwright-report/
 /blob-report/

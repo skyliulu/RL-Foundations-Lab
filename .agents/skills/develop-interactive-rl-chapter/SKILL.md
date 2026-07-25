@@ -16,6 +16,16 @@ Preserve the source material's conceptual spine while turning it into a continuo
 5. Add interactions only where manipulating a state, parameter, branch, or derivation step improves understanding.
 6. Keep Chinese and English structures equivalent and source-traceable.
 7. Run content-contract tests, production build, desktop/mobile rendered inspection, and console-error checks.
+8. Keep review notes, audit reports, source-coverage working matrices, screenshots, and other intermediate QA evidence local and ignored. Before committing, inspect the staged file list and remove temporary review artifacts.
+
+## Review Artifact Hygiene
+
+- Treat review reports, audit notes, repair plans, comparison matrices, QA screenshots, browser captures, and similar evidence as disposable working material by default.
+- Store temporary review artifacts only in ignored locations such as `.audit/` or `reviews/`. Do not add them to Git, even when they informed a committed implementation.
+- Commit durable product changes only: chapter content, components, shared styles, source metadata, automated tests, fixtures required by those tests, and intentionally maintained documentation.
+- A review artifact may be committed only when the user explicitly asks to preserve that specific artifact as long-lived repository documentation. A request to perform, follow, or fix a review does not grant that permission.
+- Before every commit, inspect `git diff --cached --name-only`. Reject staged review reports, scratch Markdown files, screenshots, recordings, generated browser output, and intermediate QA exports unless they meet the explicit exception above.
+- Summarize review findings and verification results in the task handoff or commit message without committing the temporary evidence itself.
 
 ## Reader-Facing Content
 
