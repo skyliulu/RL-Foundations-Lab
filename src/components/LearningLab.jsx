@@ -10,7 +10,7 @@ const defaults = {
   control: { epsilon: 0.12, alpha: 0.3, seed: 20260719 },
   vfa: { width: 1.2, alpha: 0.24, target: 5 },
   dqn: { replay: 0.7, targetPeriod: 8, steps: 40 },
-  policygradient: { theta: 0, selectedStep: 0, alpha: 0.18, baseline: 0 },
+  policygradient: { theta: 0, selectedStep: 0, alpha: 0.18, baseline: 0.8 },
   actorcritic: { reward: 1, gamma: 0.9, value: 2.2, nextValue: 2.8, actorAlpha: 0.12, criticAlpha: 0.18, ratio: 1 },
 }
 
@@ -81,8 +81,8 @@ const configs = {
   policygradient: {
     formula: String.raw`\theta\leftarrow\theta+\alpha\,\nabla_\theta\log\pi_\theta(A\mid S)\,(G-b)`,
     controls: [['theta', -2.5, 2.5, 0.1], ['alpha', 0.02, 0.5, 0.02], ['baseline', -2, 2, 0.1]],
-    labels: { zh: ['所选动作 logit θ', '步长 α', '状态基线 b'], en: ['Selected-action logit θ', 'Step size α', 'State baseline b'] },
-    metrics: (r, zh) => [[zh ? '所选动作：更新前' : 'Selected: before', r.probability], [zh ? '所选动作：更新后' : 'Selected: after', r.nextProbability], [zh ? '概率总和' : 'Probability total', r.nextProbabilities.reduce((sum, value) => sum + value, 0)]],
+    labels: { zh: ['所选状态的动作 logit', '步长 α', '状态基线 b'], en: ['Action logit at selected state', 'Step size α', 'State baseline b'] },
+    metrics: (r, zh) => [[zh ? '所选动作：更新前' : 'Selected: before', r.probability], [zh ? '所选动作：更新后' : 'Selected: after', r.nextProbability], [zh ? '基线后梯度方差' : 'Variance with baseline', r.varianceWithBaseline]],
   },
   actorcritic: {
     formula: String.raw`\delta=R+\gamma V_\phi(S')-V_\phi(S),\quad\theta\leftarrow\theta+\alpha_\theta\rho\,\delta\nabla_\theta\log\pi_\theta(A\mid S)`,
@@ -100,16 +100,22 @@ function format(value) {
 }
 
 function TdEvidenceStage({ params, result, zh }) {
-  const rewards = [0, -1, 0.5, 0, 4]
   return (
     <div className="td-evidence-stage">
       <section className="td-trajectory-ledger">
-        <header><span>{zh ? '同一条轨迹' : 'One shared trajectory'}</span><small>{zh ? '真实奖励与自举边界' : 'Observed rewards and bootstrap boundary'}</small></header>
+        <header><span>{zh ? '轨迹与当前价值表' : 'Trajectory and current value table'}</span><small>{zh ? '自举项直接读取高亮表项' : 'The bootstrap term reads the highlighted table entry'}</small></header>
+        <div className="td-value-table">
+          {result.valueTable.map((item) => <article className={`${item.time === result.bootstrap.time ? 'is-bootstrap' : ''} ${item.terminal ? 'is-terminal' : ''}`} key={item.time}>
+            <b><MathFormula latex={String.raw`S_${item.time}=s_{${item.stateId}}`} /></b>
+            <MathFormula latex={String.raw`V(S_${item.time})=${item.estimate.toFixed(2)}`} />
+            <small>{item.time === result.bootstrap.time ? (zh ? `${params.n} 步目标从这里自举` : `${params.n}-step target bootstraps here`) : item.terminal ? (zh ? '终止状态价值为零' : 'terminal value is zero') : (zh ? '当前表项' : 'current table entry')}</small>
+          </article>)}
+        </div>
         <div className="td-tape">
-          {rewards.map((reward, index) => <div className={index < params.n ? 'is-observed' : index === params.n ? 'is-bootstrap' : ''} key={index}>
-            <b><MathFormula latex={String.raw`S_${index}`} /></b>
-            <span><MathFormula latex={String.raw`R_${index + 1}=${reward}`} /></span>
-            <small>{index < params.n ? (zh ? '已进入 target' : 'observed') : index === params.n ? (zh ? '在此自举' : 'bootstrap here') : (zh ? '尚未使用' : 'not used')}</small>
+          {result.trajectory.slice(0, -1).map((item) => <div className={item.time < params.n ? 'is-observed' : ''} key={item.time}>
+            <b><MathFormula latex={String.raw`S_${item.time}`} /></b>
+            <span><MathFormula latex={String.raw`R_${item.time + 1}=${item.rewardToNext}`} /></span>
+            <small>{item.time < params.n ? (zh ? '奖励已进入目标' : 'reward included') : (zh ? '尚未等待到此步' : 'not yet observed')}</small>
           </div>)}
         </div>
       </section>
@@ -119,6 +125,14 @@ function TdEvidenceStage({ params, result, zh }) {
           <article><span>TD(0)</span><MathFormula block latex={String.raw`R_1+\gamma V(S_1)`} /><strong>{format(result.td)}</strong><p>{zh ? '一步后立即可用，依赖当前后继估计。' : 'Available after one step; depends on the current successor estimate.'}</p></article>
           <article className="is-focus"><span>{params.n}-step</span><MathFormula block latex={String.raw`\sum_{k=0}^{n-1}\gamma^kR_{k+1}+\gamma^nV(S_n)`} /><strong>{format(result.nStep)}</strong><p>{zh ? `等待 ${params.n} 个奖励，再用价值补全尾部。` : `Waits for ${params.n} rewards, then bootstraps the tail.`}</p></article>
           <article><span>Monte Carlo</span><MathFormula block latex={String.raw`\sum_{k=0}^{T-1}\gamma^kR_{k+1}`} /><strong>{format(result.mc)}</strong><p>{zh ? '等待终点，不依赖当前价值表。' : 'Waits for termination and does not use the current value table.'}</p></article>
+        </div>
+      </section>
+      <section className="td-target-breakdown">
+        <header><span>{zh ? `${params.n} 步目标的逐项账本` : `Term-by-term ledger for the ${params.n}-step target`}</span><small>{zh ? '奖励来自轨迹，尾项来自同一张价值表' : 'Rewards come from the trajectory; the tail comes from the displayed table'}</small></header>
+        <div>
+          {result.rewardContributions.map((item) => <article key={item.step}><span>{zh ? `第 ${item.step} 个奖励` : `Reward ${item.step}`}</span><MathFormula latex={String.raw`\gamma^{${item.step - 1}}R_${item.step}=${item.contribution.toFixed(3)}`} /></article>)}
+          <article className="is-bootstrap"><span>{zh ? '自举尾项' : 'Bootstrap tail'}</span><MathFormula latex={String.raw`\gamma^{${params.n}}V(S_${params.n})=${result.bootstrap.contribution.toFixed(3)}`} /><small><MathFormula latex={String.raw`V(S_${params.n})=V(s_{${result.bootstrap.stateId}})=${result.bootstrap.value.toFixed(2)}`} /></small></article>
+          <strong><MathFormula latex={String.raw`G_0^{(${params.n})}=${result.nStep.toFixed(3)}`} /></strong>
         </div>
       </section>
     </div>
@@ -250,16 +264,17 @@ function PolicyGradientEvidenceStage({ params, result, zh, set }) {
   return (
     <div className="pg-evidence-stage">
       <section className="pg-trajectory">
-        <header><span>{zh ? '选择一个时间步，检查其回报权重' : 'Select a time step and inspect its return weight'}</span><small>{zh ? '每个动作只使用其后的奖励' : 'Each action uses only later rewards'}</small></header>
-        <div>{result.returns.map((value, index) => <button type="button" className={result.selectedStep === index ? 'is-selected' : ''} onClick={() => set('selectedStep', index)} key={index}>
-          <b><MathFormula latex={String.raw`t=${index}`} /></b>
-          <span><MathFormula latex={String.raw`A_${index}=a_${result.actionIndices[index] + 1}`} /></span>
-          <span><MathFormula latex={String.raw`G_${index}=${value}`} /></span>
-          <span><MathFormula latex={String.raw`G_${index}-b=${(value - params.baseline).toFixed(2)}`} /></span>
+        <header><span>{zh ? '一条轨迹中的逐步梯度贡献' : 'Per-step gradient contributions along one trajectory'}</span><small>{zh ? '每个状态都有自己的动作分布' : 'Every state has its own action distribution'}</small></header>
+        <div>{result.stepContributions.map((item) => <button type="button" className={result.selectedStep === item.step ? 'is-selected' : ''} onClick={() => set('selectedStep', item.step)} key={item.step}>
+          <b><MathFormula latex={String.raw`S_${item.step}=s_{${item.stateId}}`} /></b>
+          <span><MathFormula latex={String.raw`A_${item.step}=a_${item.actionIndex + 1}`} /></span>
+          <span><MathFormula latex={String.raw`G_${item.step}=${item.return}`} /></span>
+          <span><MathFormula latex={String.raw`G_${item.step}-b=${item.advantage.toFixed(2)}`} /></span>
+          <small><MathFormula latex={String.raw`\lVert\widehat g_${item.step}\rVert=${item.contributionNorm.toFixed(3)}`} /></small>
         </button>)}</div>
       </section>
       <aside className="pg-gradient-ledger">
-        <span>{zh ? `时间步 ${result.selectedStep}：三个动作重新分配概率` : `Step ${result.selectedStep}: probability redistributes across three actions`}</span>
+        <span>{zh ? `状态 s${result.stateIds[result.selectedStep]}：三个动作重新分配概率` : `State s${result.stateIds[result.selectedStep]}: probability redistributes across three actions`}</span>
         <MathFormula block latex={String.raw`\nabla_\theta\log\pi_\theta(A_t\mid S_t)(G_t-b)`} />
         <div className="pg-probability-ledger">
           {result.probabilities.map((probability, index) => (
@@ -274,11 +289,24 @@ function PolicyGradientEvidenceStage({ params, result, zh, set }) {
         </div>
         <p>{result.weight >= 0 ? (zh ? '结果高于基线，所选动作概率上升。' : 'Outcome exceeds baseline, so sampled-action probability rises.') : (zh ? '结果低于基线，所选动作概率下降。' : 'Outcome falls below baseline, so sampled-action probability falls.')}</p>
       </aside>
+      <section className="pg-variance-panel">
+        <header><span>{zh ? '同一状态上的多轨迹梯度方差' : 'Multi-trajectory gradient variance at the same state'}</span><small>{zh ? '监测所选动作 logit 的梯度坐标' : 'Tracking the selected-action logit coordinate'}</small></header>
+        <div className="pg-rollout-ledger">
+          <div className="is-head"><b>{zh ? '轨迹' : 'Rollout'}</b><b>{zh ? '采样动作' : 'Sampled action'}</b><b><MathFormula latex={String.raw`G`} /></b><b>{zh ? '无基线贡献' : 'No baseline'}</b><b>{zh ? '减去状态基线' : 'With state baseline'}</b></div>
+          {result.rollouts.map((rollout) => <div key={rollout.id}><span>#{rollout.id}</span><span>{actionLabels[rollout.actionIndex]}</span><MathFormula latex={String.raw`${rollout.return.toFixed(2)}`} /><MathFormula latex={String.raw`${rollout.rawContribution.toFixed(3)}`} /><MathFormula latex={String.raw`${rollout.centeredContribution.toFixed(3)}`} /></div>)}
+        </div>
+        <div className="pg-variance-summary">
+          <span>{zh ? '不使用基线' : 'Without baseline'} <strong>{format(result.varianceWithoutBaseline)}</strong></span>
+          <i>→</i>
+          <span>{zh ? '使用状态基线' : 'With state baseline'} <strong>{format(result.varianceWithBaseline)}</strong></span>
+        </div>
+      </section>
     </div>
   )
 }
 
 function ActorCriticEvidenceStage({ params, result, zh }) {
+  const actionLabels = zh ? ['上移', '右移', '等待'] : ['Up', 'Right', 'Wait']
   return (
     <div className="ac-evidence-stage">
       <section className="ac-transition">
@@ -294,8 +322,30 @@ function ActorCriticEvidenceStage({ params, result, zh }) {
         </div>
       </section>
       <section className="ac-two-updates">
-        <article><span>Critic</span><MathFormula block latex={String.raw`\phi\leftarrow\phi+\alpha_v\delta_t\nabla_\phi V_\phi(S_t)`} /><p>{zh ? '当前状态价值' : 'Current value'} <strong>{format(params.value)} → {format(result.nextValueEstimate)}</strong></p></article>
-        <article><span>Actor</span><MathFormula block latex={String.raw`\theta\leftarrow\theta+\alpha_\pi\rho_t\delta_t\nabla_\theta\log\pi_\theta(A_t\mid S_t)`} /><p>{zh ? '策略参数步长' : 'Policy step'} <strong>{format(result.actorStep)}</strong></p></article>
+        <article className="ac-critic-ledger">
+          <header><span>Critic</span><small>{zh ? '拟合一步价值目标' : 'Fits the one-step value target'}</small></header>
+          <MathFormula block latex={String.raw`\phi\leftarrow\phi+\alpha_v\delta_t\nabla_\phi V_\phi(S_t)`} />
+          <div className="ac-before-after">
+            <span>{zh ? '更新前价值' : 'Value before'}<strong>{format(result.critic.valueBefore)}</strong></span>
+            <i>+</i>
+            <span>{zh ? '价值修正量' : 'Value correction'}<strong>{format(result.critic.correction)}</strong></span>
+            <i>→</i>
+            <span className="is-after">{zh ? '更新后价值' : 'Value after'}<strong>{format(result.critic.valueAfter)}</strong></span>
+          </div>
+          <p>{zh ? '一步目标' : 'One-step target'} <strong>{format(result.critic.target)}</strong> · <MathFormula latex={String.raw`\delta_t=${result.delta.toFixed(3)}`} /></p>
+        </article>
+        <article className="ac-actor-ledger">
+          <header><span>Actor</span><small>{zh ? '同一误差改变所选动作概率' : 'The same error changes sampled-action probability'}</small></header>
+          <MathFormula block latex={String.raw`\theta\leftarrow\theta+\alpha_\pi\rho_t\delta_t\nabla_\theta\log\pi_\theta(A_t\mid S_t)`} />
+          <div className="ac-policy-ledger">
+            {result.actor.logitsBefore.map((logit, index) => <div className={index === result.actor.actionIndex ? 'is-sampled' : ''} key={actionLabels[index]}>
+              <span>{actionLabels[index]}{index === result.actor.actionIndex ? (zh ? '（已采样）' : ' (sampled)') : ''}</span>
+              <MathFormula latex={String.raw`h:${logit.toFixed(2)}\to${result.actor.logitsAfter[index].toFixed(2)}`} />
+              <MathFormula latex={String.raw`\pi:${result.actor.probabilitiesBefore[index].toFixed(3)}\to${result.actor.probabilitiesAfter[index].toFixed(3)}`} />
+            </div>)}
+          </div>
+          <p>{zh ? '策略更新系数' : 'Policy update coefficient'} <strong>{format(result.actorStep)}</strong> · <MathFormula latex={String.raw`\rho_t=${params.ratio.toFixed(2)}`} /></p>
+        </article>
       </section>
     </div>
   )

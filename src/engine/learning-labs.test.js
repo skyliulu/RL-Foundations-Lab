@@ -12,6 +12,20 @@ test('Part II lab outputs are deterministic and parameter-sensitive', () => {
   assert.ok(control.qDanger > control.sarsaDanger)
 })
 
+test('n-step TD reads its bootstrap from the displayed value table', () => {
+  for (const n of [1, 2, 3, 4, 5]) {
+    const result = compareTdTargets({ n, gamma: 0.9 })
+    const tableEntry = result.valueTable[n]
+    assert.equal(result.bootstrap.time, n)
+    assert.equal(result.bootstrap.stateId, tableEntry.stateId)
+    assert.equal(result.bootstrap.value, tableEntry.estimate)
+    assert.equal(
+      result.nStep,
+      result.rewardContributions.reduce((sum, item) => sum + item.contribution, 0) + result.bootstrap.contribution,
+    )
+  }
+})
+
 test('stochastic approximation comparison exposes a shared evidence stream and exact update ledger', () => {
   const result = runStochasticApproximationComparison({ alpha: 0.2, noise: 1.1, batchSize: 5, drifting: true })
   assert.deepEqual(result, runStochasticApproximationComparison({ alpha: 0.2, noise: 1.1, batchSize: 5, drifting: true }))
@@ -85,4 +99,26 @@ test('Part III labs expose sharing, stability, policy, and actor-critic effects'
   assert.ok(policyStep.nextProbabilities.filter((_, index) => index !== policyStep.actionIndex).reduce((sum, value) => sum + value, 0)
     < policyStep.probabilities.filter((_, index) => index !== policyStep.actionIndex).reduce((sum, value) => sum + value, 0))
   assert.ok(runActorCritic({ reward: 3 }).delta > 0)
+})
+
+test('policy gradient exposes state-conditioned policies, per-step contributions, and rollout variance', () => {
+  const result = runPolicyGradient({ baseline: 0.8, selectedStep: 1 })
+  assert.equal(result.statePolicies.length, result.returns.length)
+  assert.equal(new Set(result.statePolicies.map((item) => item.probabilities.map((value) => value.toFixed(6)).join(','))).size, result.statePolicies.length)
+  result.stepContributions.forEach((item) => {
+    assert.ok(Math.abs(item.scoreVector.reduce((sum, value) => sum + value, 0)) < 1e-12)
+    assert.deepEqual(item.contributionVector, item.scoreVector.map((value) => value * item.advantage))
+  })
+  assert.ok(result.rollouts.length > 1)
+  assert.ok(result.varianceWithBaseline < result.varianceWithoutBaseline)
+})
+
+test('actor-critic exposes synchronized critic and complete actor before/after state', () => {
+  const result = runActorCritic({ reward: 1, nextValue: 2.8, ratio: 1 })
+  assert.equal(result.critic.valueAfter, result.critic.valueBefore + result.critic.correction)
+  assert.equal(result.critic.correction, 0.18 * result.delta)
+  assert.deepEqual(result.actor.logitsAfter, result.actor.logitsBefore.map((value, index) => value + result.actor.updateVector[index]))
+  assert.ok(Math.abs(result.actor.probabilitiesBefore.reduce((sum, value) => sum + value, 0) - 1) < 1e-12)
+  assert.ok(Math.abs(result.actor.probabilitiesAfter.reduce((sum, value) => sum + value, 0) - 1) < 1e-12)
+  assert.ok(result.actor.probabilitiesAfter[result.actor.actionIndex] > result.actor.probabilitiesBefore[result.actor.actionIndex])
 })

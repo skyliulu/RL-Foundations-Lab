@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
 import { evaluateDpo, evaluateGrpo } from '../engine/post-training'
+import { buildRlhfBatchContract } from '../engine/rlhf-batch.js'
 import MathFormula from './MathFormula'
 import MathText from './MathText'
 
@@ -36,6 +37,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
   const result = useMemo(() => evaluatePpo({ clip, updateStrength: 0.32, klBeta }), [clip, klBeta])
   const dpo = useMemo(() => evaluateDpo({ beta: Math.max(0.02, klBeta) }), [klBeta])
   const grpo = useMemo(() => evaluateGrpo({ clip, klBeta }), [clip, klBeta])
+  const batch = useMemo(() => buildRlhfBatchContract({ selectedId }), [selectedId])
   const selected = result.samples.find((sample) => sample.id === selectedId) || result.samples[0]
   const detail = nodeDetail[selectedNode]
 
@@ -65,7 +67,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
         <label><span><MathText>{c.klBeta}</MathText><output>{klBeta.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={klBeta} onChange={(event) => setKlBeta(Number(event.target.value))} /></label>
       </div>
 
-      <div className="shared-batch-banner"><span>◎</span><div><strong>{method === 'dpo' ? (lang === 'zh' ? '同一组离线偏好对' : 'One offline preference pair') : c.samples}</strong><small>{method === 'ppo' ? c.selectSample : (lang === 'zh' ? '保持任务不变，比较数据与优化信号' : 'Keep the task fixed while comparing data and update signals')}</small></div><b>{method === 'dpo' ? 'pair_017' : 'batch_042 · seed 17'}</b></div>
+      <div className="shared-batch-banner"><span>◎</span><div><strong>{method === 'dpo' ? (lang === 'zh' ? '同一组离线偏好对' : 'One offline preference pair') : c.samples}</strong><small>{method === 'ppo' ? c.selectSample : (lang === 'zh' ? '保持任务不变，比较数据与优化信号' : 'Keep the task fixed while comparing data and update signals')}</small></div><b>{method === 'dpo' ? 'pair_017' : `${batch.batchId} · ${batch.promptId}`}</b></div>
 
       {method === 'dpo' ? (
         <div className="method-algorithm-view">
@@ -126,6 +128,42 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
           </aside>
         </div>
       )}
+
+      {method === 'ppo' && view === 'system' && <div className="rlhf-batch-audit">
+        <section className="rlhf-version-flow">
+          <header><span>{lang === 'zh' ? '一批回答的来源与模型版本流' : 'Batch provenance and model-version flow'}</span><small>{lang === 'zh' ? '箭头表示数据交接，不表示所有模型一起更新' : 'Arrows show data handoff; not every model updates'}</small></header>
+          <div>{batch.lifecycle.map((stage, index) => <article key={stage.stage}>
+            <b>{String(index + 1).padStart(2, '0')}</b>
+            <span>{({ generate: lang === 'zh' ? '生成' : 'Generate', score: lang === 'zh' ? '打分' : 'Score', align: lang === 'zh' ? '对齐' : 'Align', update: lang === 'zh' ? '更新' : 'Update', refresh: lang === 'zh' ? '刷新' : 'Refresh' })[stage.stage]}</span>
+            <small>{stage.input}</small><i>→</i><strong>{stage.output}</strong><em>{stage.version}</em>
+          </article>)}</div>
+        </section>
+        <div className="rlhf-contract-grid">
+          <section className="rlhf-tensor-contract">
+            <header><span>{lang === 'zh' ? '张量形状与生产者' : 'Tensor shapes and producers'}</span><small><MathFormula latex={String.raw`B=${batch.shape.batch},\ T=${batch.shape.sequence}`} /></small></header>
+            <div role="table">
+              <div className="is-head" role="row"><b role="columnheader">{lang === 'zh' ? '张量' : 'Tensor'}</b><b role="columnheader">{lang === 'zh' ? '形状' : 'Shape'}</b><b role="columnheader">{lang === 'zh' ? '生产者 / 版本' : 'Producer / version'}</b><b role="columnheader">{lang === 'zh' ? '有效位置' : 'Valid positions'}</b></div>
+              {batch.tensors.map((tensor) => <div role="row" key={tensor.name}><code role="cell">{tensor.name}</code><span role="cell"><MathFormula latex={tensor.shape.join(String.raw`\times`)} /></span><span role="cell">{tensor.producer}<small>{tensor.version}</small></span><span role="cell">{tensor.mask}</span></div>)}
+            </div>
+          </section>
+          <section className="rlhf-model-versions">
+            <header><span>{lang === 'zh' ? '本批次锁定的模型版本' : 'Model versions locked to this batch'}</span><small>{batch.responseId}</small></header>
+            <div>{batch.versions.map((item) => <article key={item.role}><span>{item.role}</span><strong>{item.version}</strong><small>{item.state}</small><em>{item.produces}</em></article>)}</div>
+          </section>
+        </div>
+        <section className="rlhf-mask-ledger">
+          <header><span>{lang === 'zh' ? '逐 token 的 mask 与终止语义' : 'Per-token masks and termination semantics'}</span><small>{batch.terminated ? (lang === 'zh' ? 'EOS：最后一步不再自举' : 'EOS: no bootstrap after the final action') : (lang === 'zh' ? '长度截断：最后一步仍保留自举' : 'Length truncation: final action keeps bootstrap')}</small></header>
+          <div className="rlhf-mask-scroll">
+            {batch.rows.map((row) => <article className={`${row.response ? 'is-response' : 'is-prompt'} ${row.token === 'PAD' ? 'is-pad' : ''} ${row.terminal ? 'is-terminal' : ''} ${row.truncated ? 'is-truncated' : ''}`} key={row.index}>
+              <b>{row.index}</b><strong>{row.token}</strong>
+              <span><small>attention</small>{row.attention}</span>
+              <span><small>response</small>{row.response}</span>
+              <span><small>loss</small>{row.loss}</span>
+              <span><small>bootstrap</small>{row.bootstrap}</span>
+            </article>)}
+          </div>
+        </section>
+      </div>}
 
       {method === 'ppo' && <div className="response-group">
         {result.samples.map((sample) => (

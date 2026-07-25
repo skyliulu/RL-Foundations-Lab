@@ -293,12 +293,49 @@ export function runStochasticApproximationComparison({
 
 export function compareTdTargets({ gamma = 0.9, n = 3, value = 2.4, nextValue = 3.1 } = {}) {
   const rewards = [0, -1, 0.5, 0, 4]
+  const stateIds = [1, 2, 2, 7, 8, 9]
+  const stateValues = [value, nextValue, nextValue, 3.8, 4.1, 0]
+  const boundedN = Math.max(1, Math.min(rewards.length, n))
+  const trajectory = stateIds.map((stateId, index) => ({
+    time: index,
+    stateId,
+    value: stateValues[index],
+    rewardToNext: rewards[index] ?? null,
+    terminal: index === stateIds.length - 1,
+  }))
   const mc = rewards.reduce((total, reward, index) => total + gamma ** index * reward, 0)
-  const td = rewards[0] + gamma * nextValue
-  const prefix = rewards.slice(0, n).reduce((total, reward, index) => total + gamma ** index * reward, 0)
-  const bootstrappedValue = n === 1 ? nextValue : nextValue + 0.35 * (n - 1)
-  const nStep = prefix + gamma ** n * bootstrappedValue
-  return { series: [td, nStep, mc], td, nStep, mc, delta: td - value, value }
+  const td = rewards[0] + gamma * stateValues[1]
+  const rewardContributions = rewards.slice(0, boundedN).map((reward, index) => ({
+    step: index + 1,
+    reward,
+    discount: gamma ** index,
+    contribution: gamma ** index * reward,
+  }))
+  const prefix = rewardContributions.reduce((total, item) => total + item.contribution, 0)
+  const bootstrappedValue = stateValues[boundedN]
+  const bootstrapContribution = gamma ** boundedN * bootstrappedValue
+  const nStep = prefix + bootstrapContribution
+  return {
+    series: [td, nStep, mc],
+    td,
+    nStep,
+    mc,
+    delta: td - value,
+    value,
+    n: boundedN,
+    gamma,
+    trajectory,
+    valueTable: trajectory.map(({ time, stateId, value: estimate, terminal }) => ({ time, stateId, estimate, terminal })),
+    rewardContributions,
+    bootstrap: {
+      time: boundedN,
+      stateId: stateIds[boundedN],
+      value: bootstrappedValue,
+      discount: gamma ** boundedN,
+      contribution: bootstrapContribution,
+      terminal: boundedN === rewards.length,
+    },
+  }
 }
 
 const CLIFF_WIDTH = 7
@@ -508,15 +545,44 @@ export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, b
   const boundedStep = Math.max(0, Math.min(returns.length - 1, selectedStep))
   const selectedReturn = returns[boundedStep]
   const actionIndices = [0, 1, 2, 0]
+  const stateIds = [1, 2, 7, 8]
   const actionIndex = actionIndices[boundedStep]
-  const logits = [0.35, -0.1, -0.6]
-  logits[actionIndex] = theta
+  const stateLogits = [
+    [0.35, -0.1, -0.6],
+    [-0.25, 0.45, -0.35],
+    [-0.4, 0.05, 0.5],
+    [0.2, -0.45, -0.2],
+  ]
+  stateLogits[boundedStep] = [...stateLogits[boundedStep]]
+  stateLogits[boundedStep][actionIndex] = theta
   const normalize = (values) => {
     const maximum = Math.max(...values)
     const exponentials = values.map((value) => Math.exp(value - maximum))
     const total = exponentials.reduce((sum, value) => sum + value, 0)
     return exponentials.map((value) => value / total)
   }
+  const stepContributions = stateLogits.map((stepLogits, stepIndex) => {
+    const stepProbabilities = normalize(stepLogits)
+    const sampledAction = actionIndices[stepIndex]
+    const stepWeight = returns[stepIndex] - baseline
+    const scoreVector = stepProbabilities.map((probabilityValue, index) => (index === sampledAction ? 1 : 0) - probabilityValue)
+    const contributionVector = scoreVector.map((score) => score * stepWeight)
+    return {
+      step: stepIndex,
+      stateId: stateIds[stepIndex],
+      actionIndex: sampledAction,
+      return: returns[stepIndex],
+      baseline,
+      advantage: stepWeight,
+      logits: stepLogits,
+      probabilities: stepProbabilities,
+      scoreVector,
+      contributionVector,
+      contributionNorm: Math.sqrt(contributionVector.reduce((sum, value) => sum + value ** 2, 0)),
+    }
+  })
+  const selectedContribution = stepContributions[boundedStep]
+  const logits = selectedContribution.logits
   const probabilities = normalize(logits)
   const weight = Number.isFinite(advantage) ? advantage : selectedReturn - baseline
   const gradientVector = probabilities.map((probabilityValue, index) => weight * ((index === actionIndex ? 1 : 0) - probabilityValue))
@@ -525,6 +591,25 @@ export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, b
   const probability = probabilities[actionIndex]
   const nextProbability = nextProbabilities[actionIndex]
   const gradient = gradientVector[actionIndex]
+  const rolloutReturns = [selectedReturn, selectedReturn + 1.1, selectedReturn - 0.9, selectedReturn + 0.45, selectedReturn - 1.25, selectedReturn + 0.8]
+  const rolloutActions = [actionIndex, (actionIndex + 1) % 3, actionIndex, (actionIndex + 2) % 3, actionIndex, (actionIndex + 1) % 3]
+  const monitoredProbability = probabilities[actionIndex]
+  const rollouts = rolloutReturns.map((rolloutReturn, index) => {
+    const sampledAction = rolloutActions[index]
+    const score = (sampledAction === actionIndex ? 1 : 0) - monitoredProbability
+    return {
+      id: index + 1,
+      actionIndex: sampledAction,
+      return: rolloutReturn,
+      score,
+      rawContribution: score * rolloutReturn,
+      centeredContribution: score * (rolloutReturn - baseline),
+    }
+  })
+  const variance = (values) => {
+    const average = mean(values)
+    return mean(values.map((value) => (value - average) ** 2))
+  }
   return {
     series: [probability, nextProbability],
     probability,
@@ -542,14 +627,62 @@ export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, b
     selectedStep: boundedStep,
     actionIndex,
     actionIndices,
+    stateIds,
+    statePolicies: stateLogits.map((stepLogits, index) => ({
+      stateId: stateIds[index],
+      logits: stepLogits,
+      probabilities: normalize(stepLogits),
+    })),
+    stepContributions,
+    rollouts,
+    varianceWithoutBaseline: variance(rollouts.map((rollout) => rollout.rawContribution)),
+    varianceWithBaseline: variance(rollouts.map((rollout) => rollout.centeredContribution)),
   }
 }
 
 export function runActorCritic({ reward = 1, gamma = 0.9, value = 2.2, nextValue = 2.8, actorAlpha = 0.12, criticAlpha = 0.18, ratio = 1 } = {}) {
+  const normalize = (values) => {
+    const maximum = Math.max(...values)
+    const exponentials = values.map((item) => Math.exp(item - maximum))
+    const total = exponentials.reduce((sum, item) => sum + item, 0)
+    return exponentials.map((item) => item / total)
+  }
   const delta = reward + gamma * nextValue - value
+  const target = reward + gamma * nextValue
+  const criticCorrection = criticAlpha * delta
   const nextValueEstimate = value + criticAlpha * delta
+  const logitsBefore = [0.2, 0.55, -0.35]
+  const actionIndex = 1
+  const probabilitiesBefore = normalize(logitsBefore)
+  const scoreVector = probabilitiesBefore.map((probabilityValue, index) => (index === actionIndex ? 1 : 0) - probabilityValue)
+  const actorUpdateVector = scoreVector.map((score) => actorAlpha * ratio * delta * score)
+  const logitsAfter = logitsBefore.map((logit, index) => logit + actorUpdateVector[index])
+  const probabilitiesAfter = normalize(logitsAfter)
   const actorStep = actorAlpha * ratio * delta
-  return { series: [value, reward + gamma * nextValue, nextValueEstimate], delta, nextValueEstimate, actorStep, ratio }
+  return {
+    series: [value, target, nextValueEstimate],
+    delta,
+    target,
+    nextValueEstimate,
+    actorStep,
+    ratio,
+    critic: {
+      valueBefore: value,
+      target,
+      delta,
+      correction: criticCorrection,
+      valueAfter: nextValueEstimate,
+    },
+    actor: {
+      actionIndex,
+      logitsBefore,
+      probabilitiesBefore,
+      scoreVector,
+      updateVector: actorUpdateVector,
+      logitsAfter,
+      probabilitiesAfter,
+    },
+  }
 }
 
 export const learningLabRunners = {

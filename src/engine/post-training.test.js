@@ -10,6 +10,10 @@ describe('post-training method calculations', () => {
     assert.ok(result.after.chosenShift > result.chosenShift)
     assert.ok(result.after.rejectedShift < result.rejectedShift)
     assert.ok(result.after.loss < result.loss)
+    assert.equal(result.gradients.chosen, -1 * (1 - result.preferenceProbability))
+    assert.equal(result.gradients.rejected, 1 * (1 - result.preferenceProbability))
+    assert.equal(result.after.chosenShift, result.chosenShift - result.learningRate * result.gradients.chosen)
+    assert.equal(result.after.rejectedShift, result.rejectedShift - result.learningRate * result.gradients.rejected)
   })
 
   it('GRPO group-relative advantages are centered and clipped', () => {

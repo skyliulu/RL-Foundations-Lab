@@ -43,7 +43,7 @@ function DpoLab({ lang }) {
     <div className="dpo-update-ledger">
       <article><span>{lang === 'zh' ? '更新前' : 'Before'}</span><MathFormula latex={String.raw`m=${result.margin.toFixed(3)}`} /><strong><MathFormula latex={String.raw`\mathcal L=${result.loss.toFixed(3)}`} /></strong></article>
       <i aria-hidden="true">→</i>
-      <article><span>{lang === 'zh' ? '梯度下降一步' : 'One gradient step'}</span><MathFormula latex={String.raw`\Delta_w\mathrel{+}=${result.updateMagnitude.toFixed(3)}`} /><MathFormula latex={String.raw`\Delta_l\mathrel{-}=${result.updateMagnitude.toFixed(3)}`} /></article>
+      <article><span>{lang === 'zh' ? '梯度贡献与优化器一步' : 'Gradient contributions and optimizer step'}</span><MathFormula latex={String.raw`\frac{\partial\mathcal L}{\partial\Delta_w}=${result.gradients.chosen.toFixed(3)}`} /><MathFormula latex={String.raw`\frac{\partial\mathcal L}{\partial\Delta_l}=${result.gradients.rejected.toFixed(3)}`} /><small><MathFormula latex={String.raw`\Delta_w\mathrel{+}=${result.updateMagnitude.toFixed(3)},\quad\Delta_l\mathrel{-}=${result.updateMagnitude.toFixed(3)}`} /></small></article>
       <i aria-hidden="true">→</i>
       <article className="is-after"><span>{lang === 'zh' ? '更新后' : 'After'}</span><MathFormula latex={String.raw`m'=${result.after.margin.toFixed(3)}`} /><strong><MathFormula latex={String.raw`\mathcal L'=${result.after.loss.toFixed(3)}`} /></strong></article>
     </div>

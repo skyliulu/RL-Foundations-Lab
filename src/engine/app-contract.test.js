@@ -719,6 +719,30 @@ test('phase-two chapters keep one causal article spine and mechanism-faithful in
   assert.match(ppo, /aria-pressed=/)
 })
 
+test('phase-three interactions expose their algorithm-specific internal evidence', () => {
+  const learning = read('components/LearningLab.jsx')
+  const system = read('components/SystemLab.jsx')
+  const modern = read('components/ModernExtensionLab.jsx')
+  const styles = read('styles.css')
+
+  assert.match(learning, /className="td-value-table"/)
+  assert.match(learning, /result\.bootstrap\.value/)
+  assert.match(learning, /className="td-target-breakdown"/)
+  assert.match(learning, /className="pg-variance-panel"/)
+  assert.match(learning, /result\.stepContributions/)
+  assert.match(learning, /result\.varianceWithBaseline/)
+  assert.match(learning, /className="ac-policy-ledger"/)
+  assert.match(learning, /result\.actor\.probabilitiesBefore/)
+  assert.match(learning, /result\.critic\.valueAfter/)
+  assert.match(system, /className="rlhf-version-flow"/)
+  assert.match(system, /className="rlhf-tensor-contract"/)
+  assert.match(system, /className="rlhf-mask-ledger"/)
+  assert.match(system, /buildRlhfBatchContract/)
+  assert.match(modern, /result\.gradients\.chosen/)
+  assert.match(modern, /result\.gradients\.rejected/)
+  assert.match(styles, /\.ac-evidence-stage\s*\{\s*grid-template-columns:\s*1fr/)
+})
+
 test('the return worked example remains attached to the shared course world', async () => {
   const { copy } = await import('../content.js')
   const zh = copy.zh.returns.deepening.find((item) => item.id === 'two-return-calculations')
