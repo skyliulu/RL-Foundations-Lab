@@ -67,7 +67,7 @@ export const copy = {
       grid: '网格世界', value: '状态价值 V(s)', update: '本步更新', controls: '参数与操作',
       currentState: '当前状态', action: '选择动作', reward: '即时奖励', nextState: '下一状态', target: '目标值',
       before: '更新前', after: '更新后', residual: 'Bellman 残差', iterations: '更新步数', sweeps: '完整 sweep',
-      synchronous: '同步值迭代', inplace: '原地值迭代', sameConditions: '比较条件已锁定', backups: 'backup 次数', converged: '收敛轮数',
+      synchronous: '同步值迭代', inplace: '原地值迭代', sameConditions: '比较条件已锁定', backups: '单状态更新次数', converged: '收敛轮数',
       clip: '裁剪范围 ε', strength: '更新强度', klBeta: 'KL 惩罚 β', algorithm: '算法视图', system: '系统视图',
       ratio: '新旧策略比 rₜ', advantage: '优势 Aₜ', clipped: '已裁剪', free: '未裁剪', samples: '同一批 rollout 样本',
       selectSample: '选择一个样本查看它如何穿过整条链路', adjustedReward: 'KL 后奖励', objective: '代理目标', meanKl: '近似 KL',
@@ -165,7 +165,9 @@ for (const lang of ['zh', 'en']) {
   for (const chapter of copy[lang].chapters) {
     copy[lang][chapter.id].title = chapter.title
   }
-  copy[lang].bellman.summaryTitle = lang === 'zh' ? '一步递推把长期价值变成可求解方程' : 'One-step recursion turns long-term value into a solvable system'
+  copy[lang].bellman.summaryTitle = lang === 'zh'
+    ? 'Bellman 方程把轨迹期望转化为可联立求解的状态方程组'
+    : 'Bellman equations turn trajectory expectations into a solvable coupled state system'
   copy[lang].approximation.summaryTitle = lang === 'zh' ? '步长决定学习器怎样吸收历史证据' : 'Step size determines how a learner absorbs historical evidence'
   for (const id of articleFlowChapterIds) {
     const labels = derivationLabels[lang][id]

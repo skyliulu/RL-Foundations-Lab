@@ -95,6 +95,32 @@ test('the course-world trajectory overlay is synchronized but remains presentati
   assert.match(source, /<CourseTrajectoryOverlay trajectory=\{trajectory\} current=\{current\} \/>/)
 })
 
+test('the Bellman policy path is model-derived, labeled, and presentational', () => {
+  const source = read('components/BellmanLab.jsx')
+  assert.match(source, /tracePolicyPath\(\{/)
+  assert.match(source, /function BellmanTrajectoryOverlay/)
+  assert.match(source, /className="bellman-trajectory-overlay"[^>]*aria-hidden="true"/)
+  assert.match(source, /noise === 0 \? m\.policyPath : m\.mostLikelyPath/)
+  assert.match(source, /m\.mostLikelyPathNote/)
+})
+
+test('stochastic Bellman contributions use a full-width evidence strip outside the narrow update panel', () => {
+  const source = read('components/BellmanLab.jsx')
+  const styles = read('styles.css')
+  const stageClose = source.indexOf('</div>\n\n      {detail.transitions.length > 1 && (')
+  const contributionStrip = source.indexOf('className="successor-contributions"')
+  const algorithmSync = source.indexOf('className="algorithm-sync"')
+
+  assert.ok(stageClose > 0)
+  assert.ok(contributionStrip > stageClose)
+  assert.ok(algorithmSync > contributionStrip)
+  assert.match(source, /className="successor-contribution-scroll"/)
+  assert.match(source, /role="listitem"/)
+  assert.match(styles, /\.successor-contribution-scroll\s*\{[^}]*overflow-x:\s*auto/)
+  assert.match(styles, /\.successor-contribution-grid\s*\{[^}]*grid-template-columns:\s*repeat\(5,minmax\(168px,1fr\)\)/)
+  assert.doesNotMatch(source, /className="contribution-list"/)
+})
+
 test('conditionally hidden views expose their expanded state and controlled region', () => {
   const app = read('App.jsx')
   const courseWorld = read('components/CourseWorldExplorer.jsx')

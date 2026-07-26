@@ -39,6 +39,7 @@ export function useStepMicroscope({
   const valuesRef = useRef(values)
   const [history, setHistory] = useState([])
   const [residuals, setResiduals] = useState([])
+  const [stepCount, setStepCount] = useState(0)
   const [lastStep, setLastStep] = useState(null)
   const [playing, setPlaying] = useState(false)
   const [focusTerm, setFocusTerm] = useState(initialFocus)
@@ -56,6 +57,7 @@ export function useStepMicroscope({
     setSelected(selection)
     setHistory([])
     setResiduals(nextResiduals.slice(-maxTrace))
+    setStepCount(0)
     setLastStep(null)
     setPlaying(false)
     setFocusTerm(nextFocus)
@@ -83,6 +85,7 @@ export function useStepMicroscope({
     setSelected(selection)
     setHistory((items) => [...items.slice(-(maxHistory - 1)), { values: currentValues, selection }])
     setResiduals((items) => [...items.slice(-(maxTrace - 1)), Math.abs(record.residual)])
+    setStepCount((count) => count + 1)
     setLastStep(record)
     setPhase('assign')
     return record
@@ -96,6 +99,7 @@ export function useStepMicroscope({
     setSelected(previous.selection)
     setHistory((items) => items.slice(0, -1))
     setResiduals((items) => items.slice(0, -1))
+    setStepCount((count) => Math.max(0, count - 1))
     setLastStep(null)
     setPlaying(false)
     setPhase('target')
@@ -106,6 +110,7 @@ export function useStepMicroscope({
     selected,
     values,
     residuals,
+    stepCount,
     lastStep,
     playing,
     focusTerm,

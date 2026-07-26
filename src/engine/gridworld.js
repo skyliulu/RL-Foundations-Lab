@@ -133,6 +133,41 @@ export function describeBackup(state, values, gamma, noise, policy = 'fixed', ac
   return { action, transitions, target, before, residual: target - before, primary }
 }
 
+export function tracePolicyPath({
+  start,
+  values,
+  gamma,
+  noise,
+  policy = 'fixed',
+  actionOverride = null,
+  maxTransitions = 14,
+}) {
+  const states = [start]
+  const visited = new Set([keyOf(start)])
+  let current = start
+
+  for (let step = 0; step < maxTransitions; step += 1) {
+    const detail = describeBackup(
+      current,
+      values,
+      gamma,
+      noise,
+      policy,
+      step === 0 ? actionOverride : null,
+    )
+    if (!detail.primary) break
+
+    const next = detail.primary.state
+    states.push(next)
+    const nextKey = keyOf(next)
+    if (visited.has(nextKey)) break
+    visited.add(nextKey)
+    current = next
+  }
+
+  return states
+}
+
 export function backupState(state, values, gamma, noise, policy = 'fixed', actionOverride = null) {
   const detail = describeBackup(state, values, gamma, noise, policy, actionOverride)
   const nextValues = [...values]

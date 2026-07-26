@@ -12,6 +12,8 @@ import {
   createInitialValues,
   describeBackup,
   indexOf,
+  isSame,
+  tracePolicyPath,
   transitionsFor,
 } from './gridworld.js'
 import { evaluatePpo } from './ppo.js'
@@ -51,13 +53,37 @@ test('forbidden cells remain accessible states rather than walls', () => {
   assert.ok(Number.isFinite(result.values[indexOf(state)]))
 })
 
+test('a policy trace follows successor dependencies until a state repeats', () => {
+  const path = tracePolicyPath({
+    start: START,
+    values: createInitialValues(),
+    gamma: 0.9,
+    noise: 0,
+    policy: 'fixed',
+  })
+
+  assert.deepEqual(path.slice(0, 5), [
+    { row: 0, col: 0 },
+    { row: 0, col: 1 },
+    { row: 0, col: 2 },
+    { row: 0, col: 3 },
+    { row: 1, col: 3 },
+  ])
+  assert.ok(path.slice(0, -1).some((state) => isSame(state, path.at(-1))))
+})
+
 test('single-state backup follows the fixed policy printed in lecture 2', () => {
   const values = createInitialValues()
   const state = { row: 3, col: 1 }
   const result = backupState(state, values, 0.9, 0, 'fixed')
+  const changedIndices = result.values
+    .map((value, index) => value !== values[index] ? index : -1)
+    .filter((index) => index >= 0)
   assert.equal(result.action, 'right')
   assert.equal(result.values[indexOf(state)], 1)
   assert.equal(result.before, 0)
+  assert.equal(result.residual, result.target - result.before)
+  assert.deepEqual(changedIndices, [indexOf(state)])
 })
 
 test('optimal value iteration reproduces the continuing-task values in the course', () => {

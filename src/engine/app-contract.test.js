@@ -585,6 +585,18 @@ test('all rebuilt chapters expose one bilingual causal article flow with one exp
       assert.equal(typeof formula.after, 'string', `${id} article formula needs a following interpretation`)
     })
   }
+
+  const bellmanFlow = copy.zh.bellman.articleFlow
+  assert.equal(bellmanFlow[0].id, 'return-recursion')
+  assert.equal(bellmanFlow[0].formulas.length, 2)
+  assert.equal(bellmanFlow[1].id, 'conditional-expectation')
+  assert.match(bellmanFlow[1].formulas[0].latex, /\\coloneqq/)
+  assert.ok(bellmanFlow.findIndex((block) => block.id === 'matrix-and-iteration') < bellmanFlow.findIndex((block) => block.type === 'experiment'))
+  const backupBlock = bellmanFlow.find((block) => block.id === 'bootstrapping')
+  assert.match(backupBlock.formulas[0].latex, /\\delta_\{\\mathrm B\}/)
+  assert.match(copy.zh.bellman.interpretation, /局部 Bellman 残差/)
+  assert.match(copy.en.bellman.interpretation, /local Bellman residual/)
+  assert.match(copy.zh.bellman.microscope.singleBackupNote, /其余 24 个状态保持不变/)
 })
 
 test('short article turns keep formula interpretation separate from the preceding claim', async () => {

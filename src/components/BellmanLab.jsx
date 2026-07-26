@@ -13,6 +13,7 @@ import {
   indexOf,
   isForbidden,
   isSame,
+  tracePolicyPath,
 } from '../engine/gridworld'
 import { bellmanPresetConfigs } from '../content/bellman'
 import { phaseForFocus, useStepMicroscope } from '../interaction/stepMicroscope'
@@ -38,23 +39,25 @@ function heatStyle(value, maxAbs) {
 }
 
 function ResidualTrace({ values, label }) {
-  const width = 176
-  const height = 62
-  const data = values.length ? values : [0]
+  const width = 720
+  const height = 76
+  const data = values
   const max = Math.max(...data, 0.05)
-  const points = data.map((value, index) => {
-    const x = data.length === 1 ? 0 : index / (data.length - 1) * width
-    const y = height - value / max * (height - 8) - 4
-    return `${x},${y}`
-  }).join(' ')
+  const plotLeft = 6
+  const plotRight = width - 6
+  const coordinates = data.map((value, index) => ({
+    x: data.length === 1 ? plotLeft : plotLeft + index / (data.length - 1) * (plotRight - plotLeft),
+    y: height - value / max * (height - 12) - 6,
+  }))
+  const points = coordinates.map(({ x, y }) => `${x},${y}`).join(' ')
   return (
-    <svg className="residual-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
-      <line x1="0" y1={height - 4} x2={width} y2={height - 4} />
-      <polyline points={points} />
-      {data.map((value, index) => {
-        const [x, y] = points.split(' ')[index].split(',')
-        return <circle key={`${index}-${value}`} cx={x} cy={y} r="2.1" />
-      })}
+    <svg className="residual-chart" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={label}>
+      <line className="residual-guide" x1="0" y1={height / 2} x2={width} y2={height / 2} />
+      <line x1="0" y1={height - 6} x2={width} y2={height - 6} />
+      {points && <polyline points={points} />}
+      {coordinates.length > 0 && (
+        <circle className="residual-latest" cx={coordinates.at(-1).x} cy={coordinates.at(-1).y} r="3.2" />
+      )}
     </svg>
   )
 }
@@ -86,6 +89,37 @@ function DiscountValueGrid({ values, selected, maxAbs, label, onSelect }) {
   )
 }
 
+function BellmanTrajectoryOverlay({ states }) {
+  const points = states
+    .map((state) => `${(state.col + 0.5) * 20},${(state.row + 0.5) * 20}`)
+    .join(' ')
+  const last = states.at(-1)
+  const closesLoop = states.slice(0, -1).some((state) => isSame(state, last))
+
+  return (
+    <svg className="bellman-trajectory-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {states.length > 1 && <polyline points={points} />}
+      {states.map((state, index) => (
+        <circle
+          className={index === 0 ? 'is-start' : index === states.length - 1 ? 'is-current' : ''}
+          cx={(state.col + 0.5) * 20}
+          cy={(state.row + 0.5) * 20}
+          r={index === 0 || index === states.length - 1 ? 2.3 : 1.25}
+          key={`${state.row}-${state.col}-${index}`}
+        />
+      ))}
+      {closesLoop && (
+        <circle
+          className="is-loop"
+          cx={(last.col + 0.5) * 20}
+          cy={(last.row + 0.5) * 20}
+          r="4"
+        />
+      )}
+    </svg>
+  )
+}
+
 export default function BellmanLab({ lang, text }) {
   const c = text.common
   const m = text.bellman.microscope
@@ -99,11 +133,13 @@ export default function BellmanLab({ lang, text }) {
     initialSelection: defaultState,
     initialValues: createInitialValues,
     initialFocus: 'target',
+    maxTrace: 75,
   })
   const {
     selected,
     values,
     residuals,
+    stepCount,
     lastStep: lastUpdate,
     playing,
     focusTerm,
@@ -120,6 +156,14 @@ export default function BellmanLab({ lang, text }) {
   const selectedIndex = indexOf(selected)
   const isDiscountComparison = activePreset === 'discount-horizon'
   const activePresetContent = text.bellman.presets.find((preset) => preset.id === activePreset)
+  const policyPath = useMemo(() => tracePolicyPath({
+    start: selected,
+    values,
+    gamma,
+    noise,
+    policy,
+    actionOverride,
+  }), [selected, values, gamma, noise, policy, actionOverride])
 
   const resetValues = ({ clearPreset = false } = {}) => {
     microscope.reset({ values: createInitialValues(), focusTerm: 'target', phase: 'target' })
@@ -135,14 +179,14 @@ export default function BellmanLab({ lang, text }) {
     if (!config) return
     const seeded = config.seed === 'converged'
       ? converge({ gamma: config.gamma, noise: config.noise, optimal: config.policy === 'greedy' })
-      : { values: createInitialValues(), residuals: [] }
+      : { values: createInitialValues() }
     setGamma(config.gamma)
     setNoise(config.noise)
     setPolicy(config.policy)
     microscope.reset({
       values: seeded.values,
       selection: config.selected,
-      residuals: seeded.residuals,
+      residuals: [],
       focusTerm: config.focusTerm,
       phase: phaseForFocus(config.focusTerm),
     })
@@ -215,6 +259,10 @@ export default function BellmanLab({ lang, text }) {
       </div>
 
       <div className="preset-workbench">
+        <p className="preset-purpose">
+          <strong>{m.presetLabel}</strong>
+          <MathText>{m.presetPurpose}</MathText>
+        </p>
         <div className="preset-strip" role="group" aria-label={m.presetLabel}>
           {text.bellman.presets.map((preset, index) => (
             <button
@@ -238,32 +286,35 @@ export default function BellmanLab({ lang, text }) {
       <div className={`bellman-stage ${isDiscountComparison ? 'is-comparing' : ''}`}>
         <section className={`lab-panel grid-panel ${focusTerm === 'state' ? 'is-focused' : ''}`}>
           <header><span>{c.grid}</span><small>{policy === 'fixed' ? c.fixed : c.greedy}</small></header>
-          <div className="grid-board" role="grid" aria-label={c.grid}>
-            {Array.from({ length: SIZE * SIZE }, (_, index) => {
-              const state = { row: Math.floor(index / SIZE), col: index % SIZE }
-              const forbidden = isForbidden(state)
-              const goal = isSame(state, GOAL)
-              const active = isSame(state, selected)
-              const next = primary && isSame(state, primary.state)
-              return (
-                <button
-                  type="button"
-                  role="gridcell"
-                  key={`${state.row}-${state.col}`}
-                  className={`grid-cell ${forbidden ? 'forbidden' : ''} ${goal ? 'goal' : ''} ${active ? 'selected' : ''} ${next ? 'next' : ''} ${focusTerm === 'reward' && (forbidden || goal || (active && isSame(primary?.state || state, state))) ? 'term-highlight' : ''}`}
-                  aria-label={`${stateLabel(state)} ${active ? c.currentState : ''}`}
-                  aria-selected={active}
-                  onClick={() => selectState(state)}
-                >
-                  {isSame(state, START) && <span className="start-mark">S</span>}
-                  {forbidden && <strong className="cell-reward">−1</strong>}
-                  {goal && <strong className="cell-reward">+1</strong>}
-                  <span className="policy-arrow">{arrowFor(state, policy, values, gamma, noise)}</span>
-                  {active && <span className="cell-tag"><MathFormula latex={String.raw`s`} /></span>}
-                  {next && !active && <span className="cell-tag next-tag"><MathFormula latex={String.raw`s'`} /></span>}
-                </button>
-              )
-            })}
+          <div className="bellman-grid-visual">
+            <div className="grid-board" role="grid" aria-label={c.grid}>
+              {Array.from({ length: SIZE * SIZE }, (_, index) => {
+                const state = { row: Math.floor(index / SIZE), col: index % SIZE }
+                const forbidden = isForbidden(state)
+                const goal = isSame(state, GOAL)
+                const active = isSame(state, selected)
+                const next = primary && isSame(state, primary.state)
+                return (
+                  <button
+                    type="button"
+                    role="gridcell"
+                    key={`${state.row}-${state.col}`}
+                    className={`grid-cell ${forbidden ? 'forbidden' : ''} ${goal ? 'goal' : ''} ${active ? 'selected' : ''} ${next ? 'next' : ''} ${focusTerm === 'reward' && (forbidden || goal || (active && isSame(primary?.state || state, state))) ? 'term-highlight' : ''}`}
+                    aria-label={`${stateLabel(state)} ${active ? c.currentState : ''}`}
+                    aria-selected={active}
+                    onClick={() => selectState(state)}
+                  >
+                    {isSame(state, START) && <span className="start-mark">S</span>}
+                    {forbidden && <strong className="cell-reward">−1</strong>}
+                    {goal && <strong className="cell-reward">+1</strong>}
+                    <span className="policy-arrow">{arrowFor(state, policy, values, gamma, noise)}</span>
+                    {active && <span className="cell-tag"><MathFormula latex={String.raw`s`} /></span>}
+                    {next && !active && <span className="cell-tag next-tag"><MathFormula latex={String.raw`s'`} /></span>}
+                  </button>
+                )
+              })}
+            </div>
+            <BellmanTrajectoryOverlay states={policyPath} />
           </div>
           <div className="grid-legend">
             <span><i className="legend-swatch goal-swatch" />{lang === 'zh' ? '进入目标 +1' : 'enter target +1'}</span>
@@ -271,7 +322,9 @@ export default function BellmanLab({ lang, text }) {
             <span><i className="legend-boundary" />{lang === 'zh' ? '越界 −1 / 原地' : 'boundary −1 / stay'}</span>
             <span><i className="legend-outline" /><MathFormula latex={String.raw`s`} /></span>
             <span><i className="legend-outline next-outline" /><MathFormula latex={String.raw`s'`} /></span>
+            <span><i className="legend-policy-path" />{noise === 0 ? m.policyPath : m.mostLikelyPath}</span>
           </div>
+          <p className="bellman-path-note">{noise === 0 ? m.policyPathNote : m.mostLikelyPathNote}</p>
         </section>
 
         <section className={`lab-panel value-panel ${focusTerm === 'future' || focusTerm === 'gamma' ? 'is-focused' : ''}`}>
@@ -348,29 +401,41 @@ export default function BellmanLab({ lang, text }) {
             )}
             <strong className="target-value"><MathFormula latex={String.raw`=${detail.target.toFixed(3)}`} /></strong>
           </div>
-          {detail.transitions.length > 1 && (
-            <div className="contribution-list" aria-label={lang === 'zh' ? '后继状态贡献' : 'Successor contributions'}>
-              <strong>{m.contributions}</strong>
-              {detail.transitions.map((transition) => {
-                const nextValue = values[indexOf(transition.state)] || 0
-                const contribution = transition.probability * (transition.reward + gamma * nextValue)
-                return (
-                  <div key={`${stateLabel(transition.state)}-${transition.reward}`}>
-                    <span><MathFormula latex={String.raw`${transition.probability.toFixed(2)}\times(${transition.reward.toFixed(1)}+${gamma.toFixed(2)}\times${nextValue.toFixed(2)})`} /></span>
-                    <b><MathFormula latex={String.raw`=${contribution.toFixed(3)}`} /></b>
-                  </div>
-                )
-              })}
-            </div>
-          )}
           <div className="change-row">
             <span><small>{c.before}</small>{displayedUpdate.before.toFixed(3)}</span>
             <b>→</b>
             <span><small>{lastUpdate && isSame(lastUpdate.selection, selected) ? c.after : m.ifApplied}</small>{displayedUpdate.after.toFixed(3)}</span>
           </div>
+          <p className="single-backup-note"><MathText>{`${m.singleBackupNote} ${stateLabel(selected)}。`}</MathText></p>
           <div className="residual-readout"><span>{c.residual}</span><strong>{Math.abs(displayedUpdate.residual).toFixed(3)}</strong></div>
         </aside>
       </div>
+
+      {detail.transitions.length > 1 && (
+        <section className="successor-contributions" aria-label={lang === 'zh' ? '后继状态的期望贡献' : 'Expected successor contributions'}>
+          <header>
+            <span>{m.contributions}</span>
+            <small>{m.contributionHint}</small>
+          </header>
+          <div className="successor-contribution-scroll">
+            <div className="successor-contribution-grid" role="list">
+              {detail.transitions.map((transition) => {
+                const nextValue = values[indexOf(transition.state)] || 0
+                const oneStepTarget = transition.reward + gamma * nextValue
+                const contribution = transition.probability * oneStepTarget
+                return (
+                  <div role="listitem" key={`${stateLabel(transition.state)}-${transition.reward}`}>
+                    <strong>{stateLabel(transition.state)}</strong>
+                    <span><MathFormula latex={String.raw`p=${transition.probability.toFixed(2)}`} /></span>
+                    <span><MathFormula latex={String.raw`R+\gamma V=${oneStepTarget.toFixed(3)}`} /></span>
+                    <b><MathFormula latex={String.raw`p\,[R+\gamma V]=${contribution.toFixed(3)}`} /></b>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="algorithm-sync">
         <header>
@@ -413,9 +478,15 @@ export default function BellmanLab({ lang, text }) {
           <button type="button" onClick={() => resetValues({ clearPreset: true })}>↻ {c.reset}</button>
         </div>
         <div className="trace-box">
-          <span>{c.residual} <strong>{residuals.at(-1)?.toFixed(3) || '—'}</strong></span>
-          <ResidualTrace values={residuals} label={c.residual} />
-          <small>{c.backups}: {residuals.length} · {c.sweeps}: {completedSweeps}</small>
+          <div className="trace-copy">
+            <span>{m.localResidual} <strong>{residuals.at(-1)?.toFixed(3) || '—'}</strong></span>
+            <small><MathText>{m.residualHint}</MathText></small>
+          </div>
+          <ResidualTrace values={residuals} label={m.residualTraceLabel} />
+          <div className="trace-meta">
+            <small>{c.backups}: {stepCount} · {c.sweeps}: {completedSweeps}</small>
+            <small><MathText>{m.residualConvergence}</MathText></small>
+          </div>
         </div>
       </div>
     </section>

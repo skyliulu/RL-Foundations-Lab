@@ -123,6 +123,47 @@ test('Return samples support pressed state, Enter/Space, focus, and hidden prese
   expect(await page.locator('.return-observatory').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
 })
 
+test('Bellman policy paths stay synchronized with the selected state and randomness label', async ({ page }) => {
+  await openChapter(page, 'Bellman 方程')
+
+  const overlay = page.locator('.bellman-trajectory-overlay')
+  await expect(overlay).toHaveAttribute('aria-hidden', 'true')
+  await expect(overlay.locator('polyline')).toHaveCount(1)
+  await expect(overlay.locator('circle')).not.toHaveCount(0)
+  await expect(page.locator('.grid-legend')).toContainText('当前策略轨迹')
+
+  const firstPoints = await overlay.locator('polyline').getAttribute('points')
+  await page.locator('.grid-board .grid-cell').nth(10).click()
+  await expect(overlay.locator('polyline')).not.toHaveAttribute('points', firstPoints)
+
+  const noiseControls = page.locator('.control-deck input[type="range"]')
+  await expect(noiseControls).toHaveCount(2)
+  await noiseControls.nth(1).fill('0.3')
+  await expect(page.locator('.grid-legend')).toContainText('当前策略主分支')
+  await expect(page.locator('.bellman-path-note')).toContainText('所有后继分支加权')
+  const contributionStrip = page.locator('.successor-contributions')
+  await expect(contributionStrip).toContainText('所有列相加')
+  await expect(contributionStrip.locator('[role="listitem"]')).toHaveCount(5)
+  await expect(page.locator('.bellman-stage .successor-contributions')).toHaveCount(0)
+  expect(await contributionStrip.evaluate((element) => element.getBoundingClientRect().top >= document.querySelector('.bellman-stage').getBoundingClientRect().bottom - 1)).toBe(true)
+
+  const valueCells = page.locator('.value-board .value-cell')
+  const beforeValues = await valueCells.allTextContents()
+  await page.locator('.step-actions .primary-action').click()
+  const afterValues = await valueCells.allTextContents()
+  expect(afterValues.filter((value, index) => value !== beforeValues[index])).toHaveLength(1)
+  await expect(page.locator('.single-backup-note')).toContainText('其余 24 个状态保持不变')
+  await expect(page.locator('.trace-copy')).toContainText('本次局部 Bellman 残差')
+  await expect(page.locator('.residual-chart polyline')).toHaveCount(1)
+
+  const traceDimensions = await page.locator('.trace-box').evaluate((element) => ({
+    traceWidth: element.getBoundingClientRect().width,
+    deckWidth: element.parentElement.getBoundingClientRect().width,
+  }))
+  expect(traceDimensions.traceWidth).toBeGreaterThanOrEqual(traceDimensions.deckWidth - 2)
+  await expectNoPageOverflow(page)
+})
+
 test('PPO SVG samples expose equivalent mouse and keyboard selection', async ({ page }) => {
   await openChapter(page, 'Proximal Policy Optimization')
 

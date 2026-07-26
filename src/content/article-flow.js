@@ -39,15 +39,15 @@ const orders = {
     ref('sections', 'continuing-transfer', 'turn', { formulas: false }),
   ],
   bellman: [
-    ref('prelude', 'return-recursion', 'section', { formulas: false }),
-    ref('prelude', 'conditional-expectation', 'turn', { formulas: false }),
-    derivation(),
+    ref('prelude', 'return-recursion', 'section', { formulaIndices: [0, 2] }),
+    ref('prelude', 'conditional-expectation', 'turn', { formulaIndices: [0] }),
+    derivation({ stepIndices: [1, 2, 3, 4] }),
     ref('deepening', 'four-state-worked-system', 'topic'),
+    ref('deepening', 'matrix-and-iteration', 'topic'),
     ref('sections', 'target-anatomy'),
     ref('sections', 'bootstrapping'),
     experiment(),
     ref('sections', 'continuing-boundary'),
-    ref('deepening', 'matrix-and-iteration', 'topic'),
     ref('deepening', 'state-to-action-value', 'topic'),
     ref('sections', 'action-value-transfer', 'turn', { formulas: false }),
   ],
@@ -269,7 +269,7 @@ function formulaEntries(item, descriptor) {
   const formulas = [...(item.formulas || []), ...(item.formula ? [item.formula] : [])]
   const selected = descriptor.formulaIndices ? descriptor.formulaIndices.map((index) => formulas[index]).filter(Boolean) : formulas
   const before = item.paragraphs?.length ? item.paragraphs.at(-2) || item.paragraphs[0] : item.intro
-  const after = item.paragraphs?.length > 1 ? item.paragraphs.at(-1) : item.handoff || item.note
+  const after = item.formulaAfter || (item.paragraphs?.length > 1 ? item.paragraphs.at(-1) : item.handoff || item.note)
   return selected.map((formula) => ({
     role: formula?.role || descriptor.formulaRole || 'support',
     latex: formula?.latex || formula,
@@ -279,7 +279,7 @@ function formulaEntries(item, descriptor) {
 }
 
 function paragraphEntries(item, descriptor, lang, hasFormulaContract) {
-  const paragraphs = hasFormulaContract && item.paragraphs?.length > 1
+  const paragraphs = hasFormulaContract && !item.formulaAfter && item.paragraphs?.length > 1
     ? item.paragraphs.slice(0, -1)
     : item.paragraphs
   const mergeParagraphs = descriptor.mergeParagraphs ?? descriptor.type === 'turn'

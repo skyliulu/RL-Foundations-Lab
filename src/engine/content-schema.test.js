@@ -72,6 +72,23 @@ test('the Bellman golden chapter satisfies the structured content contract', () 
     copy.en.bellman.microscope.pseudocode.map((line) => line.id),
     copy.zh.bellman.microscope.pseudocode.map((line) => line.id),
   )
+  assert.match(copy.zh.bellman.prelude[0].paragraphs[0], /return Gₜ 定义为/)
+  assert.match(copy.zh.bellman.prelude[1].paragraphs[0], /状态价值函数 Vπ\(s\) 定义为/)
+  assert.match(copy.zh.bellman.prelude[1].formulas[0], /\\coloneqq/)
+  const coupledSystem = copy.zh.bellman.deepening.find((section) => section.id === 'four-state-worked-system')
+  const matrixSolution = copy.zh.bellman.deepening.find((section) => section.id === 'matrix-and-iteration')
+  assert.match(coupledSystem.formulas[0], /V\(s_4\).*V\(s_4\)/s)
+  assert.match(coupledSystem.formulas[1], /\\begin\{bmatrix\}/)
+  assert.match(`${matrixSolution.paragraphs.join(' ')} ${matrixSolution.formulaAfter}`, /完全相同.*不动点/)
+  assert.match(matrixSolution.formulas.join(' '), /\\mathcal T\^\{\\pi\}/)
+  assert.match(matrixSolution.formulas[0], /\\mathbf v\^\{\\pi\}-\\gamma P\^\{\\pi\}\\mathbf v\^\{\\pi\}/)
+  assert.match(matrixSolution.formulas[1], /\\mathbf v_0.*\\mathbf v_1.*\\mathbf v_2.*9,\\ 10,\\ 10,\\ 10/s)
+  assert.deepEqual(matrixSolution.formulaLabels, ['直接求解：把未知量集中到等号左侧', '迭代求解：把上一轮估计代入等号右侧'])
+  assert.match(matrixSolution.formulaAfter, /Bellman backup.*不是保存副本.*选定一个状态.*一次 sweep/)
+  assert.match(matrixSolution.formulaAfter, /策略 π 始终固定.*不是.*策略迭代/)
+  assert.match(copy.zh.bellman.sections.find((section) => section.id === 'target-anatomy').paragraphs.join(' '), /目标 T.*更新当前 V\(s\)/)
+  assert.equal(copy.zh.bellman.summaryTitle, 'Bellman 方程把轨迹期望转化为可联立求解的状态方程组')
+  assert.equal(copy.en.bellman.summaryTitle, 'Bellman equations turn trajectory expectations into a solvable coupled state system')
 })
 
 test('the MDP foundation chapter is bilingual, structured, and source-traceable', () => {
