@@ -62,28 +62,40 @@ test('navigation and conditionally hidden MDP views expose keyboard state', asyn
 test('Return samples support pressed state, Enter/Space, focus, and hidden presets', async ({ page }) => {
   await openChapter(page, '回报与价值函数')
 
-  const trajectoryMode = page.getByRole('button', { name: '回报分解', exact: true })
-  const valueMode = page.getByRole('button', { name: '价值估计', exact: true })
+  const trajectoryMode = page.getByRole('button', { name: '查看一条轨迹', exact: true })
+  const valueMode = page.getByRole('button', { name: '比较多条轨迹', exact: true })
   await expect(trajectoryMode).toHaveAttribute('aria-pressed', 'true')
   await valueMode.click()
   await expect(valueMode).toHaveAttribute('aria-pressed', 'true')
   await expect(trajectoryMode).toHaveAttribute('aria-pressed', 'false')
 
-  const samples = page.locator('.value-estimate-chart g[role="button"]')
-  await expect(samples).toHaveCount(8)
+  const samples = page.locator('.return-trajectory-card')
+  await page.getByRole('button', { name: '32', exact: true }).click()
+  await expect(samples).toHaveCount(32)
+  const trajectoryList = page.locator('.return-trajectory-list')
+  expect(await trajectoryList.evaluate((element) => ({
+    isScrollable: element.scrollHeight > element.clientHeight,
+    overflowY: getComputedStyle(element).overflowY,
+  }))).toEqual({ isScrollable: true, overflowY: 'auto' })
   const secondSample = samples.nth(1)
   await secondSample.focus()
   await page.keyboard.press('Space')
   await expect(secondSample).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.return-readout')).toContainText('#2')
   await expect(secondSample).toBeFocused()
-  expect(await secondSample.locator('circle').evaluate((element) => getComputedStyle(element).strokeWidth)).toBe('4px')
+  await expect(secondSample).toHaveClass(/is-selected/)
 
   const thirdSample = samples.nth(2)
   await thirdSample.focus()
   await page.keyboard.press('Enter')
   await expect(thirdSample).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.return-readout')).toContainText('#3')
+
+  const lastSample = samples.nth(31)
+  await lastSample.focus()
+  await page.keyboard.press('Enter')
+  await expect(lastSample).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.return-readout')).toContainText('#32')
 
   const presetsToggle = page.locator('button[aria-controls="return-presets"]')
   await presetsToggle.focus()
@@ -130,12 +142,12 @@ test('English copy preserves the same Return keyboard and hidden-view contract',
   await page.getByRole('button', { name: /Returns and Value Functions/ }).last().click()
   await expect(page.locator('h1')).toContainText('Returns and Value Functions')
 
-  const valueMode = page.getByRole('button', { name: 'Value estimate', exact: true })
+  const valueMode = page.getByRole('button', { name: 'Compare possible futures', exact: true })
   await valueMode.click()
   await expect(valueMode).toHaveAttribute('aria-pressed', 'true')
 
-  const secondSample = page.locator('.value-estimate-chart g[role="button"]').nth(1)
-  await expect(secondSample).toHaveAttribute('aria-label', /Selected sample 2/)
+  const secondSample = page.locator('.return-trajectory-card').nth(1)
+  await expect(secondSample).toHaveAttribute('aria-label', /Selected trajectory 2/)
   await secondSample.focus()
   await page.keyboard.press('Enter')
   await expect(secondSample).toHaveAttribute('aria-pressed', 'true')

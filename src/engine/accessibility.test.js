@@ -57,7 +57,7 @@ test('every visually selected control exposes pressed, selected, or current stat
 })
 
 test('clickable SVG samples are named, focusable, stateful, and keyboard operable', () => {
-  for (const file of ['components/PpoLab.jsx', 'components/ReturnObservatory.jsx']) {
+  for (const file of ['components/PpoLab.jsx']) {
     const source = read(file)
     const interactiveGroups = (source.match(/<g\b[\s\S]*?<\/g>/g) || []).filter((block) => block.includes('onClick='))
     assert.ok(interactiveGroups.length > 0, `${file} must expose an interactive SVG sample`)
@@ -73,8 +73,17 @@ test('clickable SVG samples are named, focusable, stateful, and keyboard operabl
 
   const styles = read('styles.css')
   assert.match(styles, /\.sample-mark:focus-visible/)
-  assert.match(styles, /\.sample-point:focus-visible circle/)
-  assert.match(styles, /\.selected-sample-point:focus-visible circle/)
+})
+
+test('return trajectory choices use native buttons and keep the map overlay presentational', () => {
+  const source = read('components/ReturnObservatory.jsx')
+  assert.match(source, /className=\{index === selectedIndex \? 'return-trajectory-card is-selected' : 'return-trajectory-card'\}/)
+  assert.match(source, /aria-pressed=\{index === selectedIndex\}/)
+  assert.match(source, /aria-label=\{`\$\{text\.selectedRun\}/)
+  assert.match(source, /result\.samples\.map\(\(sample, index\) =>/)
+  assert.doesNotMatch(source, /result\.samples\.slice\(0,\s*8\)/)
+  assert.match(source, /className=\{`return-trajectory-list\$\{scrollable \? ' is-scrollable' : ''\}`\}/)
+  assert.match(source, /className="return-path-overlay"[^>]*aria-hidden="true"/)
 })
 
 test('conditionally hidden views expose their expanded state and controlled region', () => {

@@ -139,7 +139,12 @@ test('the Return chapter separates trajectory samples from exact state value', (
   assert.match(returnChapter.zh.derivation[4].latex, /G_\{t\+1\}/)
   assert.match(returnChapter.zh.derivation[5].latex, /V\^\{\\pi\}/)
   assert.match(returnChapter.zh.prelude[1].formulas[0], /E/)
-  assert.match(returnChapter.en.prelude[0].formulas[0], /G_t/)
+  assert.match(returnChapter.en.prelude[0].formulas[0], /G_\{\\mathrm\{safe\}\}/)
+  assert.match(returnChapter.zh.prelude[0].paragraphs.join(' '), /即时奖励 0.*禁区.*长期/)
+  assert.match(returnChapter.zh.prelude[1].paragraphs.join(' '), /随机变量.*return 样本.*条件期望/)
+  assert.doesNotMatch(returnChapter.zh.deepening[1].title, /加权中心/)
+  assert.match(returnChapter.zh.deepening[1].paragraphs.join(' '), /起点、策略与折扣因子不变.*不同轨迹.*不同 return/)
+  assert.equal(returnPresetConfigs['stochastic-value'].mode, 'futures')
 })
 
 test('the Optimality chapter preserves the expectation-to-max conceptual switch', () => {

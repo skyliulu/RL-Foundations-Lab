@@ -32,3 +32,30 @@ test('each return equals the sum of the visible discounted contributions', () =>
   const sum = sample.steps.reduce((total, step) => total + step.contribution, 0)
   assert.ok(Math.abs(sum - sample.discountedReturn) < 1e-12)
 })
+
+test('deterministic samples collapse to one future while stochastic samples branch', () => {
+  const deterministic = estimateStateValue({
+    start: START,
+    gamma: 0.9,
+    noise: 0,
+    sampleCount: 8,
+    horizon: 120,
+  })
+  const stochastic = estimateStateValue({
+    start: START,
+    gamma: 0.9,
+    noise: 0.3,
+    sampleCount: 8,
+    horizon: 120,
+  })
+  const pathSignature = (sample) => sample.steps
+    .slice(0, 16)
+    .map((step) => `${step.nextState.row},${step.nextState.col}`)
+    .join('|')
+  const returnSignature = (sample) => sample.discountedReturn.toFixed(8)
+
+  assert.equal(new Set(deterministic.samples.map(pathSignature)).size, 1)
+  assert.equal(new Set(deterministic.samples.map(returnSignature)).size, 1)
+  assert.ok(new Set(stochastic.samples.map(pathSignature)).size > 1)
+  assert.ok(new Set(stochastic.samples.map(returnSignature)).size > 1)
+})

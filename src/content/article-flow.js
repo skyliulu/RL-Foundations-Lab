@@ -4,13 +4,37 @@ const experiment = () => ({ type: 'experiment', id: 'chapter-experiment' })
 
 const orders = {
   returns: [
-    ref('prelude', 'reward-to-return', 'section', { formulas: false }),
-    derivation(),
-    ref('prelude', 'return-to-value'),
-    ref('deepening', 'two-return-calculations', 'topic'),
-    ref('deepening', 'return-distribution', 'topic'),
+    ref('prelude', 'reward-to-return', 'section', { formulaRole: 'support' }),
+    derivation({
+      id: 'return-construction',
+      stepIndices: [0, 1, 2, 3, 4],
+      title: {
+        zh: '沿时间轴定义 return，并把剩余未来写成递推',
+        en: 'Define return along time and expose its recursive remainder',
+      },
+      intro: {
+        zh: '两条具体路径说明了为什么需要累计未来奖励。下面固定时间下标，先定义有限轨迹的 return，再处理持续型轨迹，并从同一个定义中拆出一步递推关系。',
+        en: 'The two concrete paths show why future rewards must be accumulated. Fix the time indices, define return on a finite trajectory, extend it to continuing trajectories, and then expose a one-step recursion within the same definition.',
+      },
+    }),
     ref('sections', 'discount-boundary'),
-    ref('sections', 'sample-expectation'),
+    ref('deepening', 'two-return-calculations', 'topic'),
+    ref('prelude', 'return-to-value', 'section', { formulas: false }),
+    derivation({
+      id: 'state-value-definition',
+      stepIndices: [5],
+      level: 'embedded',
+      title: {
+        zh: '状态价值是 return 随机变量的条件期望',
+        en: 'State value is the conditional expectation of the return random variable',
+      },
+      intro: {
+        zh: '一条已实现轨迹给出一个 return 样本；状态价值则必须同时概括同一起点在固定策略和环境下的所有可能未来。',
+        en: 'One realized trajectory supplies one return sample; state value must summarize every possible future induced by the same start, policy, and environment.',
+      },
+    }),
+    ref('deepening', 'return-distribution', 'topic'),
+    ref('sections', 'sample-expectation', 'turn'),
     experiment(),
     ref('sections', 'continuing-transfer', 'turn', { formulas: false }),
   ],

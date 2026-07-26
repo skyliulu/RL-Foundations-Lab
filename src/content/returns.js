@@ -4,7 +4,7 @@ import { assertFoundationChapterDefinition } from './schema.js'
 export const returnPresetConfigs = {
   'course-baseline': { start: START, gamma: 0.9, noise: 0, sampleCount: 8, mode: 'trajectory' },
   'near-sighted': { start: START, gamma: 0.4, noise: 0, sampleCount: 8, mode: 'trajectory' },
-  'stochastic-value': { start: START, gamma: 0.9, noise: 0.3, sampleCount: 32, mode: 'value' },
+  'stochastic-value': { start: START, gamma: 0.9, noise: 0.3, sampleCount: 8, mode: 'futures' },
   'continuing-target': { start: GOAL, gamma: 0.9, noise: 0, sampleCount: 8, mode: 'trajectory' },
 }
 
@@ -31,18 +31,18 @@ const sources = [
 
 const explorer = {
   zh: {
-    modeTrajectory: '回报分解', modeValue: '价值估计', gamma: '折扣因子 γ', noise: '动作随机性', sampleCount: '轨迹样本数', exact: '精确 Vπ(s)', estimate: '样本均值', error: '估计误差', selectedRun: '当前样本', seed: 'seed', contribution: '折扣贡献', immediateReward: '即时奖励', discountWeight: '折扣权重', runningReturn: '累计 G₀', remainingBound: '截断尾项上界', visibleSteps: '显示前 14 步；完整数值计算 120 步', stateValue: '状态价值', return: '单条回报', trajectoryTape: 'Episode Tape', valueLens: 'Value Lens', chooseState: '点击状态改变起点', fixedPolicy: '示例固定策略 π', courseBaseline: '确定性基线', websiteExtension: '随机扩展', deterministic: '确定性：一条轨迹就是全部可能', stochastic: '随机性：一次 return 只是一个样本', sampleAxis: '样本编号', valueAxis: 'return / value', runningMean: '运行均值', exactLine: '精确期望', clickSample: '点击样本点查看它对应的轨迹', noRewardYet: '这一段还没有奖励，但它仍会推迟未来奖励的折扣权重。', preset: '观察预设', startState: '起始状态', targetContinuing: '目标状态继续产生 +1，不是 terminal', reset: '恢复确定性基线', statePrefix: 's', rewardPrefix: 'r', probability: '分支概率', tailNote: '尾项没有被偷偷忽略：右侧明确显示最坏情况下的剩余上界。', presetItems: {
-      'course-baseline': { title: '确定性基线', note: '确定性策略下，单条 return 与精确 value 重合。' },
-      'near-sighted': { title: '短视折扣', note: 'γ 变小后，远处的 +1 对起点影响迅速衰减。' },
-      'stochastic-value': { title: '从样本到期望', note: '同一起点产生不同 return，运行均值逐步靠近 Vπ(s)。' },
+    modeTrajectory: '查看一条轨迹', modeFutures: '比较多条轨迹', gamma: '折扣因子 γ', noise: '转移随机性', noiseHint: '策略保持固定，只改变动作执行后的环境结果', sampleCount: '重复采样次数', exact: '状态价值 Vπ(s)', estimate: '样本均值', selectedReturn: '选中轨迹的 return', selectedRun: '选中轨迹', seed: 'seed', contribution: '折扣贡献', runningReturn: '这条轨迹的 G₀', remainingBound: '截断尾项上界', visibleSteps: '显示前 12 步；完整数值计算 120 步', return: '单条回报', trajectoryTape: '一条轨迹怎样形成 return', chooseState: '点击状态改变共同起点', fixedPolicy: '示例固定策略 π', courseBaseline: '确定性转移', deterministic: '唯一未来', stochastic: '多种可能未来', runningMean: '样本均值', exactLine: '条件期望', clickSample: '选择任意轨迹，地图和回报分解会同步更新', preset: '观察预设', startState: '共同起点', targetContinuing: '目标状态仍会继续交互并产生 +1', statePrefix: 's', tailNote: '完整数值使用 120 步，并显示尚未展开部分的最坏情况上界。', environment: '实验环境', environmentDetail: '5×5 网格世界 · 固定策略 π · 只改变环境中的动作执行结果', fanTitle: '从同一起点采样出的未来', fanNote: '每一行都是一条实际发生的轨迹及其 return', deterministicSummary: '所有采样轨迹完全相同：确定性条件下只有一条可能未来，因此它的 return 就等于状态价值。', stochasticSummary: '起点、策略和折扣因子都没有改变，但环境随机性产生了不同轨迹；每条轨迹只给出一个 return 样本。', shownSamples: '全部轨迹', scrollHint: '窗口显示 4 条，可滚动查看', samplePath: '状态路径', rewardPath: '奖励序列', selectedValueNote: '选择不同轨迹会改变单次 return，但不会改变同一状态在固定策略下的精确价值。', deterministicValueNote: '概率全部集中在唯一轨迹上，因此条件期望等于这条轨迹的 return。', sampleMeanNote: '样本均值只是对条件期望的估计；它不定义状态价值。', presetItems: {
+      'course-baseline': { title: '唯一确定轨迹', note: '重复运行得到同一路径，return 与状态价值重合。' },
+      'near-sighted': { title: '缩短时间尺度', note: '只改变 γ，观察远期 +1 对同一轨迹的贡献怎样衰减。' },
+      'stochastic-value': { title: '同一起点，多种未来', note: '固定策略不变，转移随机性产生不同轨迹与 return。' },
       'continuing-target': { title: '持续型目标', note: '从目标出发仍会继续交互，得到 1 + γ + γ² + …。' },
     },
   },
   en: {
-    modeTrajectory: 'Return decomposition', modeValue: 'Value estimate', gamma: 'Discount γ', noise: 'Action randomness', sampleCount: 'Trajectory samples', exact: 'Exact Vπ(s)', estimate: 'Sample mean', error: 'Estimation error', selectedRun: 'Selected sample', seed: 'seed', contribution: 'Discounted contribution', immediateReward: 'Immediate reward', discountWeight: 'Discount weight', runningReturn: 'Cumulative G₀', remainingBound: 'Truncated-tail bound', visibleSteps: 'First 14 steps shown; numbers use 120 steps', stateValue: 'State value', return: 'Single return', trajectoryTape: 'Episode Tape', valueLens: 'Value Lens', chooseState: 'Click a state to change the start', fixedPolicy: 'Example fixed policy π', courseBaseline: 'Deterministic baseline', websiteExtension: 'Stochastic extension', deterministic: 'Deterministic: one trajectory is the full possibility set', stochastic: 'Stochastic: one return is only one sample', sampleAxis: 'Sample index', valueAxis: 'return / value', runningMean: 'Running mean', exactLine: 'Exact expectation', clickSample: 'Click a sample point to inspect its trajectory', noRewardYet: 'This segment has no reward yet, but it still delays and discounts future rewards.', preset: 'Observation presets', startState: 'Start state', targetContinuing: 'The target keeps producing +1 and is not terminal', reset: 'Restore deterministic baseline', statePrefix: 's', rewardPrefix: 'r', probability: 'Branch probability', tailNote: 'The tail is not silently discarded: the worst-case remaining bound is shown explicitly.', presetItems: {
-      'course-baseline': { title: 'Deterministic baseline', note: 'Under a deterministic policy, one return equals the exact value.' },
-      'near-sighted': { title: 'Short horizon', note: 'With smaller γ, the distant +1 quickly loses influence at the start.' },
-      'stochastic-value': { title: 'Samples to expectation', note: 'The same start yields different returns; the running mean approaches Vπ(s).' },
+    modeTrajectory: 'Inspect one trajectory', modeFutures: 'Compare possible futures', gamma: 'Discount γ', noise: 'Transition randomness', noiseHint: 'Keep the policy fixed and change only the environment outcome after an action', sampleCount: 'Repeated samples', exact: 'State value Vπ(s)', estimate: 'Sample mean', selectedReturn: 'Selected trajectory return', selectedRun: 'Selected trajectory', seed: 'seed', contribution: 'Discounted contribution', runningReturn: 'This trajectory’s G₀', remainingBound: 'Truncated-tail bound', visibleSteps: 'First 12 steps shown; numbers use 120 steps', return: 'Single return', trajectoryTape: 'How one trajectory produces a return', chooseState: 'Click a state to change the shared start', fixedPolicy: 'Example fixed policy π', courseBaseline: 'Deterministic transitions', deterministic: 'One possible future', stochastic: 'Many possible futures', runningMean: 'Sample mean', exactLine: 'Conditional expectation', clickSample: 'Select any trajectory to synchronize the map and return decomposition', preset: 'Observation presets', startState: 'Shared start', targetContinuing: 'The target continues interacting and producing +1', statePrefix: 's', tailNote: 'The numeric return uses 120 steps and reports a worst-case bound for the unexpanded tail.', environment: 'Experiment environment', environmentDetail: '5×5 grid world · fixed policy π · only action-execution outcomes vary', fanTitle: 'Futures sampled from the same start', fanNote: 'Each row is one realized trajectory and its return', deterministicSummary: 'Every sampled trajectory is identical. Under deterministic conditions there is only one possible future, so its return equals the state value.', stochasticSummary: 'The start, policy, and discount stay fixed, but environmental randomness produces different trajectories; each trajectory supplies only one return sample.', shownSamples: 'All trajectories', scrollHint: '4 shown at a time; scroll to inspect the rest', samplePath: 'State path', rewardPath: 'Reward sequence', selectedValueNote: 'Selecting another trajectory changes the observed return but not the exact value of the same state under the fixed policy.', deterministicValueNote: 'All probability lies on one trajectory, so the conditional expectation equals that trajectory’s return.', sampleMeanNote: 'The sample mean estimates the conditional expectation; it does not define state value.', presetItems: {
+      'course-baseline': { title: 'One deterministic path', note: 'Repeated runs follow the same path, so return and state value coincide.' },
+      'near-sighted': { title: 'Shorter time scale', note: 'Change only γ and watch distant +1 rewards lose influence on the same path.' },
+      'stochastic-value': { title: 'One start, many futures', note: 'Keep the policy fixed while transition randomness changes trajectories and returns.' },
       'continuing-target': { title: 'Continuing target', note: 'Starting at the target still continues: 1 + γ + γ² + ….' },
     },
   },
@@ -116,35 +116,35 @@ const returnDerivationEn = [
 
 const returnDeepeningZh = [
   {
-    id: 'two-return-calculations', kicker: '同一对象，两种算法', title: '按定义累加与从后向前递推必须得到同一个 return',
-    paragraphs: ['仍沿用第 01 章建立的共享网格世界。智能体先经过一个普通格，再试图进入禁区而得到 −1，随后回到普通格，最后进入目标格得到 +1，因此这条有限 episode 的奖励依次为 0、−1、0、+1；取折扣 γ=0.9。按定义可以从起点把每项乘上相应幂次后相加，也可以从终点令 G₃=1，再用 G_t=R_{t+1}+γG_{t+1} 逐步向前递推。', '第二种写法没有改变 return，只是复用了已经算出的后缀回报。这个递归结构使后续 Bellman 方程和逐步学习成为可能。'],
+    id: 'two-return-calculations', kicker: '同一条轨迹的两种计算顺序', title: '反向递推只是复用已经算出的后缀回报',
+    paragraphs: ['仍沿用共享网格世界中的受罚路径。智能体先经过普通格，再试图进入禁区而得到 −1，随后回到普通格，最后进入目标格得到 +1，因此这条有限轨迹的奖励依次为 0、−1、0、+1；取折扣 γ=0.9。按定义可以从起点给每项乘上相应折扣后相加，也可以从终点令 G₃=1，再用 G_t=R_{t+1}+γG_{t+1} 逐步向前递推。', '两种计算始终使用同一条已经发生的轨迹，因此必须得到同一个 return。反向递推没有引入平均，也没有把 return 变成 value；它只是复用了后缀回报，并为下一章的一步递推留下了结构。'],
     formulas: [String.raw`G_0=0+0.9(-1)+0.9^2(0)+0.9^3(1)=-0.171`, String.raw`G_3=1,\quad G_2=0+0.9G_3=0.9,\quad G_1=-1+0.9G_2=-0.19,\quad G_0=0+0.9G_1=-0.171`],
     example: { title: '同一条 episode 的反向 return 表', caption: '每行的 Gₜ 都完整包含该时刻之后的奖励。', headers: ['t', 'Rₜ₊₁', '递推', 'Gₜ'], rows: [['3', '+1', '1 + 0', '1.000'], ['2', '0', '0 + 0.9×1', '0.900'], ['1', '−1', '−1 + 0.9×0.9', '−0.190'], ['0', '0', '0 + 0.9×(−0.19)', '−0.171']] },
     handoff: 'return 的递推仍依赖这条 episode 的真实未来；要评价一个状态，还必须把所有可能未来的概率纳入。',
   },
   {
-    id: 'return-distribution', kicker: '从确定性到随机性', title: 'State value 是 return 分布的加权中心，而不是“典型轨迹”',
-    paragraphs: ['假设从同一状态出发有 0.7 的概率得到 G=2，有 0.3 的概率得到 G=−4。两条 return 都可能发生，但状态价值只有一个：按各自概率加权后的期望 0.2。', '样本均值是在不知道完整分布时估计这个期望的方法；若模型和概率已知，则可以直接求精确期望。二者评价的是同一数学对象，证据来源不同。'],
-    formulas: [String.raw`V^{\pi}(s)=0.7\times2+0.3\times(-4)=0.2`, String.raw`\widehat V_n^{\pi}(s)=\frac{1}{n}\sum_{i=1}^{n}G^{(i)}\xrightarrow[n\to\infty]{}V^{\pi}(s)`],
-    theorem: { claim: '确定性条件下 return 与 value 数值相同，是“分布退化为一个点”的特殊情况。', why: '若所有概率质量都落在同一条未来上，随机变量 Gₜ 没有方差，其期望就等于唯一实现值。', conditions: [String.raw`\Pr(G_t=g\mid S_t=s)=1\quad\Longrightarrow\quad V^{\pi}(s)=g`] },
-    handoff: '定义已经清楚，但直接枚举所有轨迹会指数增长。下一章将用一步条件期望替代对完整未来树的枚举。',
+    id: 'return-distribution', kicker: '同一起点的多种未来', title: '确定性只产生一个 return，随机性产生一个 return 分布',
+    paragraphs: ['仍从同一个网格状态出发并执行同一套固定策略。若环境转移是确定的，每次运行都会经过同一串状态、动作和奖励，因而只会得到一个 return；此时状态价值这个条件期望恰好等于唯一的 return。', '现在保持起点、策略与折扣因子不变，只让动作执行后的转移带有随机性。同一个意图可能落到不同后继状态，随后形成不同奖励序列、不同轨迹与不同 return。状态价值不挑选其中一条“代表性轨迹”，而是对所有可能 return 按其发生概率取条件期望。'],
+    formulas: [String.raw`V^{\pi}(s)=\sum_{\tau}\Pr(\tau\mid S_t=s,\pi,p)\,G(\tau)`],
+    theorem: { claim: 'Return 与 state value 只在唯一未来的特殊情况下数值相同。', why: '若给定起点后所有概率都集中在同一条轨迹上，Gₜ 不再波动，它的条件期望自然等于唯一实现值。', conditions: [String.raw`\Pr(G_t=g\mid S_t=s)=1\quad\Longrightarrow\quad V^{\pi}(s)=g`] },
+    handoff: '完整模型可以直接计算这个条件期望；模型未知时，只能用多条轨迹的 return 样本来估计它。',
   },
 ]
 
 const returnDeepeningEn = [
   {
-    id: 'two-return-calculations', kicker: 'One object, two procedures', title: 'Definition-based summation and backward recursion must produce the same return',
-    paragraphs: ['Continue with the shared grid world. The agent crosses an ordinary cell, attempts to enter the forbidden region and receives −1, returns to an ordinary cell, and finally enters the goal for +1. The resulting finite episode has rewards 0, −1, 0, +1 with γ=0.9. The definition weights each reward from the start; backward recursion begins with G₃=1 and repeatedly applies G_t=R_{t+1}+γG_{t+1}.', 'Backward recursion does not redefine return; it reuses an already computed suffix. That structure makes Bellman equations and incremental learning possible.'],
+    id: 'two-return-calculations', kicker: 'Two calculation orders on one trajectory', title: 'Backward recursion only reuses an already computed suffix return',
+    paragraphs: ['Continue with the penalized path in the shared grid world. The agent crosses an ordinary cell, attempts to enter the forbidden region and receives −1, returns to an ordinary cell, and finally enters the goal for +1. The finite trajectory therefore yields rewards 0, −1, 0, +1 with γ=0.9. The definition weights every reward from the start; backward recursion begins with G₃=1 and repeatedly applies G_t=R_{t+1}+γG_{t+1}.', 'Both calculations use the same realized trajectory and must therefore produce the same return. Backward recursion introduces neither averaging nor a state value; it only reuses suffix returns and exposes the one-step structure needed in the next chapter.'],
     formulas: [String.raw`G_0=0+0.9(-1)+0.9^2(0)+0.9^3(1)=-0.171`, String.raw`G_3=1,\quad G_2=0+0.9G_3=0.9,\quad G_1=-1+0.9G_2=-0.19,\quad G_0=0+0.9G_1=-0.171`],
     example: { title: 'Backward return table for one episode', caption: 'Each Gₜ contains every reward after that time.', headers: ['t', 'Rₜ₊₁', 'Recursion', 'Gₜ'], rows: [['3', '+1', '1 + 0', '1.000'], ['2', '0', '0 + 0.9×1', '0.900'], ['1', '−1', '−1 + 0.9×0.9', '−0.190'], ['0', '0', '0 + 0.9×(−0.19)', '−0.171']] },
     handoff: 'Return recursion still uses one realized future. Evaluating a state requires probabilities over every possible future.',
   },
   {
-    id: 'return-distribution', kicker: 'Deterministic to stochastic', title: 'State value is the probability-weighted center of a return distribution',
-    paragraphs: ['Suppose one state yields G=2 with probability 0.7 and G=−4 with probability 0.3. Both returns are possible, but their probability-weighted expectation is the single state value 0.2.', 'A sample mean estimates this expectation when the full distribution is unavailable. A known model computes it exactly. The mathematical object is the same; the evidence source differs.'],
-    formulas: [String.raw`V^{\pi}(s)=0.7\times2+0.3\times(-4)=0.2`, String.raw`\widehat V_n^{\pi}(s)=\frac{1}{n}\sum_{i=1}^{n}G^{(i)}\xrightarrow[n\to\infty]{}V^{\pi}(s)`],
-    theorem: { claim: 'Return and value coincide under deterministic conditions only because the distribution collapses to one point.', why: 'If all probability mass lies on one future, Gₜ has zero variance and its expectation equals its only realization.', conditions: [String.raw`\Pr(G_t=g\mid S_t=s)=1\quad\Longrightarrow\quad V^{\pi}(s)=g`] },
-    handoff: 'The definition is complete, but enumerating full trajectories grows exponentially. The next chapter replaces the future tree with a one-step conditional expectation.',
+    id: 'return-distribution', kicker: 'Many futures from one start', title: 'Determinism produces one return; randomness produces a return distribution',
+    paragraphs: ['Start from the same grid state and follow the same fixed policy. With deterministic transitions, every run visits the same states, actions, and rewards, so only one return is possible. The conditional expectation called state value then equals that unique return.', 'Now hold the start, policy, and discount fixed while making action execution stochastic. The same intended move can reach different successors and create different reward sequences, trajectories, and returns. State value does not select a “representative trajectory”; it takes the conditional expectation over all possible returns with their probabilities.'],
+    formulas: [String.raw`V^{\pi}(s)=\sum_{\tau}\Pr(\tau\mid S_t=s,\pi,p)\,G(\tau)`],
+    theorem: { claim: 'Return and state value coincide only in the special case of a unique future.', why: 'If all probability conditional on the start lies on one trajectory, Gₜ no longer varies and its conditional expectation equals its only realization.', conditions: [String.raw`\Pr(G_t=g\mid S_t=s)=1\quad\Longrightarrow\quad V^{\pi}(s)=g`] },
+    handoff: 'A known model can compute this conditional expectation directly; without the model, return samples from many trajectories must estimate it.',
   },
 ]
 
@@ -153,54 +153,54 @@ export const returnChapter = assertFoundationChapterDefinition({
   sources,
   zh: {
     prerequisite: '前置：状态、动作、奖励、策略与轨迹',
-    summaryTitle: 'return 属于一条未来；value 是所有可能未来的平均',
+    summaryTitle: '一条轨迹给出一个 return；状态价值概括所有可能轨迹',
     eyebrow: '第 2 章 · Return、折扣与 State Value',
-    title: '即时奖励不足以刻画状态的长期价值',
-    intro: '奖励只描述一次转移，return 才把一条轨迹上的未来奖励合在一起；当策略或环境带有随机性，同一起点会产生许多不同 return，它们的条件期望才是状态价值 Vπ(s)。',
-    bridge: '下面继续使用第 01 章的 5×5 网格世界与固定策略。先把一条轨迹的每个奖励乘上 γ 的时间权重，再切换到 Value Lens，观察样本均值如何逼近同一环境模型计算出的精确期望。',
-    experimentIntro: '下面沿用已经定义的 5×5 网格世界与固定策略。先逐项查看一条轨迹的折扣贡献，再切换到价值视图，把单次 return 与多条轨迹的样本均值分开。',
-    interpretation: '确定性条件下，一条起始状态只对应一条未来，所以 return 与 value 数值相同；加入动作随机性后，单条轨迹只是一个样本，只有运行均值才在逼近期望。',
-    figure: '交互图 2.1 · Return Observatory',
-    instruction: '改变 γ、随机性和样本数；先看一条轨迹，再看多条未来的平均',
+    title: '从一次奖励走向一条轨迹的回报与状态价值',
+    intro: '第 01 章已经能够记录每次转移的奖励，但单次奖励只能说明刚刚发生的结果，不能比较随后走向不同未来的路径。本章先把一条轨迹上的未来奖励定义为 return，再说明同一起点在随机策略或随机环境下会产生许多 return；它们的条件期望才是状态价值。',
+    bridge: '下面继续使用共享的 5×5 网格世界。先沿一条实际轨迹计算折扣 return，再保持起点、策略与折扣因子不变，只改变环境转移的随机性，观察同一个状态怎样产生一个 return 分布。',
+    experimentIntro: '先预测：如果固定起点、策略和折扣因子，只把转移随机性从 0 调高，地图上的唯一轨迹、单次 return 与状态价值会分别发生什么变化？下面先查看一条轨迹，再并排比较从同一起点采样出的多条未来。',
+    interpretation: '转移随机性为 0 时，重复采样得到同一条轨迹，唯一 return 与状态价值重合。加入随机性后，选择不同轨迹会改变单次 return，却不会改变同一起点和固定策略所对应的精确状态价值；样本均值只是对这个条件期望的估计。',
+    figure: '交互图 2.1 · 同一起点的轨迹与状态价值',
+    instruction: '固定策略，改变折扣与转移随机性；选择轨迹，比较单次 return 和状态价值',
     question: '同一个起始状态，为什么会同时对应许多 return，却只有一个 Vπ(s)？',
     derivation: returnDerivationZh,
     deepening: returnDeepeningZh,
     prelude: [
-      { id: 'reward-to-return', kicker: '沿时间累加', title: '即时奖励只回答“刚才发生了什么”', paragraphs: ['一条策略可能先绕行、受罚，随后长期得到正奖励。只看第一步 rₜ₊₁ 无法比较这两种未来。', 'Return Gₜ 把从当前时刻之后的奖励放在同一条时间轴上；γᵏ 是第 k 步奖励抵达当前时刻时的权重。'], formulas: [String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`] },
-      { id: 'return-to-value', kicker: '从样本到期望', title: '一条 return 是结果，state value 是分布的均值', paragraphs: ['当 π(a|s) 或环境转移带有随机性，从同一状态出发会得到不同轨迹与不同 Gₜ。', 'Vπ(s) 对这些可能回报取条件期望。确定性世界里只有一条未来，因此 return 与 value 才会数值相同。'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
+      { id: 'reward-to-return', kicker: '一次反馈与整条未来', title: '即时奖励相同，两条路径的长期结果仍可能不同', paragraphs: ['从起点出发，向右和向下的第一步都可能得到即时奖励 0，但两条路径随后并不等价：安全路径继续绕开禁区并进入目标，受罚路径则会在中途得到 −1。只比较第一步奖励，看不出哪条路径更好。', '奖励 Rₜ₊₁ 属于一次状态转移；return Gₜ 属于从时刻 t 开始的一整条未来，它把未来奖励汇总起来，并在持续型任务中按时间距离赋予权重。把后续奖励放回同一条时间轴后，安全路径得到更高 return，长期好坏才成为可以比较的数值。'], formulas: [String.raw`\begin{aligned}G_{\mathrm{safe}}&=0+0+0+1=1,\\G_{\mathrm{penalized}}&=0-1+0+1=0.\end{aligned}`] },
+      { id: 'return-to-value', kicker: '从一次实现到条件期望', title: '同一起点的多种未来需要一个统一评价', paragraphs: ['未来真正发生之前，Gₜ 取决于接下来采样到的动作、转移与奖励，因此是随机变量；一条具体轨迹发生以后，我们才观察到它的一个 return 样本。若策略和环境都确定，同一起点只产生这一条未来，重复运行便总会得到同一个样本。', '只要策略选择或环境转移带有随机性，同一状态就可能产生不同轨迹与不同 return。一次幸运或倒霉的结果都不足以评价这个状态，因此状态价值 Vπ(s) 被定义为：从状态 s 出发并遵循策略 π 时，Gₜ 的条件期望。'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
     ],
     sections: [
-      { id: 'discount-boundary', kicker: '边界案例', title: 'γ 既让无穷和有限，也定义时间尺度', paragraphs: ['在持续型目标上，如果不折扣，1 + 1 + 1 + … 会发散。只要 0 < γ < 1，几何级数就有限。', 'γ 接近 0 时只有近处奖励可见；γ 接近 1 时远期奖励保留更多权重，但截断和估计也更困难。'], formula: String.raw`1+\gamma+\gamma^2+\cdots=\frac{1}{1-\gamma}` },
-      { id: 'sample-expectation', kicker: '常见误解', title: '单条高回报轨迹不等于高价值', paragraphs: ['随机环境中，一次幸运轨迹可能高于精确 value，一次倒霉轨迹也可能低于它。', '只有在明确的 seed 与样本协议下观察运行均值，才能把“这次发生了什么”与“平均会发生什么”分开。'], formula: String.raw`\widehat{V}_n(s)=\frac{1}{n}\sum_{i=1}^{n}G_t^{(i)}` },
-      { id: 'continuing-transfer', kicker: '迁移到下一章', title: 'Bellman 方程将无限未来折叠成一步', paragraphs: ['直接枚举全部未来可以定义 value，却不是高效的求解方法。', '下一章利用 Gₜ = Rₜ₊₁ + γGₜ₊₁，把长期回报拆成即时奖励与后继状态的价值。'], formula: String.raw`G_t=R_{t+1}+\gamma G_{t+1}` },
+      { id: 'discount-boundary', kicker: '持续型轨迹', title: '折扣让无限回报保持有限，也规定远期奖励的权重', paragraphs: ['目标状态不会终止交互；若它持续产生 +1，直接相加会得到发散的无穷和。对第 k 步之后的奖励乘以 γᵏ，并令 0<γ<1，就能让有界奖励形成有限的折扣 return。', 'γ 接近 0 时，只有近期奖励保留明显权重；γ 接近 1 时，远期奖励影响更大，但有限步截断需要覆盖更长的未来。'], formula: String.raw`1+\gamma+\gamma^2+\cdots=\frac{1}{1-\gamma}` },
+      { id: 'sample-expectation', kicker: '期望与估计', title: '样本均值可以估计状态价值，但单条轨迹不能定义状态价值', paragraphs: ['若环境模型和所有概率已知，可以直接计算 Gₜ 的条件期望；模型未知时，则从同一状态重复出发，收集多条轨迹的 return 样本。样本均值会随采样结果波动，而状态价值是固定策略与环境共同确定的数学对象。', '因此，一次高 return 只能说明这条轨迹发生了什么，不能证明状态本身具有同样高的价值。随着独立样本增加，样本均值才逐步逼近同一个条件期望。'], formula: String.raw`\widehat{V}_n^{\pi}(s)=\frac{1}{n}\sum_{i=1}^{n}G_t^{(i)}\xrightarrow[n\to\infty]{}V^{\pi}(s)` },
+      { id: 'continuing-transfer', kicker: '下一步计算问题', title: '状态价值定义清楚以后，仍不能直接枚举全部未来', paragraphs: ['条件期望完整定义了状态价值，但随机轨迹树会随时间迅速展开，逐条枚举并不是可行的计算方法。return 的递推式已经给出突破口：一条长期未来可以拆成下一步奖励与剩余未来。', '下一章会对这个递推式取条件期望，把完整轨迹树折叠成一步转移与后继状态价值之间的关系。'], formula: String.raw`G_t=R_{t+1}+\gamma G_{t+1}` },
     ],
-    summary: ['Return 是单条轨迹上未来奖励的折扣和。', 'State value 是给定起始状态并遵循策略时，所有可能 return 的条件期望。', '折扣既控制持续型任务的有限性，也决定当前决策看多远。'],
+    summary: ['即时奖励描述一次转移；return 汇总一条轨迹上从当前时刻开始的未来奖励。', '未来尚未实现时 Gₜ 是随机变量；一条实际轨迹只给出它的一个样本。', 'State value 是给定起始状态并遵循策略时，所有可能 return 的条件期望；只有唯一未来时，它才与单条 return 数值相同。', '折扣既控制持续型任务的有限性，也决定远期奖励在当前 return 中保留多少权重。'],
     explorer: explorer.zh,
   },
   en: {
     prerequisite: 'Prerequisites: states, actions, rewards, policies, and trajectories',
-    summaryTitle: 'A return belongs to one future; value averages all possible futures',
+    summaryTitle: 'One trajectory yields one return; state value summarizes all possible trajectories',
     eyebrow: 'Chapter 2 · Return, discounting, and state value',
-    title: 'Immediate reward cannot characterize the long-term value of a state',
-    intro: 'A reward describes one transition. Return combines the future rewards along one trajectory. When the policy or environment is stochastic, one start can produce many returns; their conditional expectation is the state value Vπ(s).',
-    bridge: 'The observatory reuses the 5×5 grid world and fixed policy from Chapter 1. First weight every reward on one trajectory by its temporal power of γ. Then switch to the Value Lens and watch the sample mean approach the exact expectation computed from the same environment model.',
-    experimentIntro: 'Reuse the defined 5×5 grid and fixed policy. First inspect discounted contributions along one trajectory, then switch to the value view and separate one return from the mean over many trajectories.',
-    interpretation: 'Under deterministic dynamics, one start has one future, so return and value coincide numerically. With action randomness, one trajectory is only a sample and the running mean is what approaches expectation.',
-    figure: 'Interactive figure 2.1 · Return Observatory',
-    instruction: 'Change γ, randomness, and sample count; inspect one trajectory before averaging many futures',
+    title: 'From one reward to a trajectory return and a state value',
+    intro: 'Chapter 1 can already record the reward on each transition, but one reward reports only what just happened and cannot compare paths that lead to different futures. This chapter first defines return from the future rewards on one trajectory, then shows how a stochastic policy or environment can produce many returns from the same start; their conditional expectation is the state value.',
+    bridge: 'Continue with the shared 5×5 grid world. First compute discounted return along one realized trajectory. Then hold the start, policy, and discount fixed while changing only transition randomness, so one state visibly produces a distribution of returns.',
+    experimentIntro: 'Predict first: if the start, policy, and discount remain fixed while transition randomness rises from zero, what changes about the unique path, a single return, and the state value? Inspect one trajectory first, then compare several futures sampled from the same start.',
+    interpretation: 'With zero transition randomness, repeated samples reproduce one trajectory and its unique return equals the state value. Once transitions become stochastic, selecting another trajectory changes the observed return but not the exact value attached to the same start and fixed policy; the sample mean is only an estimate of that conditional expectation.',
+    figure: 'Interactive figure 2.1 · Trajectories and state value from one start',
+    instruction: 'Hold the policy fixed; vary discount and transition randomness, then compare one return with state value',
     question: 'Why can one start state have many returns but only one Vπ(s)?',
     derivation: returnDerivationEn,
     deepening: returnDeepeningEn,
     prelude: [
-      { id: 'reward-to-return', kicker: 'Accumulate through time', title: 'Immediate reward only answers what just happened', paragraphs: ['A policy may detour or suffer a penalty before receiving positive rewards for a long time. The first rₜ₊₁ cannot compare those futures.', 'Return Gₜ puts future rewards on one timeline; γᵏ is the weight with which the reward k steps away reaches the present.'], formulas: [String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`] },
-      { id: 'return-to-value', kicker: 'Samples to expectation', title: 'A return is an outcome; state value is the mean of a distribution', paragraphs: ['When π(a|s) or the transition is stochastic, the same state produces different trajectories and different Gₜ values.', 'Vπ(s) takes the conditional expectation over those possible returns. Return equals value only in a deterministic world with one possible future.'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
+      { id: 'reward-to-return', kicker: 'One feedback signal versus an entire future', title: 'Equal immediate rewards can still lead to different long-term outcomes', paragraphs: ['From the start, moving right and moving down can both produce an immediate reward of 0, yet the futures differ: the safe path continues around the forbidden region and reaches the target, whereas the penalized path later receives −1. The first reward alone cannot rank the paths.', 'Reward Rₜ₊₁ belongs to one state transition; return Gₜ belongs to the entire future beginning at time t. It aggregates future rewards and, in continuing tasks, weights them by temporal distance. Once later rewards share one timeline, the safe path has the larger return and long-term quality becomes numerically comparable.'], formulas: [String.raw`\begin{aligned}G_{\mathrm{safe}}&=0+0+0+1=1,\\G_{\mathrm{penalized}}&=0-1+0+1=0.\end{aligned}`] },
+      { id: 'return-to-value', kicker: 'One realization to a conditional expectation', title: 'Many futures from one start require one common evaluation', paragraphs: ['Before the future occurs, Gₜ depends on subsequently sampled actions, transitions, and rewards and is therefore a random variable. After one concrete trajectory occurs, we observe one return sample. If both policy and environment are deterministic, the same start has only that future and every run repeats the same sample.', 'Once policy choice or environment transition is stochastic, one state can generate different trajectories and returns. Neither a lucky nor an unlucky realization is enough to evaluate the state, so state value Vπ(s) is defined as the conditional expectation of Gₜ when starting from s and following π.'], formulas: [String.raw`V^{\pi}(s)=\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`] },
     ],
     sections: [
-      { id: 'discount-boundary', kicker: 'Boundary case', title: 'γ makes an infinite sum finite and defines a time scale', paragraphs: ['At the continuing target, the undiscounted 1 + 1 + 1 + … diverges. For 0 < γ < 1, the geometric series is finite.', 'Near zero, only nearby rewards remain visible. Near one, distant rewards retain weight, but truncation and estimation become harder.'], formula: String.raw`1+\gamma+\gamma^2+\cdots=\frac{1}{1-\gamma}` },
-      { id: 'sample-expectation', kicker: 'Common misconception', title: 'One high-return trajectory does not imply high value', paragraphs: ['In a stochastic environment, a lucky trajectory can lie above exact value and an unlucky one below it.', 'A visible seed and sample protocol is needed to separate what happened once from what happens on average.'], formula: String.raw`\widehat{V}_n(s)=\frac{1}{n}\sum_{i=1}^{n}G_t^{(i)}` },
-      { id: 'continuing-transfer', kicker: 'Transfer to the next chapter', title: 'The Bellman equation folds an infinite future into one step', paragraphs: ['Enumerating all futures defines value but is not an efficient way to solve it.', 'The next chapter uses Gₜ = Rₜ₊₁ + γGₜ₊₁ to split long-term return into immediate reward and successor value.'], formula: String.raw`G_t=R_{t+1}+\gamma G_{t+1}` },
+      { id: 'discount-boundary', kicker: 'Continuing trajectories', title: 'Discount keeps infinite return finite and assigns weight to distant rewards', paragraphs: ['The target does not terminate interaction. If it keeps producing +1, direct summation diverges. Weighting a reward k steps away by γᵏ with 0<γ<1 turns bounded rewards into a finite discounted return.', 'Near zero, γ preserves substantial weight only for nearby rewards. Near one, distant rewards matter more, but a finite truncation must cover a longer future.'], formula: String.raw`1+\gamma+\gamma^2+\cdots=\frac{1}{1-\gamma}` },
+      { id: 'sample-expectation', kicker: 'Expectation and estimation', title: 'A sample mean can estimate state value, but one trajectory cannot define it', paragraphs: ['When the model and every probability are known, the conditional expectation of Gₜ can be computed directly. Without the model, repeated starts from the same state provide return samples from many trajectories. The sample mean varies with the sampled evidence, whereas state value is the mathematical object fixed by the policy and environment.', 'A high return therefore reports only what happened on that trajectory; it does not prove that the state has the same high value. As independent samples accumulate, their mean approaches the same conditional expectation.'], formula: String.raw`\widehat{V}_n^{\pi}(s)=\frac{1}{n}\sum_{i=1}^{n}G_t^{(i)}\xrightarrow[n\to\infty]{}V^{\pi}(s)` },
+      { id: 'continuing-transfer', kicker: 'The remaining computation problem', title: 'A clear definition of state value still does not make full-future enumeration practical', paragraphs: ['The conditional expectation completely defines state value, but a stochastic trajectory tree expands rapidly with time, so enumerating every path is not a practical calculation. Return recursion already exposes an escape: a long future separates into the next reward and the remaining future.', 'The next chapter takes a conditional expectation of that recursion and replaces the full trajectory tree with a relation between one-step transitions and successor-state values.'], formula: String.raw`G_t=R_{t+1}+\gamma G_{t+1}` },
     ],
-    summary: ['Return is the discounted sum of future rewards along one trajectory.', 'State value is the conditional expectation over every possible return from a state under a policy.', 'Discounting controls both finiteness in continuing tasks and the effective planning horizon.'],
+    summary: ['Immediate reward describes one transition; return aggregates future rewards from the current time along one trajectory.', 'Before the future is realized, Gₜ is a random variable; one realized trajectory supplies only one sample.', 'State value is the conditional expectation of all possible returns from a start under a policy. It equals a single return only when there is one possible future.', 'Discounting controls both finiteness in continuing tasks and the weight retained by distant rewards.'],
     explorer: explorer.en,
   },
 })
