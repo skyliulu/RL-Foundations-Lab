@@ -86,6 +86,15 @@ test('return trajectory choices use native buttons and keep the map overlay pres
   assert.match(source, /className="return-path-overlay"[^>]*aria-hidden="true"/)
 })
 
+test('the course-world trajectory overlay is synchronized but remains presentational', () => {
+  const source = read('components/CourseWorldExplorer.jsx')
+  assert.match(source, /function CourseTrajectoryOverlay/)
+  assert.match(source, /trajectory\.length > 0/)
+  assert.match(source, /trajectory\.map\(\(step\) => step\.to\)/)
+  assert.match(source, /className="course-trajectory-overlay"[^>]*aria-hidden="true"/)
+  assert.match(source, /<CourseTrajectoryOverlay trajectory=\{trajectory\} current=\{current\} \/>/)
+})
+
 test('conditionally hidden views expose their expanded state and controlled region', () => {
   const app = read('App.jsx')
   const courseWorld = read('components/CourseWorldExplorer.jsx')

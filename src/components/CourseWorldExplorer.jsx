@@ -32,6 +32,30 @@ function rewardReason(transition, from, text) {
   return text.normal
 }
 
+function CourseTrajectoryOverlay({ trajectory, current }) {
+  const states = trajectory.length > 0
+    ? [trajectory[0].from, ...trajectory.map((step) => step.to)]
+    : [current]
+  const points = states
+    .map((state) => `${(state.col + 0.5) * 20},${(state.row + 0.5) * 20}`)
+    .join(' ')
+
+  return (
+    <svg className="course-trajectory-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {states.length > 1 && <polyline points={points} />}
+      {states.map((state, index) => (
+        <circle
+          className={index === 0 ? 'is-start' : index === states.length - 1 ? 'is-current' : ''}
+          cx={(state.col + 0.5) * 20}
+          cy={(state.row + 0.5) * 20}
+          r={index === 0 || index === states.length - 1 ? 2.3 : 1.3}
+          key={`${keyOf(state)}-${index}`}
+        />
+      ))}
+    </svg>
+  )
+}
+
 export default function CourseWorldExplorer({ lang, content }) {
   const text = content.explorer
   const [current, setCurrent] = useState(START)
@@ -87,33 +111,37 @@ export default function CourseWorldExplorer({ lang, content }) {
       <div className="world-explorer-stage">
         <section className="world-map-panel">
           <header><div><span>{text.world}</span><small>5 × 5 · {text.continuing}</small></div><button type="button" aria-expanded={showPolicy} aria-controls="course-world-grid" onClick={() => setShowPolicy((value) => !value)}>{showPolicy ? text.hidePolicy : text.showPolicy}</button></header>
-          <div className="course-world-grid" id="course-world-grid">
-            {allStates().map((state) => {
-              const selected = isSame(state, current)
-              const possible = branchKeys.has(keyOf(state))
-              const cellAction = fixedPolicyAction(state)
-              return (
-                <button
-                  type="button"
-                  key={keyOf(state)}
-                  className={`course-world-cell${isForbidden(state) ? ' forbidden' : ''}${isGoal(state) ? ' goal' : ''}${selected ? ' current' : ''}${possible ? ' possible' : ''}`}
-                  aria-label={`${text.state} ${labelState(state, text.statePrefix)}`}
-                  aria-pressed={selected}
-                  onClick={() => restartAt(state)}
-                >
-                  <span className="world-state-id">{labelState(state, text.statePrefix)}</span>
-                  {showPolicy && <span className="world-policy-arrow" aria-hidden="true">{ACTIONS[cellAction].arrow}</span>}
-                  {isSame(state, START) && <small>{text.start}</small>}
-                  {selected && <b>{text.current}</b>}
-                </button>
-              )
-            })}
+          <div className="course-world-visual">
+            <div className="course-world-grid" id="course-world-grid">
+              {allStates().map((state) => {
+                const selected = isSame(state, current)
+                const possible = branchKeys.has(keyOf(state))
+                const cellAction = fixedPolicyAction(state)
+                return (
+                  <button
+                    type="button"
+                    key={keyOf(state)}
+                    className={`course-world-cell${isForbidden(state) ? ' forbidden' : ''}${isGoal(state) ? ' goal' : ''}${selected ? ' current' : ''}${possible ? ' possible' : ''}`}
+                    aria-label={`${text.state} ${labelState(state, text.statePrefix)}`}
+                    aria-pressed={selected}
+                    onClick={() => restartAt(state)}
+                  >
+                    <span className="world-state-id">{labelState(state, text.statePrefix)}</span>
+                    {showPolicy && <span className="world-policy-arrow" aria-hidden="true">{ACTIONS[cellAction].arrow}</span>}
+                    {isSame(state, START) && <small>{text.start}</small>}
+                    {selected && <b>{text.current}</b>}
+                  </button>
+                )
+              })}
+            </div>
+            <CourseTrajectoryOverlay trajectory={trajectory} current={current} />
           </div>
           <div className="world-legend">
             <span><i className="legend-forbidden" />{text.forbidden} −1</span>
             <span><i className="legend-goal" />{text.goal} +1</span>
             <span><i className="legend-current" />{text.selected}</span>
             <span><i className="legend-possible" /><MathText>{text.transition}</MathText></span>
+            <span><i className="legend-trajectory" />{text.trajectoryPath}</span>
           </div>
           <p className="world-model-note">{text.clickState} · {text.noTerminal}</p>
         </section>

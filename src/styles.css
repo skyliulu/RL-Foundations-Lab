@@ -686,7 +686,13 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 .world-map-panel > header div span, .world-map-panel > header div small { display: block; }
 .world-map-panel > header div small { margin-top: 4px; }
 .world-map-panel > header button, .trajectory-tape > header button { padding: 4px 7px; border: 1px solid var(--line); background: transparent; color: var(--navy); cursor: pointer; font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); }
+.course-world-visual { position: relative; }
 .course-world-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }
+.course-trajectory-overlay { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.course-trajectory-overlay polyline { fill: none; stroke: var(--navy); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; opacity: .82; }
+.course-trajectory-overlay circle { fill: var(--paper-light); stroke: var(--navy); stroke-width: .75; }
+.course-trajectory-overlay circle.is-start { fill: var(--navy); }
+.course-trajectory-overlay circle.is-current { fill: var(--teal); stroke: var(--paper-light); stroke-width: 1; }
 .course-world-cell { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; border: 0; border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); background: rgba(255,255,255,.18); cursor: pointer; }
 .course-world-cell:hover { box-shadow: inset 0 0 0 2px rgba(23,79,130,.35); z-index: 2; }
 .course-world-cell.forbidden { background: #efb126; color: #68420b; }
@@ -694,13 +700,13 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 .course-world-cell.possible { outline: 2px dashed var(--amber); outline-offset: -5px; }
 .course-world-cell.current { box-shadow: inset 0 0 0 3px var(--navy); z-index: 3; }
 .world-state-id { position: absolute; top: 4px; left: 5px; color: currentColor; font-family: Cambria, serif; font-size: var(--font-floor); opacity: .7; }
-.world-policy-arrow { display: block; color: var(--navy); font-size: clamp(.75rem, 1.2vw, 1rem); }
+.world-policy-arrow { position: relative; z-index: 5; display: block; color: var(--navy); font-size: clamp(.75rem, 1.2vw, 1rem); }
 .course-world-cell small { position: absolute; bottom: 3px; left: 4px; color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); }
 .course-world-cell b { position: absolute; right: 3px; bottom: 3px; padding: 1px 3px; background: var(--navy); color: white; font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); font-weight: 400; }
 .world-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); }
 .world-legend > span { display: inline-flex; align-items: center; gap: 4px; }
 .world-legend i { width: 9px; height: 9px; }
-.legend-forbidden { background: #efb126; }.legend-goal { background: #55c6d8; }.legend-current { border: 2px solid var(--navy); }.legend-possible { border: 2px dashed var(--amber); }
+.legend-forbidden { background: #efb126; }.legend-goal { background: #55c6d8; }.legend-current { border: 2px solid var(--navy); }.legend-possible { border: 2px dashed var(--amber); }.legend-trajectory { position: relative; }.legend-trajectory::before { position: absolute; top: 4px; left: 0; width: 9px; border-top: 2px solid var(--navy); content: ""; }.legend-trajectory::after { position: absolute; top: 1px; right: 0; width: 5px; height: 5px; border: 1px solid var(--navy); border-radius: 50%; background: var(--paper-light); content: ""; }
 .world-model-note { margin: 9px 0 0; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: var(--font-floor); line-height: 1.5; }
 .action-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .action-pad button { min-width: 0; padding: 7px 3px; border: 1px solid var(--line); background: transparent; cursor: pointer; }

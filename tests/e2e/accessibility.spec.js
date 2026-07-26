@@ -56,6 +56,19 @@ test('navigation and conditionally hidden MDP views expose keyboard state', asyn
   await expect(policyToggle).toHaveAttribute('aria-expanded', 'false')
   await expect(page.locator('.world-policy-arrow')).toHaveCount(0)
 
+  const pathOverlay = page.locator('.course-trajectory-overlay')
+  await expect(pathOverlay.locator('circle')).toHaveCount(1)
+  await expect(pathOverlay.locator('polyline')).toHaveCount(0)
+  await page.locator('.transition-branches > button').first().click()
+  await expect(pathOverlay.locator('circle')).toHaveCount(2)
+  await expect(pathOverlay.locator('polyline')).toHaveCount(1)
+  await page.locator('.transition-branches > button').first().click()
+  await expect(pathOverlay.locator('circle')).toHaveCount(3)
+  await expect(page.locator('.trajectory-tape')).toContainText('2 步')
+  await page.getByRole('button', { name: '重置轨迹', exact: true }).click()
+  await expect(pathOverlay.locator('circle')).toHaveCount(1)
+  await expect(pathOverlay.locator('polyline')).toHaveCount(0)
+
   await expectNoPageOverflow(page)
 })
 
