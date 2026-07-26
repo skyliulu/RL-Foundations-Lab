@@ -94,10 +94,20 @@ test('the chapter shell keeps prose on one reading column and experiments on one
   assert.match(styles, /--chapter-frame:\s*1240px/)
   assert.match(styles, /--reading-column:\s*920px/)
   assert.match(styles, /\.chapter-shell\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
-  ;['chapter-continuity', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources'].forEach((className) => {
+  ;['chapter-header', 'chapter-continuity', 'mdp-narrative', 'clickable-derivation', 'chapter-article-sections', 'chapter-summary', 'chapter-sources'].forEach((className) => {
     assert.match(styles, new RegExp(`\\.${className}\\s*\\{[^}]*max-width:\\s*var\\(--reading-column\\)`), className)
   })
+  assert.match(styles, /\.chapter-header h1\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none/)
+  assert.match(styles, /\.chapter-intro\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none/)
   assert.match(styles, /\.world-explorer\s*\{[^}]*max-width:\s*var\(--chapter-frame\)/)
+})
+
+test('the course entry uses the same outer width as the learning content below it', () => {
+  const styles = read('styles.css')
+  assert.match(styles, /\.course-home\s*\{[^}]*width:\s*min\(1180px,\s*100%\)/)
+  assert.match(styles, /\.home-hero\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none/)
+  assert.match(styles, /\.home-hero h1\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none/)
+  assert.match(styles, /\.home-hero > p\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none/)
 })
 
 test('desktop reading width and long equations avoid unnecessary inner scrollbars', () => {
