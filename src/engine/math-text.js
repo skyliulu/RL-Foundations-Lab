@@ -1,5 +1,5 @@
-const mathRunPattern = /\\[A-Za-z]+(?:\{[^}]*\})?|[←→≤≥≠≈=]|[([]?[A-Za-z0-9αβγδεηθλμρσφπΔΣ∑∞⋯…][A-Za-z0-9αβγδεηθλμρσφπΔΣ∑∞⋯…₀₁₂₃₄₅₆₇₈₉₊₋ₐₛₜₖᵏᵣᵗ²³̃_^{}()[\]|,+\-−=<>≤≥≠≈←→\/.'′*]*[)\]]?/g
-const distinctiveMathPattern = /\\|[αβγδεηθλμρσφπΔΣ∑∞⋯…₀₁₂₃₄₅₆₇₈₉₊₋ₐₛₜₖᵏᵣᵗ²³̃′≤≥≠≈←→=^_{}|]|^[VQGSTRPAvqpr]\w*\([^)]*\)$|^[VQvq]\*$/
+const mathRunPattern = /\\[A-Za-z]+(?:\{[^}]*\})?|[←→≤≥≠≈∈=]|[([]?[A-Za-z0-9𝒜𝒮αβγδεηθλμρσφπΔΣ∑∞⋯…][A-Za-z0-9𝒜𝒮αβγδεηθλμρσφπΔΣ∑∞⋯…₀₁₂₃₄₅₆₇₈₉₊₋ₐₛₜₖᵏᵣᵗ²³̃_^{}()[\]|,+\-−=<>≤≥≠≈∈←→\/.'′*]*[)\]]?/g
+const distinctiveMathPattern = /\\|[𝒜𝒮αβγδεηθλμρσφπΔΣ∑∞⋯…₀₁₂₃₄₅₆₇₈₉₊₋ₐₛₜₖᵏᵣᵗ²³̃′≤≥≠≈∈←→=^_{}|]|^[VQGSTRPAvqpr]\w*\([^)]*\)$|^[VQvq]\*?\([^)]*\)$|^[Tt]\*?[Vv](?:\([^)]*\))?$|^[VQvq]\*$/
 const proseWordPattern = /\b(?!arg\b|max\b|min\b|log\b|exp\b|clip\b|old\b|new\b)[A-Za-z]{4,}\b/
 
 const symbolMap = new Map([
@@ -12,6 +12,7 @@ const symbolMap = new Map([
   ['⋯', String.raw`\cdots`], ['…', String.raw`\ldots`],
   ['←', String.raw`\leftarrow`], ['→', String.raw`\rightarrow`], ['≤', String.raw`\le`],
   ['≥', String.raw`\ge`], ['≠', String.raw`\ne`], ['≈', String.raw`\approx`], ['−', '-'],
+  ['∈', String.raw`\in`], ['𝒜', String.raw`\mathcal{A}`], ['𝒮', String.raw`\mathcal{S}`],
   ['′', "'"], ['²', '^{2}'], ['³', '^{3}'], ['ᵏ', '^{k}'], ['ᵣ', '^{r}'], ['ᵗ', '^{t}'],
 ])
 
@@ -29,12 +30,13 @@ export function normalizeMathText(source) {
   let latex = normalizedSource
     .replace(/([A-Za-z])̃/g, (_, symbol) => String.raw`\widetilde{${symbol}}`)
     .replace(/([VQvPTr])π([₀₁₂₃₄₅₆₇₈₉₊₋ₜₖ]*)/g, (_, base, suffix) => `${base}^{π${suffix}}`)
+    .replace(/\b([VQT])\*(?=[A-Za-z(])/g, '$1^*')
     .replace(/[₀₁₂₃₄₅₆₇₈₉₊₋ₐₛₜₖ]+/g, (run) => `_{${[...run].map((char) => subscriptMap[char]).join('')}}`)
 
   for (const [symbol, replacement] of symbolMap) latex = latex.replaceAll(symbol, replacement)
 
   return latex
-    .replace(/\\(leftarrow|rightarrow|approx|epsilon|lambda|gamma|theta|sigma|Delta|delta|infty|cdots|ldots|sum|alpha|beta|eta|rho|phi|pi|mu|ne|le(?!ftarrow)|ge)(?=[A-Za-z])/g, String.raw`\$1 `)
+    .replace(/\\(leftarrow|rightarrow|approx|epsilon|lambda|gamma|theta|sigma|Delta|delta|infty|cdots|ldots|sum|alpha|beta|eta|rho|phi|pi|mu|mathcal|in|ne|le(?!ftarrow)|ge)(?=[A-Za-z])/g, String.raw`\$1 `)
     .replace(/\barg\s+max\b/g, String.raw`\operatorname*{arg\,max}`)
     .replace(/\bmax(?=[_(\s]|$)/g, String.raw`\max`)
     .replace(/\bmin(?=[_(\s]|$)/g, String.raw`\min`)

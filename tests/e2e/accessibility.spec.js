@@ -36,11 +36,11 @@ async function expectNoPageOverflow(page) {
 }
 
 test('navigation and conditionally hidden MDP views expose keyboard state', async ({ page }) => {
-  await openChapter(page, '强化学习的基本概念')
+  await openChapter(page, '强化学习的基本要素')
 
   const activeNav = page.locator('.left-nav nav button[aria-current="page"]')
   await expect(activeNav).toHaveCount(1)
-  await expect(activeNav).toContainText('强化学习的基本概念')
+  await expect(activeNav).toContainText('强化学习的基本要素')
 
   const contractToggle = page.locator('button[aria-controls="mdp-interface-strip"]')
   await expect(contractToggle).toHaveAttribute('aria-expanded', 'false')
@@ -73,7 +73,7 @@ test('navigation and conditionally hidden MDP views expose keyboard state', asyn
 })
 
 test('Return samples support pressed state, Enter/Space, focus, and hidden presets', async ({ page }) => {
-  await openChapter(page, '回报与价值函数')
+  await openChapter(page, '回报与状态价值')
 
   const trajectoryMode = page.getByRole('button', { name: '查看一条轨迹', exact: true })
   const valueMode = page.getByRole('button', { name: '比较多条轨迹', exact: true })
@@ -193,8 +193,8 @@ test('English copy preserves the same Return keyboard and hidden-view contract',
   await page.goto('/')
   await page.getByRole('button', { name: 'EN', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await page.getByRole('button', { name: /Returns and Value Functions/ }).last().click()
-  await expect(page.locator('h1')).toContainText('Returns and Value Functions')
+  await page.getByRole('button', { name: /Return and State Value/ }).last().click()
+  await expect(page.locator('h1')).toContainText('Return and State Value')
 
   const valueMode = page.getByRole('button', { name: 'Compare possible futures', exact: true })
   await valueMode.click()

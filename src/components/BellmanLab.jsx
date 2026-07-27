@@ -273,7 +273,7 @@ export default function BellmanLab({ lang, text }) {
               onClick={() => applyPreset(preset.id)}
             >
               <span>{String(index + 1).padStart(2, '0')}</span>
-              {preset.title}
+              <MathText>{preset.title}</MathText>
             </button>
           ))}
         </div>

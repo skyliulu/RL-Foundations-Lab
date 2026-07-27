@@ -19,6 +19,9 @@ test('inline pseudo-math is normalized to valid LaTeX', () => {
     ['vₖ₊₁=rπ+γPπvₖ', String.raw`v_{k+1}=r^{\pi}+\gamma P^{\pi}v_{k}`],
     ['Δ ← max(Δ, |old−V(s)|)', String.raw`\Delta \leftarrow \max(\Delta, |old-V(s)|)`],
     ['g̃ₖ', String.raw`\widetilde{g}_{k}`],
+    ['𝒜(s)', String.raw`\mathcal{A}(s)`],
+    ['γ∈(0,1)', String.raw`\gamma\in(0,1)`],
+    ['V*(s)', String.raw`V^*(s)`],
   ]
 
   examples.forEach(([source, expected]) => {
@@ -27,6 +30,7 @@ test('inline pseudo-math is normalized to valid LaTeX', () => {
     assert.doesNotThrow(() => katex.renderToString(latex, { throwOnError: true, strict: 'error' }))
   })
   assert.equal(isStandaloneFormula('(I−γPπ)vπ=rπ'), true)
+  assert.equal(isStandaloneFormula('V*(s)'), true)
   assert.deepEqual(splitMathText('Initialize V(s), for example to zero'), [
     { type: 'text', value: 'Initialize ' },
     { type: 'math', value: 'V(s)' },
