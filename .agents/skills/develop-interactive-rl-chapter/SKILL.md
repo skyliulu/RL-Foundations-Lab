@@ -75,6 +75,13 @@ Preserve the source material's conceptual spine while turning it into a continuo
 - Audit the chapter twice: read only the prose while ignoring headings and chrome, then read only the transitions between blocks. Both passes must reveal a continuous argument with no unexplained jumps.
 - Reject a chapter when its facts are individually accurate but the reader cannot answer why this paragraph, equation, or experiment must appear at this exact point.
 
+## Chapter-Opening Problem Contract
+
+- Open every chapter by naming the concrete problem that remains unresolved after the previous chapter, before naming the new equation, algorithm, or interface that will solve it.
+- The opening paragraph must state four things in reader-visible prose: what the reader can already compute or explain, why that capability is insufficient, which decision or quantity remains unavailable, and what this chapter will derive and test.
+- A retrospective sentence such as “the previous chapter introduced X” is context, not motivation. Reject openings that stop there, immediately announce “this chapter introduces Y,” or reveal the final algebraic answer before the need and symbols have been established.
+- Make the opening problem observable in the running example and test the same problem in the chapter experiment. If the interaction cannot exhibit the opening failure case and the new mechanism’s effect under controlled conditions, redesign the interaction or revise the opening claim.
+
 ## Chapter 7 Pilot Standard
 
 Use the rebuilt stochastic-approximation chapter as the structural reference for every chapter, without copying its subject-specific components.
@@ -93,6 +100,13 @@ Use the rebuilt stochastic-approximation chapter as the structural reference for
 ## Heading Density and Natural Chinese
 
 - Place headings only at genuine conceptual turns. A heading must introduce a section that changes the problem, mathematical object, mechanism, or stage of the argument; it must not merely label the next paragraph, formula, example, or transition.
+- Keep the chapter title compact and topic-like. It should name the chapter's central mathematical object, problem, or method; move the full claim, purpose, and scope into the subtitle and opening paragraph. As an editorial target, keep Chinese chapter titles within 12 full-width character equivalents and English titles within six words. Exceed this only when shortening a conventional technical name would create ambiguity, and still require the title to fit on one desktop line and no more than two mobile lines in rendered QA.
+- Do not turn a chapter title into a miniature abstract. Reject titles that join several clauses, enumerate the chapter sequence, or try to encode both the premise and conclusion. Never insert manual line breaks to make an overlong title appear acceptable.
+- Make section headings state the transferable concept, relation, mechanism, or conclusion established by the section. A heading that only announces the example, formula, calculation, or content that follows is an outline label, not a teaching claim.
+- Apply a generalization test to every section heading: after replacing the current grid coordinates, state count, or worked-example entities with another valid instance, the heading's claim should remain true. Put instance-specific details such as “four states” in the eyebrow, caption, or prose unless that number itself carries teaching meaning.
+- Keep section headings economical. Prefer one subject-predicate relation over stacked clauses; if a heading needs multiple commas, semicolons, or explanatory modifiers to become accurate, move that detail into the first sentence.
+- Write reader-facing Chinese headings as complete, natural declarative statements. Use a concrete subject and predicate when the heading makes a claim; reject writing prompts such as “先问……”, rhetorical fragments such as “为什么……”, and spoken concessive fragments such as “虽然……，……” that depend on the body text to become grammatical.
+- Make the eyebrow or kicker name the concept, proof stage, or evidence type, and make the heading state the section's claim or mechanism. Read each one separately and then read them together; reject pairs that form a question-answer fragment, repeat the same connective, or become an unnatural Chinese sentence when adjacent.
 - Demoting a heading from `h2` to `h3`, changing its wording, or removing its number is not a prose refactor. If the same heading-plus-one-sentence rhythm remains, the chapter is still fragmented.
 - A block containing only one or two short explanatory paragraphs, one supporting equation, one example, or one transition must not normally open a new visible heading. Merge its title into the surrounding paragraph as a natural lead sentence and keep the equation inside that paragraph's argument.
 - Start a new visible heading only when the reader is entering a genuinely new problem, mathematical object, named theorem, complete algorithm, experiment, or stage of the proof. A label that merely describes the next sentence does not meet this threshold.

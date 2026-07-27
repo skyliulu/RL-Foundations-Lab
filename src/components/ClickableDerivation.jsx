@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import MathFormula from './MathFormula'
+import ResponsiveMathFormula from './ResponsiveMathFormula'
 import RichContent from './RichContent'
 
 export default function ClickableDerivation({ eyebrow, title, intro, steps, onSelect, variant = 'major' }) {
@@ -34,7 +34,7 @@ export default function ClickableDerivation({ eyebrow, title, intro, steps, onSe
               <span className="derivation-line-number">{String(index + 1).padStart(2, '0')}</span>
               <span className="derivation-line-content">
                 <span className="derivation-line-rule"><RichContent value={step.rule} /></span>
-                <MathFormula block latex={step.latex} className="derivation-line-math" />
+                <ResponsiveMathFormula block latex={step.latex} narrowLatex={step.narrowLatex} className="derivation-line-math" />
                 <span className="derivation-line-short"><RichContent value={step.short} /></span>
                 {step.detail && <span className="derivation-line-detail"><RichContent value={step.detail} /></span>}
               </span>

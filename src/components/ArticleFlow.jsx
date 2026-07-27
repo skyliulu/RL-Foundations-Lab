@@ -1,4 +1,5 @@
 import MathFormula from './MathFormula'
+import ResponsiveMathFormula from './ResponsiveMathFormula'
 import ClickableDerivation from './ClickableDerivation'
 import RichContent from './RichContent'
 import ChapterDeepening from './ChapterDeepening'
@@ -11,7 +12,7 @@ function FlowSection({ block }) {
   return <article className={`article-flow-block article-flow-section flow-${block.id}`}>
     <FlowHeader block={block} />
     {block.paragraphs.map((paragraph, index) => <p key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
-    {block.formulas?.length > 0 && <div className={`article-flow-equations${block.formulaAfter ? ' has-after' : ''}`}>{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
+    {block.formulas?.length > 0 && <div className={`article-flow-equations${block.formulaAfter ? ' has-after' : ''}`}>{block.formulas.map((formula) => <ResponsiveMathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} narrowLatex={formula.narrowLatex} key={formula.latex} />)}</div>}
     {block.formulaAfter && <p className="article-flow-formula-after"><RichContent value={block.formulaAfter} /></p>}
   </article>
 }
@@ -19,7 +20,7 @@ function FlowSection({ block }) {
 function FlowProse({ block }) {
   return <div className={`article-flow-prose flow-${block.id}`}>
     {block.paragraphs.map((paragraph, index) => <p key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
-    {block.formulas?.length > 0 && <div className={`article-flow-equations${block.formulaAfter ? ' has-after' : ''}`}>{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
+    {block.formulas?.length > 0 && <div className={`article-flow-equations${block.formulaAfter ? ' has-after' : ''}`}>{block.formulas.map((formula) => <ResponsiveMathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} narrowLatex={formula.narrowLatex} key={formula.latex} />)}</div>}
     {block.formulaAfter && <p className="article-flow-formula-after"><RichContent value={block.formulaAfter} /></p>}
   </div>
 }
@@ -27,7 +28,7 @@ function FlowProse({ block }) {
 function FlowTurn({ block }) {
   return <div className={`article-flow-prose article-flow-turn flow-${block.id}`}>
     {block.paragraphs.map((paragraph, index) => <p className={index === 0 ? 'article-flow-turn-opening' : undefined} key={`${block.id}-p-${index}`}><RichContent value={paragraph} /></p>)}
-    {block.formulas?.length > 0 && <div className={`article-flow-equations${block.formulaAfter ? ' has-after' : ''}`}>{block.formulas.map((formula) => <MathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} key={formula.latex} />)}</div>}
+    {block.formulas?.length > 0 && <div className={`article-flow-equations${block.formulaAfter ? ' has-after' : ''}`}>{block.formulas.map((formula) => <ResponsiveMathFormula block className={`article-flow-equation is-${formula.role || 'support'}`} latex={formula.latex} narrowLatex={formula.narrowLatex} key={formula.latex} />)}</div>}
     {block.formulaAfter && <p className="article-flow-formula-after"><RichContent value={block.formulaAfter} /></p>}
   </div>
 }

@@ -115,7 +115,7 @@ const bellmanDerivationEn = [
 
 const bellmanDeepeningZh = [
   {
-    id: 'four-state-worked-system', kicker: '贯穿手算 · 四状态网格', title: '四个状态各有一条方程，未知价值彼此出现在右侧',
+    id: 'four-state-worked-system', kicker: '方程耦合 · 四状态网格', title: 'Bellman 方程把各状态的价值组织成耦合系统',
     paragraphs: ['先取原网格的一个四状态缩影，并固定策略：s₁ 以奖励 0 转移到 s₃；s₂ 和 s₃ 都以奖励 +1 转移到 s₄；s₄ 每一步获得 +1 并留在原地。令 γ=0.9。此时不能给每个状态单独“打分”，因为 V(s₁) 需要 V(s₃)，V(s₂) 与 V(s₃) 需要 V(s₄)，而 V(s₄) 又依赖自身。', '因此 Bellman 方程不是一条可以孤立代入的公式，而是所有状态必须同时满足的方程组。先由自循环方程得到 V(s₄)=1+0.9V(s₄)=10，再代回其余三式，可得 V(s₂)=V(s₃)=10、V(s₁)=9。'],
     formulas: [
       String.raw`\begin{aligned}V(s_1)&=0+0.9V(s_3),&V(s_2)&=1+0.9V(s_4),\\V(s_3)&=1+0.9V(s_4),&V(s_4)&=1+0.9V(s_4).\end{aligned}`,
@@ -125,7 +125,7 @@ const bellmanDeepeningZh = [
     handoff: '矩阵中的每一行正好保存一条状态方程。把四个状态推广到 n 个状态，就得到通用的矩阵形式。',
   },
   {
-    id: 'matrix-and-iteration', kicker: '从方程组到求解', title: '同一组方程既可以移项求解，也可以逐轮逼近',
+    id: 'matrix-and-iteration', kicker: '从方程组到求解', title: '直接求解与迭代更新指向同一个价值解',
     paragraphs: ['沿用上面的四状态例子，把四个未知价值依次放进向量 vπ，把四个期望即时奖励放进 rπ；矩阵 Pπ 的第 s 行、第 s′ 列记录遵循固定策略 π 时从 s 到 s′ 的概率。这样，vπ=rπ+γPπvπ 只是把刚才四条 Bellman 方程按行叠在一起，并没有引入新的数学关系。', '这组方程有两种求法。直接求解时，把所有含未知向量 vπ 的项移到等号左边，再乘逆矩阵；迭代求解时，不立即要求等号两边完全一致，而是把上一轮向量 vk 代入右侧，算出下一轮 vk+1。下面第二条公式继续使用同一个四状态例子，让两种计算方式可以逐行对照。'],
     formulas: [
       String.raw`\begin{aligned}\mathbf v^{\pi}&=\mathbf r^{\pi}+\gamma P^{\pi}\mathbf v^{\pi}\\\mathbf v^{\pi}-\gamma P^{\pi}\mathbf v^{\pi}&=\mathbf r^{\pi}\\(I-\gamma P^{\pi})\mathbf v^{\pi}&=\mathbf r^{\pi}\\\mathbf v^{\pi}&=(I-\gamma P^{\pi})^{-1}\mathbf r^{\pi}\end{aligned}`,
@@ -137,7 +137,7 @@ const bellmanDeepeningZh = [
     pseudocodeTitle: '用逐状态回传更新做迭代策略评价', pseudocode: ['初始化固定策略 π 的 V(s)，例如所有状态置 0', '重复一次 sweep：', '  Δ ← 0', '  对每个状态 s 做一次 backup（单状态回传更新）：', '    old ← V(s)', '    V(s) ← Σₐπ(a|s)Σₛ′,ᵣp(s′,r|s,a)[r+γV(s′)]', '    Δ ← max(Δ, |old−V(s)|)', '直到 Δ 小于停止阈值；返回 Vπ'],
   },
   {
-    id: 'state-to-action-value', kicker: '固定第一步', title: 'Action value 只比 state value 多回答一个问题',
+    id: 'state-to-action-value', kicker: '动作价值 · 固定第一步', title: '动作价值保留第一步差异，状态价值按策略求平均',
     paragraphs: ['Vπ(s) 在第一步就按策略 π 对动作取平均，因此不能直接告诉我们某个具体动作会怎样。Qπ(s,a) 固定第一步动作 a，再从后继状态开始遵循 π。', '把 Qπ 重新按 π(a|s) 加权，就回到 Vπ；反过来，比较同一状态的 Qπ(s,a) 才能做策略改善。'],
     formulas: [String.raw`Q^{\pi}(s,a)=\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V^{\pi}(s')\right]`, String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`],
     handoff: '下一章不再只评价给定 π，而是让同一状态中的动作价值竞争，并证明选择最大动作如何产生最优方程。',
@@ -146,7 +146,7 @@ const bellmanDeepeningZh = [
 
 const bellmanDeepeningEn = [
   {
-    id: 'four-state-worked-system', kicker: 'Worked system · Four-state grid', title: 'Each state has an equation, and the unknown values appear on one another’s right-hand sides',
+    id: 'four-state-worked-system', kicker: 'Equation coupling · Four-state grid', title: 'Bellman equations form a coupled system of state values',
     paragraphs: ['Take a four-state slice of the grid under a fixed policy. State s₁ moves to s₃ with reward 0; s₂ and s₃ move to s₄ with reward +1; s₄ earns +1 and remains in place. Let γ=0.9. The values cannot be assigned independently: V(s₁) needs V(s₃), V(s₂) and V(s₃) need V(s₄), and V(s₄) depends on itself.', 'The Bellman equation is therefore a coupled system that all states must satisfy simultaneously. The self-loop gives V(s₄)=1+0.9V(s₄)=10; substituting that result yields V(s₂)=V(s₃)=10 and V(s₁)=9.'],
     formulas: [
       String.raw`\begin{aligned}V(s_1)&=0+0.9V(s_3),&V(s_2)&=1+0.9V(s_4),\\V(s_3)&=1+0.9V(s_4),&V(s_4)&=1+0.9V(s_4).\end{aligned}`,
@@ -156,7 +156,7 @@ const bellmanDeepeningEn = [
     handoff: 'Each matrix row stores one state equation. Extending four states to n states gives the general matrix form.',
   },
   {
-    id: 'matrix-and-iteration', kicker: 'From system to solution', title: 'The same system can be solved directly or approached one round at a time',
+    id: 'matrix-and-iteration', kicker: 'From system to solution', title: 'Direct solution and iteration target the same value',
     paragraphs: ['Continue with the four-state example above. Stack its four unknown values into vπ and its four expected immediate rewards into rπ. Entry (s,s′) of Pπ is the probability of moving from s to s′ under the fixed policy π. The equation vπ=rπ+γPπvπ therefore adds no new relation; it simply stacks the four Bellman equations row by row.', 'There are two ways to solve the system. A direct solve moves every term containing the unknown vπ to the left and then applies the inverse matrix. An iterative solve does not require both sides to agree immediately: it inserts the previous vector vk on the right to produce vk+1. The second chain below uses the same four-state numbers so the two computations can be compared line by line.'],
     formulas: [
       String.raw`\begin{aligned}\mathbf v^{\pi}&=\mathbf r^{\pi}+\gamma P^{\pi}\mathbf v^{\pi}\\\mathbf v^{\pi}-\gamma P^{\pi}\mathbf v^{\pi}&=\mathbf r^{\pi}\\(I-\gamma P^{\pi})\mathbf v^{\pi}&=\mathbf r^{\pi}\\\mathbf v^{\pi}&=(I-\gamma P^{\pi})^{-1}\mathbf r^{\pi}\end{aligned}`,
@@ -168,7 +168,7 @@ const bellmanDeepeningEn = [
     pseudocodeTitle: 'Iterative policy evaluation by state backups', pseudocode: ['Initialize V(s) for the fixed policy π, for example to zero', 'Repeat one sweep:', '  Δ ← 0', '  For every state s, perform one backup:', '    old ← V(s)', '    V(s) ← Σₐπ(a|s)Σₛ′,ᵣp(s′,r|s,a)[r+γV(s′)]', '    Δ ← max(Δ, |old−V(s)|)', 'Until Δ is below tolerance; return Vπ'],
   },
   {
-    id: 'state-to-action-value', kicker: 'Fix the first action', title: 'Action value answers one question that state value averages away',
+    id: 'state-to-action-value', kicker: 'Action value · Fixing the first action', title: 'Action value preserves first-action differences; state value averages by policy',
     paragraphs: ['Vπ(s) averages the first action under π. Qπ(s,a) instead fixes that first action and follows π afterward.', 'Weighting Qπ by π(a|s) recovers Vπ. Comparing Qπ(s,a) values at one state enables policy improvement.'],
     formulas: [String.raw`Q^{\pi}(s,a)=\sum_{s',r}p(s',r\mid s,a)\left[r+\gamma V^{\pi}(s')\right]`, String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`],
     handoff: 'The next chapter lets actions compete and proves why selecting the largest action value produces the optimal equation.',
@@ -182,7 +182,7 @@ export const bellmanChapter = assertChapterDefinition({
   sources,
   zh: {
     eyebrow: '第 3 章 · 状态价值与 Bellman 方程',
-    title: '把所有可能轨迹压缩成相互依赖的状态方程',
+    title: 'Bellman 方程',
     intro: '上一章已经知道：一条实际轨迹给出一个 return，而状态价值概括同一起点的所有可能 return；但若逐条枚举未来，状态价值仍然无法计算。本章先把 return 与状态价值函数的定义放在同一条推导链上，再利用 return 的一步递推，把状态价值改写成一组可以联立或迭代求解的 Bellman 方程。',
     bridge: '下面继续使用同一个 5×5 网格环境：进入黄色禁区或尝试越界奖励 −1，进入蓝色目标奖励 +1，其余移动奖励 0；目标状态不会终止任务。点击状态、调整参数并执行一次更新，观察数值如何从同一套环境模型中产生。',
     experimentIntro: '下面回到 5×5 网格执行一次 Bellman backup。先选择状态，沿网格上的实线查看当前策略会经过的主分支轨迹，再逐项核对动作、所有可能后继、即时奖励和折扣后继价值，最后才写回新的状态价值。',
@@ -190,7 +190,7 @@ export const bellmanChapter = assertChapterDefinition({
     figure: '交互图 3.1 · 一次 Bellman backup 的显微镜',
     instruction: '选择起点查看策略轨迹，再观察一次 Bellman 更新怎样聚合下一步结果',
     exact: '已知模型 · 精确期望',
-    summaryTitle: 'Bellman 方程把轨迹期望转化为可联立求解的状态方程组',
+    summaryTitle: 'Bellman 方程把策略评价转化为方程求解',
     derivation: bellmanDerivationZh,
     deepening: bellmanDeepeningZh,
     microscope: {
@@ -229,8 +229,8 @@ export const bellmanChapter = assertChapterDefinition({
     prelude: [
       {
         id: 'return-recursion',
-        kicker: '从 Return 的定义开始',
-        title: '先定义一条轨迹的长期回报，再拆出它的一步递推',
+        kicker: '递推起点 · Return 定义',
+        title: '长期回报可以拆成即时奖励与下一时刻回报',
         paragraphs: ['从时间 t 开始，return Gₜ 定义为这条轨迹后续奖励的折扣和：下一步奖励 Rₜ₊₁ 不折扣，再往后的奖励依次多乘一个 γ。未来轨迹尚未发生时，Gₜ 是随机变量；一条轨迹实现以后，它才成为这次运行对应的具体数值。', '从折扣和中拿出第一项，括号里的剩余部分恰好是 Gₜ₊₁，因此 Gₜ=Rₜ₊₁+γGₜ₊₁。这只是对同一串奖励的代数重排，却把“全部未来”变成“当前一步加上一个同类型的剩余问题”。'],
         formulas: [
           String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`,
@@ -240,8 +240,8 @@ export const bellmanChapter = assertChapterDefinition({
       },
       {
         id: 'conditional-expectation',
-        kicker: '从 Return 到状态价值函数',
-        title: '状态价值函数对同一起点的所有可能 Return 取条件期望',
+        kicker: '评价对象 · 状态价值函数',
+        title: '状态价值函数用条件期望汇总同一起点的所有 Return',
         paragraphs: ['固定策略 π 与环境模型 p 后，状态价值函数 Vπ(s) 定义为：已知当前状态 Sₜ=s 时，随机 return Gₜ 的条件期望。它以状态 s 为输入；策略或环境改变时，同一状态对应的函数值也可能改变。', '把 return 的递推式代入这个定义，再按动作、奖励与后继状态分组，剩余 return 的条件期望正好是后继状态价值 Vπ(s′)。这一步才把一棵完整的未来轨迹树压缩成一步转移关系。'],
         formulas: [
           String.raw`V^{\pi}(s)\coloneqq\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`,
@@ -252,15 +252,15 @@ export const bellmanChapter = assertChapterDefinition({
     sections: [
       {
         id: 'target-anatomy',
-        kicker: '观察',
-        title: '目标值由即时奖励与后继价值组成',
+        kicker: '更新目标 · 单步组成',
+        title: '一次 Bellman 更新只依赖一步奖励与后继价值',
         paragraphs: ['即时奖励给出本步的直接回报；后继状态价值代表未来；γ 决定未来在今天的权重。按照刚才的定义，一次 Bellman backup 先把这两部分合成目标 T，再用 T 更新当前 V(s)。', '默认动作是确定的，因此一次 backup 只有一个后继分支。提高动作随机性后，目标必须对所有可能后继进行概率加权；画布下方的贡献带会把这些分支并排展开，所有加权贡献之和才是最终目标值 T。'],
         formula: String.raw`T=\mathbb{E}[R_{t+1}+\gamma V^{\pi}(S_{t+1})\mid S_t=s]`,
       },
       {
         id: 'bootstrapping',
-        kicker: '机制',
-        title: '单步写回一个状态，连续更新才让价值影响向外传播',
+        kicker: '自举机制 · 原地更新',
+        title: '原地更新复用最新估计，使奖励影响逐步传播',
         paragraphs: ['单步按钮只更新当前选中的状态 s：先用此刻 value table 中的后继估计计算目标 TπV(s)，再用目标覆盖旧的 V(s)，其余 24 个状态保持不变。连续播放按固定顺序遍历 25 个状态；因为采用原地更新，后面的 backup 会读取前面刚写回的最新值。一次遍历称为一个 sweep。', '这种“用现有估计更新另一个估计”的机制称为 bootstrapping。若从全零开始，靠近奖励的位置通常先改变，之后其他状态读取这些新值，于是奖励及其折扣影响逐步传向更远的位置。传播是反复应用 Bellman 关系在网格上的结果，并不是额外添加的规则。', 'Bellman 残差衡量当前估计与该状态方程右侧还差多少。交互图记录写回前的绝对局部残差 |δB(s)|：它接近 0，只说明这个状态在当时的 value table 下几乎满足自己的方程。判断整张表是否收敛，需要检查所有状态残差的最大值；逐状态曲线会因更新对象不同而上下波动，不必单调下降。'],
         formula: String.raw`\delta_{\mathrm B}(s)=\left(\mathcal T^{\pi}V\right)(s)-V(s)`,
       },
@@ -273,14 +273,14 @@ export const bellmanChapter = assertChapterDefinition({
       },
       {
         id: 'continuing-boundary',
-        kicker: '边界情况',
-        title: '目标不是终止状态，越界也不是零奖励',
+        kicker: '边界条件 · 持续型任务',
+        title: '任务是否终止决定后继价值是否归零',
         paragraphs: ['这个网格世界是持续型任务：进入蓝色目标得到 +1 后仍会继续行动，所以目标附近价值可以接近 1/(1−γ)。尝试越界时位置不变，但即时奖励为 −1，因此“下一状态没变”和“什么都没发生”并不等价。', '这两个规则都会进入 Bellman target：目标格没有把后继价值置零，越界动作则形成带负奖励的 self-loop。忽略任一规则，得到的价值表都会偏离本章设定的环境。'],
       },
       {
         id: 'action-value-transfer',
-        kicker: '下一步',
-        title: '从状态评价扩展到动作比较',
+        kicker: '章节衔接 · 动作比较',
+        title: '动作价值使同一状态下的不同选择可以直接比较',
         paragraphs: ['Vπ(s) 平均了策略在状态 s 选择的所有动作。要决定哪个动作更好，需要固定第一个动作并计算 Qπ(s,a)。', 'Qπ 保留第一步动作差异，再从后继状态继续遵循 π。下一章让同一状态的动作价值直接竞争，由评价给定策略转向寻找最优策略。'],
         formula: String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`,
       },
@@ -299,7 +299,7 @@ export const bellmanChapter = assertChapterDefinition({
   },
   en: {
     eyebrow: 'Chapter 3 · State Value and the Bellman Equation',
-    title: 'Compress all possible trajectories into coupled state equations',
+    title: 'The Bellman Equation',
     intro: 'The previous chapter established that one realized trajectory yields one return while state value summarizes every possible return from the same start. That definition is still impractical if it requires enumerating futures. This chapter places the return and state-value definitions on one derivation chain, then uses one-step return recursion to obtain a coupled Bellman system that can be solved directly or iteratively.',
     bridge: 'The canvas continues with the same 5×5 grid environment: entering a yellow forbidden cell or attempting to cross the boundary yields −1, entering the blue target yields +1, and every other move yields 0. The target is non-terminal. Select a state, adjust parameters, and see the values emerge from the same model.',
     experimentIntro: 'Return to the 5×5 grid for one Bellman backup. Select a state, follow the solid line through the current policy’s primary path, inspect the action, every possible successor, immediate reward, and discounted successor value, and only then write back the new state value.',
@@ -307,7 +307,7 @@ export const bellmanChapter = assertChapterDefinition({
     figure: 'Interactive Figure 3.1 · Microscope for one Bellman backup',
     instruction: 'Select a start to inspect the policy path, then see how one Bellman update aggregates one-step outcomes',
     exact: 'Known model · exact expectation',
-    summaryTitle: 'Bellman equations turn trajectory expectations into a solvable coupled state system',
+    summaryTitle: 'The Bellman equation turns policy evaluation into equation solving',
     derivation: bellmanDerivationEn,
     deepening: bellmanDeepeningEn,
     microscope: {
@@ -346,8 +346,8 @@ export const bellmanChapter = assertChapterDefinition({
     prelude: [
       {
         id: 'return-recursion',
-        kicker: 'Start from the return definition',
-        title: 'Define long-term return on one trajectory, then expose its one-step recursion',
+        kicker: 'Recursion starting point · Return definition',
+        title: 'Long-term return decomposes into immediate reward and next-step return',
         paragraphs: ['From time t, return Gₜ is the discounted sum of the rewards that follow on one trajectory. The next reward Rₜ₊₁ is undiscounted, and each more distant reward receives one additional factor of γ. Before the future occurs, Gₜ is random; after one trajectory is realized, it becomes that run’s concrete return.', 'Taking the first term out of the sum leaves exactly Gₜ₊₁ in parentheses, so Gₜ=Rₜ₊₁+γGₜ₊₁. This is only an algebraic rearrangement, but it converts the whole future into the current step plus a remaining problem of the same kind.'],
         formulas: [
           String.raw`G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots`,
@@ -357,8 +357,8 @@ export const bellmanChapter = assertChapterDefinition({
       },
       {
         id: 'conditional-expectation',
-        kicker: 'From return to the state-value function',
-        title: 'The state-value function averages all possible returns from the same start',
+        kicker: 'Evaluation object · State-value function',
+        title: 'The state-value function uses a conditional expectation to summarize every return from one start',
         paragraphs: ['Fix policy π and environment model p. The state-value function Vπ(s) is defined as the conditional expectation of random return Gₜ given Sₜ=s. Its input is state s; changing the policy or environment can change the function value at that same state.', 'Substitute return recursion into this definition and group by action, reward, and successor. The remaining return within each successor group has expectation Vπ(s′), which compresses an entire future trajectory tree into a one-step relation.'],
         formulas: [
           String.raw`V^{\pi}(s)\coloneqq\mathbb{E}_{\pi,p}[G_t\mid S_t=s]`,
@@ -369,15 +369,15 @@ export const bellmanChapter = assertChapterDefinition({
     sections: [
       {
         id: 'target-anatomy',
-        kicker: 'Observe',
-        title: 'The target combines immediate reward and successor value',
+        kicker: 'Update target · One-step components',
+        title: 'A Bellman update depends only on one-step reward and successor value',
         paragraphs: ['The immediate reward is the direct return from this step; successor value represents the future; γ controls how much the future matters now. Under the definition above, one Bellman backup combines these terms into target T and then uses T to update the current V(s).', 'Actions are deterministic by default, so a backup has one successor branch. With action randomness, the target must probability-weight every possible successor. The contribution strip below the canvas places those branches side by side; their weighted sum is the final target.'],
         formula: String.raw`T=\mathbb{E}[R_{t+1}+\gamma V^{\pi}(S_{t+1})\mid S_t=s]`,
       },
       {
         id: 'bootstrapping',
-        kicker: 'Mechanism',
-        title: 'One step writes one state; continued updates propagate value influence outward',
+        kicker: 'Bootstrapping · In-place updates',
+        title: 'In-place updates reuse the latest estimates and propagate reward influence',
         paragraphs: ['The single-step button updates only the selected state s. It computes target TπV(s) from the successor estimates in the current value table, overwrites the old V(s), and leaves the other 24 states unchanged. Continuous play visits the 25 states in a fixed order. Because updates are in place, later backups read the latest values written earlier in the same sweep.', 'Using an existing estimate to update another estimate is bootstrapping. Starting from zeros, states near a reward usually change first; other states then read those new values, so the reward and its discounted influence move outward. Propagation is the visible consequence of repeatedly applying the Bellman relation, not an extra rule.', 'The Bellman residual measures the gap between the current estimate and that state equation’s right-hand side. The canvas records the absolute local residual |δB(s)| before each write. A value near zero only means that state nearly satisfies its equation under the table at that moment. Whole-table convergence requires the maximum residual over all states to be small; a state-by-state trace need not decrease monotonically.'],
         formula: String.raw`\delta_{\mathrm B}(s)=\left(\mathcal T^{\pi}V\right)(s)-V(s)`,
       },
@@ -390,14 +390,14 @@ export const bellmanChapter = assertChapterDefinition({
       },
       {
         id: 'continuing-boundary',
-        kicker: 'Boundary case',
-        title: 'The target is non-terminal, and crossing a boundary is not reward-free',
+        kicker: 'Boundary conditions · Continuing task',
+        title: 'Termination determines whether successor value becomes zero',
         paragraphs: ['This grid world is a continuing task. The agent keeps acting after receiving +1 on entering the blue target, so nearby values can approach 1/(1−γ). A boundary attempt leaves the state unchanged but yields −1: “same successor” does not mean “nothing happened.”', 'Both rules enter the Bellman target: the target cell does not zero future value, and a boundary action creates a negative-reward self-loop. Omitting either rule changes the value table.'],
       },
       {
         id: 'action-value-transfer',
-        kicker: 'Next',
-        title: 'From state evaluation to action comparison',
+        kicker: 'Chapter transition · Action comparison',
+        title: 'Action value makes choices at the same state directly comparable',
         paragraphs: ['Vπ(s) averages over the actions selected by the policy in state s. To decide which action is better, fix the first action and evaluate Qπ(s,a).', 'Qπ preserves the first-action difference and follows π afterward. The next chapter lets these action values compete within a state, moving from evaluating a fixed policy to searching for an optimal one.'],
         formula: String.raw`V^{\pi}(s)=\sum_a\pi(a\mid s)Q^{\pi}(s,a)`,
       },

@@ -87,8 +87,8 @@ test('the Bellman golden chapter satisfies the structured content contract', () 
   assert.match(matrixSolution.formulaAfter, /Bellman backup.*不是保存副本.*选定一个状态.*一次 sweep/)
   assert.match(matrixSolution.formulaAfter, /策略 π 始终固定.*不是.*策略迭代/)
   assert.match(copy.zh.bellman.sections.find((section) => section.id === 'target-anatomy').paragraphs.join(' '), /目标 T.*更新当前 V\(s\)/)
-  assert.equal(copy.zh.bellman.summaryTitle, 'Bellman 方程把轨迹期望转化为可联立求解的状态方程组')
-  assert.equal(copy.en.bellman.summaryTitle, 'Bellman equations turn trajectory expectations into a solvable coupled state system')
+  assert.equal(copy.zh.bellman.summaryTitle, 'Bellman 方程把策略评价转化为方程求解')
+  assert.equal(copy.en.bellman.summaryTitle, 'The Bellman equation turns policy evaluation into equation solving')
 })
 
 test('the MDP foundation chapter is bilingual, structured, and source-traceable', () => {
@@ -134,8 +134,8 @@ test('the MDP foundation chapter is bilingual, structured, and source-traceable'
   assert.match(mdpChapter.en.deepening[0].handoff, /long-term evaluation.*where.*stops/i)
   assert.match(mdpChapter.zh.deepening[1].paragraphs[0], /Markov 性解决.*终止规则解决/)
   assert.match(mdpChapter.en.deepening[1].paragraphs[0], /Markov property answers.*termination rule answers/i)
-  assert.equal(mdpChapter.zh.summaryTitle, '状态决定怎样预测下一步，任务边界决定怎样评价整条路径')
-  assert.equal(mdpChapter.en.summaryTitle, 'State determines next-step prediction; the task boundary determines path evaluation')
+  assert.equal(mdpChapter.zh.summaryTitle, '状态支持一步预测，任务边界限定长期评价')
+  assert.equal(mdpChapter.en.summaryTitle, 'State supports one-step prediction; task boundaries delimit long-term evaluation')
   assert.doesNotMatch(mdpChapter.zh.intro, /Bellman|PPO|MDP|状态|动作|策略|奖励/)
   assert.doesNotMatch(mdpChapter.en.intro, /Bellman|PPO|MDP|state|action|policy|reward/i)
   assert.ok(mdpChapter.zh.experimentIntro.length > 40)
@@ -164,11 +164,91 @@ test('the Return chapter separates trajectory samples from exact state value', (
   assert.equal(returnPresetConfigs['stochastic-value'].mode, 'futures')
 })
 
+test('chapters 1–3 use compact chapter titles and transferable section claims', () => {
+  assert.deepEqual(
+    copy.zh.chapters.slice(0, 3).map(({ id, title }) => [id, title]),
+    [
+      ['mdp', '强化学习的基本要素'],
+      ['returns', '回报与状态价值'],
+      ['bellman', 'Bellman 方程'],
+    ],
+  )
+  assert.deepEqual(
+    copy.en.chapters.slice(0, 3).map(({ id, title }) => [id, title]),
+    [
+      ['mdp', 'Reinforcement Learning'],
+      ['returns', 'Return and State Value'],
+      ['bellman', 'The Bellman Equation'],
+    ],
+  )
+
+  for (const [chapter, built] of [[mdpChapter, copy.zh.mdp], [returnChapter, copy.zh.returns], [bellmanChapter, copy.zh.bellman]]) {
+    assert.equal(chapter.zh.title, built.title, `${chapter.id} Chinese source and rendered title stay synchronized`)
+    assert.equal(chapter.en.title, copy.en[chapter.id].title, `${chapter.id} English source and rendered title stay synchronized`)
+  }
+  copy.zh.chapters.slice(0, 3).forEach(({ id, title }) => {
+    assert.ok(Array.from(title.replace(/\s+/g, '')).length <= 12, `${id} Chinese chapter title stays compact`)
+  })
+  copy.en.chapters.slice(0, 3).forEach(({ id, title }) => {
+    assert.ok(title.trim().split(/\s+/).length <= 6, `${id} English chapter title stays compact`)
+  })
+
+  const mdpMajorIds = new Set(['problem-setting', 'transition-model', 'mdp-definition'])
+  const visiblePairs = [
+    ...mdpChapter.zh.learningPath.filter((section) => mdpMajorIds.has(section.id)),
+    ...mdpChapter.zh.deepening,
+    ...copy.zh.returns.articleFlow.filter((block) => ['section', 'topic', 'derivation'].includes(block.type)),
+    ...copy.zh.bellman.articleFlow.filter((block) => ['section', 'topic', 'derivation'].includes(block.type)),
+  ]
+  visiblePairs.forEach(({ id, kicker = '', title = '' }) => {
+    assert.ok(title.trim(), `${id} needs a reader-visible claim`)
+    assert.doesNotMatch(`${kicker} ${title}`, /[？?]/, `${id} must not form a rhetorical question`)
+    assert.doesNotMatch(title, /^(先问|先看|再看|最后看|为什么|怎样|如何|虽然)/, `${id} must be a declarative heading`)
+    assert.doesNotMatch(kicker, /^(先建立|从 .*开始$|观察$|机制$|下一步$|深入$)/, `${id} kicker must name a concept or evidence stage`)
+  })
+
+  ;['locationTitle', 'choiceTitle', 'responseTitle'].forEach((field) => {
+    assert.doesNotMatch(mdpChapter.zh.overview[field], /^(先|再|最后)/, `${field} must describe content rather than reading order`)
+  })
+  assert.equal(mdpChapter.zh.deepening[1].kicker, '反事实 · 终止规则')
+  assert.equal(copy.zh.returns.articleFlow.find((block) => block.id === 'return-construction').title, 'Return 沿时间轴累积奖励，并能拆成一步递推')
+  assert.equal(copy.zh.bellman.articleFlow.find((block) => block.id === 'target-anatomy').kicker, '更新目标 · 单步组成')
+  assert.equal(copy.zh.bellman.articleFlow.find((block) => block.id === 'four-state-worked-system').title, 'Bellman 方程把各状态的价值组织成耦合系统')
+  assert.doesNotMatch(copy.zh.bellman.articleFlow.find((block) => block.id === 'four-state-worked-system').title, /四条|四状态/)
+  assert.equal(copy.zh.bellman.articleFlow.find((block) => block.id === 'state-to-action-value').title, '动作价值保留第一步差异，状态价值按策略求平均')
+})
+
 test('the Optimality chapter preserves the expectation-to-max conceptual switch', () => {
   assert.deepEqual(validateFoundationChapterDefinition(optimalityChapter), [])
   assert.deepEqual(optimalityChapter.zh.prelude.map((section) => section.id), optimalityChapter.en.prelude.map((section) => section.id))
   assert.deepEqual(Object.keys(optimalityPresetConfigs), Object.keys(optimalityChapter.en.explorer.presetItems))
-  assert.match(optimalityChapter.zh.prelude[1].formulas[0], /max/)
+  assert.match(optimalityChapter.zh.intro, /准确评价不等于策略已经合理/)
+  assert.match(optimalityChapter.zh.derivation[0].latex, /Q\^\{\\pi\}/)
+  assert.match(optimalityChapter.zh.derivation[1].latex, /V\^\{\\pi\}/)
+  assert.doesNotMatch(optimalityChapter.zh.derivation.slice(0, 2).map((step) => step.latex).join(''), /\\\\/)
+  assert.match(optimalityChapter.zh.derivation.find((step) => step.id === 'convex-max').latex, /max/)
+  const optimalityEquation = optimalityChapter.zh.derivation.find((step) => step.id === 'optimality-equation')
+  const greedyRecovery = optimalityChapter.zh.deepening.find((section) => section.id === 'greedy-policy-proof')
+  const rewardTransform = optimalityChapter.zh.deepening.find((section) => section.id === 'reward-transformations')
+  const rewardHorizon = optimalityChapter.zh.sections.find((section) => section.id === 'reward-horizon')
+  const contractionProof = optimalityChapter.zh.deepening.find((section) => section.id === 'contraction-proof')
+  assert.doesNotMatch(optimalityEquation.latex, /\\\\/)
+  assert.match(optimalityEquation.narrowLatex, /\\\\/)
+  assert.doesNotMatch(greedyRecovery.formulas.join(' '), /T\^\{|\\pi_g/)
+  assert.match(greedyRecovery.paragraphs.join(' '), /第一步先做 a.*之后始终采用最好的动作/)
+  assert.match(greedyRecovery.formulaAfter, /arg max.*动作.*不是最大数值/)
+  assert.deepEqual(greedyRecovery.theorem.conditions, [])
+  assert.match(greedyRecovery.theorem.why, /全部可用动作.*并列最大/)
+  assert.equal(rewardTransform.title, '全局奖励变换不改排序，局部变化可能改变策略')
+  assert.doesNotMatch(rewardTransform.title, /先问|是否/)
+  assert.equal(contractionProof.kicker, '收敛依据')
+  assert.equal(contractionProof.title, 'Bellman 最优更新会持续缩小价值误差')
+  assert.doesNotMatch(`${contractionProof.kicker}${contractionProof.title}`, /为什么|虽然/)
+  assert.match(rewardTransform.paragraphs.join(' '), /每一次转移.*相同的缩放与平移/)
+  assert.match(rewardTransform.formulaAfter, /只把禁区奖励.*不符合这个条件.*调整 γ 也不是奖励平移/)
+  assert.equal(typeof rewardHorizon.formula, 'object')
+  assert.doesNotMatch(rewardHorizon.formula.latex, /\\\\/)
+  assert.match(rewardHorizon.formula.narrowLatex, /\\\\/)
 })
 
 test('the Planning chapter compares VI, TPI, and PI under one content contract', () => {

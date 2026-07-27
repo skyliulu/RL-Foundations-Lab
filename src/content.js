@@ -17,9 +17,9 @@ export const copy = {
     lab: '从网格世界到大语言模型后训练',
     toc: '学习地图',
     chapters: [
-      { id: 'mdp', number: '01', kicker: '基本概念', title: '强化学习的基本概念', subtitle: '从状态、动作、策略和奖励建立决策模型' },
-      { id: 'returns', number: '02', kicker: '策略评价', title: '回报与价值函数', subtitle: '用长期回报评价策略' },
-      { id: 'bellman', number: '03', kicker: '策略评价', title: 'Bellman 方程', subtitle: '用一步递推求解给定策略的价值' },
+      { id: 'mdp', number: '01', kicker: '基本概念', title: '强化学习的基本要素', subtitle: '明确状态、动作、策略与环境响应的职责边界' },
+      { id: 'returns', number: '02', kicker: '策略评价', title: '回报与状态价值', subtitle: '区分单条轨迹的回报与状态的期望价值' },
+      { id: 'bellman', number: '03', kicker: '策略评价', title: 'Bellman 方程', subtitle: '用一步递推求解固定策略的状态价值' },
       { id: 'optimality', number: '04', kicker: '最优控制', title: 'Bellman 最优方程', subtitle: '从策略评价走向最优控制' },
       { id: 'planning', number: '05', kicker: '动态规划', title: '值迭代与策略迭代', subtitle: '在模型已知时求解最优策略' },
       { id: 'montecarlo', number: '06', kicker: '无模型学习', title: 'Monte Carlo 方法', subtitle: '在模型未知时用完整回合估计价值' },
@@ -80,9 +80,9 @@ export const copy = {
     lab: 'From Grid Worlds to Language-Model Post-Training',
     toc: 'Learning map',
     chapters: [
-      { id: 'mdp', number: '01', kicker: 'Basic concepts', title: 'Foundations of Reinforcement Learning', subtitle: 'Build a decision model from states, actions, policies, and rewards' },
-      { id: 'returns', number: '02', kicker: 'Policy evaluation', title: 'Returns and Value Functions', subtitle: 'Evaluate a policy by its long-term return' },
-      { id: 'bellman', number: '03', kicker: 'Policy evaluation', title: 'The Bellman Equation', subtitle: 'Solve a fixed policy through one-step recursion' },
+      { id: 'mdp', number: '01', kicker: 'Basic concepts', title: 'Reinforcement Learning', subtitle: 'Separate the roles of state, action, policy, and environment response' },
+      { id: 'returns', number: '02', kicker: 'Policy evaluation', title: 'Return and State Value', subtitle: 'Separate a trajectory return from the expected value of a state' },
+      { id: 'bellman', number: '03', kicker: 'Policy evaluation', title: 'The Bellman Equation', subtitle: 'Solve the state value of a fixed policy through one-step recursion' },
       { id: 'optimality', number: '04', kicker: 'Optimal control', title: 'The Bellman Optimality Equation', subtitle: 'Move from policy evaluation to optimal control' },
       { id: 'planning', number: '05', kicker: 'Dynamic programming', title: 'Value Iteration and Policy Iteration', subtitle: 'Solve for an optimal policy when the model is known' },
       { id: 'montecarlo', number: '06', kicker: 'Model-free learning', title: 'Monte Carlo Methods', subtitle: 'Estimate value from complete episodes without a model' },
@@ -143,7 +143,7 @@ export const copy = {
 const derivationLabels = {
   zh: {
     returns: ['核心推导', '从奖励序列得到回报与状态价值'],
-    bellman: ['Bellman 期望方程', '从 Return 的递推得到 Bellman 方程'],
+    bellman: ['条件期望展开 · Bellman 方程', '条件期望把 return 递推变成状态价值递推'],
     optimality: ['最优性推导', '从策略加权得到 Bellman 最优方程'],
     planning: ['动态规划更新', '评估深度连接值迭代与策略迭代'],
     ppo: ['策略比率与裁剪', '从重要性比率得到裁剪代理目标'],
@@ -152,7 +152,7 @@ const derivationLabels = {
   },
   en: {
     returns: ['Core derivation', 'From a Reward Sequence to Return and State Value'],
-    bellman: ['Bellman expectation equation', 'Deriving the Bellman Equation from Return Recursion'],
+    bellman: ['Conditional-expectation expansion · Bellman equation', 'Conditional expectation turns return recursion into state-value recursion'],
     optimality: ['Optimality derivation', 'From Policy Weighting to the Bellman Optimality Equation'],
     planning: ['Dynamic-programming updates', 'Evaluation Depth Connects Value and Policy Iteration'],
     ppo: ['Policy ratios and clipping', 'From Importance Ratios to the Clipped Surrogate Objective'],
@@ -166,8 +166,8 @@ for (const lang of ['zh', 'en']) {
     copy[lang][chapter.id].title = chapter.title
   }
   copy[lang].bellman.summaryTitle = lang === 'zh'
-    ? 'Bellman 方程把轨迹期望转化为可联立求解的状态方程组'
-    : 'Bellman equations turn trajectory expectations into a solvable coupled state system'
+    ? 'Bellman 方程把策略评价转化为方程求解'
+    : 'The Bellman equation turns policy evaluation into equation solving'
   copy[lang].approximation.summaryTitle = lang === 'zh' ? '步长决定学习器怎样吸收历史证据' : 'Step size determines how a learner absorbs historical evidence'
   for (const id of articleFlowChapterIds) {
     const labels = derivationLabels[lang][id]

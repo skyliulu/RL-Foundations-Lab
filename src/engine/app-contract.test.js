@@ -373,6 +373,7 @@ test('continuous chapter prose has one spacing owner and stable inline leads', a
   assert.match(proseWrapRule, /word-break:\s*normal/)
   assert.match(styles, /--flow-body-line-height:\s*1\.82/)
   assert.match(styles, /html:lang\(zh\) main\s*\{\s*word-break:\s*auto-phrase;\s*\}/)
+  assert.match(styles, /html:lang\(zh\) \.chapter-header h1,[\s\S]*?html:lang\(zh\) \.chapter-header h1 > \.math-text,[\s\S]*?html:lang\(zh\) \.article-flow-heading h2 \.math-text\s*\{\s*word-break:\s*auto-phrase;\s*\}/)
   assert.match(articleBlockRule, /padding:[^;]*0/)
   assert.match(articleDerivationRule, /margin-bottom:\s*0/)
   assert.doesNotMatch(app, /<br\s*\/?>/)
@@ -396,7 +397,12 @@ test('chapter skill rejects mechanically valid but semantically fragmented prose
   assert.match(skill, /Do not append a `formula` or `formulas` array after prose merely because the schema supports it/)
   assert.match(skill, /Do not reveal a derived result in a prelude and then derive the same result again/)
   assert.match(skill, /Build a formula-role ledger for every display equation/)
+  assert.match(skill, /Write reader-facing Chinese headings as complete, natural declarative statements/)
+  assert.match(skill, /Read each one separately and then read them together/)
   assert.match(skill, /Read every adjacent paragraph pair as plain text without component boundaries/)
+  assert.match(skill, /what the reader can already compute or explain/)
+  assert.match(skill, /A retrospective sentence such as “the previous chapter introduced X” is context, not motivation/)
+  assert.match(skill, /Make the opening problem observable in the running example/)
 })
 
 test('chapter one introduces the shared course world before formal definitions', () => {
@@ -431,6 +437,22 @@ test('right-workbench notation is rendered through MathFormula', () => {
   assert.match(app, /latex=\{String\.raw`V\^\{\\pi\}\(s\)`\}/)
   assert.doesNotMatch(app, />p\(s′\|s,a,history\) = p\(s′\|s,a\)</)
   assert.doesNotMatch(app, /Gₜ|Vπ\(s\)/)
+})
+
+test('long primary equations stay single-line when space is available and split only on narrow screens', () => {
+  const responsive = read('components/ResponsiveMathFormula.jsx')
+  const derivation = read('components/ClickableDerivation.jsx')
+  const article = read('components/ArticleFlow.jsx')
+  const optimality = read('components/OptimalitySwitch.jsx')
+  const styles = read('styles.css')
+
+  assert.match(responsive, /responsive-math-wide/)
+  assert.match(responsive, /responsive-math-narrow/)
+  assert.match(derivation, /narrowLatex=\{step\.narrowLatex\}/)
+  assert.match(article, /narrowLatex=\{formula\.narrowLatex\}/)
+  assert.match(optimality, /<ResponsiveMathFormula/)
+  assert.match(styles, /\.responsive-math-formula > \.responsive-math-narrow\s*\{[^}]*display:\s*none/)
+  assert.match(styles, /@media \(max-width:\s*620px\)[\s\S]*?\.responsive-math-formula > \.responsive-math-wide\s*\{[^}]*display:\s*none/)
 })
 
 test('algorithms, tables, experiments, and the right workbench share a readable type floor', () => {

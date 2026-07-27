@@ -3,11 +3,30 @@ import assert from 'node:assert/strict'
 
 import { COURSE_REWARDS, START, indexOf } from './gridworld.js'
 import { comparePolicyAndOptimal, inspectActionCompetition, solveOperator } from './optimality.js'
+import { optimalityPresetConfigs } from '../content/optimality.js'
 
 test('the Bellman optimality fixed point dominates the fixed-policy value', () => {
   const comparison = comparePolicyAndOptimal({ gamma: 0.9, noise: 0 })
   comparison.gaps.forEach((gap) => assert.ok(gap >= -1e-8))
   assert.ok(comparison.gaps.some((gap) => gap > 1))
+})
+
+test('the operator-switch preset makes a converged policy backup and a profitable max backup visibly different', () => {
+  const preset = optimalityPresetConfigs['operator-switch']
+  const rewards = { ...COURSE_REWARDS, forbidden: preset.forbiddenReward }
+  const comparison = comparePolicyAndOptimal({ gamma: preset.gamma, noise: preset.noise, rewards })
+  const detail = inspectActionCompetition({
+    state: preset.selected,
+    values: comparison.policy.values,
+    gamma: preset.gamma,
+    noise: preset.noise,
+    rewards,
+  })
+  const policyValue = comparison.policy.values[indexOf(preset.selected)]
+
+  assert.ok(Math.abs(detail.policyTarget - policyValue) < 1e-8)
+  assert.ok(detail.bestTarget - detail.policyTarget > 1)
+  assert.ok(!detail.bestActions.includes(detail.policyAction))
 })
 
 test('the optimality operator selects the largest of the five action targets', () => {

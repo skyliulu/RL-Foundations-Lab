@@ -9,8 +9,8 @@ const orders = {
       id: 'return-construction',
       stepIndices: [0, 1, 2, 3, 4],
       title: {
-        zh: '沿时间轴定义 return，并把剩余未来写成递推',
-        en: 'Define return along time and expose its recursive remainder',
+        zh: 'Return 沿时间轴累积奖励，并能拆成一步递推',
+        en: 'Return accumulates rewards along time and decomposes into a one-step recursion',
       },
       intro: {
         zh: '两条具体路径说明了为什么需要累计未来奖励。下面固定时间下标，先定义有限轨迹的 return，再处理持续型轨迹，并从同一个定义中拆出一步递推关系。',
@@ -273,6 +273,7 @@ function formulaEntries(item, descriptor) {
   return selected.map((formula) => ({
     role: formula?.role || descriptor.formulaRole || 'support',
     latex: formula?.latex || formula,
+    narrowLatex: formula?.narrowLatex || null,
     before,
     after,
   }))

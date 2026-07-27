@@ -33,22 +33,22 @@ const explorer = {
 const overview = {
   zh: {
     eyebrow: '共同环境 · 5×5 网格世界',
-    title: '这就是后续章节反复使用的决策世界',
+    title: '网格世界把决策过程的基本对象放进同一场景',
     caption: '智能体从左上角出发，在 25 个可访问格子之间移动。黄色格是可进入但会受罚的禁区，蓝色格是目标；地图外侧全部属于边界。',
     map: '环境地图', statePrefix: 's', start: '起点', forbidden: '禁区 −1', target: '目标 +1',
-    locationTitle: '先看当前位置', locationBody: '每个格子都有编号，后面会把“此刻位于哪个格子”正式命名。',
-    choiceTitle: '再看可选方向', choiceBody: '每一步都可以选择上、右、下、左或停留。',
-    responseTitle: '最后看世界回应', responseBody: '选择之后，位置可能变化，同时得到 −1、0 或 +1。',
+    locationTitle: '当前位置界定智能体所处的状态', locationBody: '每个格子都有编号，后面会把“此刻位于哪个格子”正式命名。',
+    choiceTitle: '动作集合给出当前状态下的选择', choiceBody: '每一步都可以选择上、右、下、左或停留。',
+    responseTitle: '环境响应产生下一状态与即时奖励', responseBody: '选择之后，位置可能变化，同时得到 −1、0 或 +1。',
     boundary: '越界并不会离开地图：智能体留在原格，并收到 −1。禁区也不是墙，进入后同样收到 −1。',
   },
   en: {
     eyebrow: 'Shared environment · 5×5 grid world',
-    title: 'This is the decision world reused throughout the chapters',
+    title: 'The grid world places the basic objects of decision making in one setting',
     caption: 'The agent begins in the upper-left and moves among 25 accessible cells. Yellow cells are accessible but penalized, the blue cell is the target, and everything outside the map is boundary.',
     map: 'Environment map', statePrefix: 's', start: 'Start', forbidden: 'Forbidden −1', target: 'Target +1',
-    locationTitle: 'Begin with location', locationBody: 'Every cell has an id. The next section formally names what it means to occupy one of them.',
-    choiceTitle: 'Then inspect the choices', choiceBody: 'At every step the agent may move up, right, down, left, or stay.',
-    responseTitle: 'Finally observe the response', responseBody: 'After a choice, location may change and the world returns −1, 0, or +1.',
+    locationTitle: 'Current location identifies the agent’s state', locationBody: 'Every cell has an id. The next section formally names what it means to occupy one of them.',
+    choiceTitle: 'The action set specifies the choices at that state', choiceBody: 'At every step the agent may move up, right, down, left, or stay.',
+    responseTitle: 'The environment response produces a successor and reward', responseBody: 'After a choice, location may change and the world returns −1, 0, or +1.',
     boundary: 'A boundary attempt does not leave the map: the agent stays in place and receives −1. Forbidden cells are not walls; entering one also gives −1.',
   },
 }
@@ -56,8 +56,8 @@ const overview = {
 const mdpZhPath = [
   {
     id: 'problem-setting',
-    kicker: '先建立共同场景',
-    title: '在网格世界中观察一次完整交互',
+    kicker: '共同场景 · 网格世界',
+    title: '智能体作出选择，环境返回状态与奖励',
     paragraphs: [
       '我们先固定一个具体世界：一张 5×5 的方格地图。蓝色格是目标，黄色格是禁区，地图外侧是边界；禁区仍然可以进入，只是会受到惩罚。这张地图及其规则合在一起，就是智能体所处的环境。',
       '智能体，也就是需要在地图中不断做出选择的主体，可以从任意格子出发。任务不只是抵达目标，还要区分撞到边界、穿过禁区和无谓绕路，因此我们需要逐一建立描述这个世界的基本对象。',
@@ -88,7 +88,7 @@ const mdpZhPath = [
   {
     id: 'transition-model',
     kicker: '环境接口 · 状态转移',
-    title: '动作之后发生什么，由环境的状态转移模型决定',
+    title: '状态转移模型决定动作产生的下一状态',
     paragraphs: [
       '确定性世界可以用一张“状态 × 动作”表直接指定后继状态，例如 s₁ 执行向右得到 s₂；s₁ 执行向上则因越界仍停在 s₁。在这个环境中，禁区是可进入状态，不是墙。',
       '现实环境可能带有风、传感噪声或执行误差。此时一个动作会对应多个可能后继，必须用条件概率描述。确定性转移只是这个分布把全部概率质量放在一个后继上的特殊情况。',
@@ -134,7 +134,7 @@ const mdpZhPath = [
   {
     id: 'task-types',
     kicker: '任务边界 · Episode 与持续型任务',
-    title: '终止状态决定一段交互是 episode，还是持续型任务',
+    title: '终止规则决定交互形成有限 episode 还是持续型任务',
     paragraphs: [
       '上一节留下的“轨迹在哪里结束”，由终止规则回答。它不是实现细节，而是回报定义的一部分：边界一变，轨迹包含的未来奖励也随之改变。',
       '如果策略运行到某个终止状态后停止，有限轨迹称为 episode，对应 episodic task。没有终止状态、交互永不自然结束的任务称为 continuing task。',
@@ -145,7 +145,7 @@ const mdpZhPath = [
   {
     id: 'mdp-definition',
     kicker: '形式化 · MDP 与 Markov 性',
-    title: '只有当前状态足够概括历史，一步环境模型才能成立',
+    title: 'Markov 状态概括相关历史，使一步环境模型成立',
     paragraphs: [
       '现在，状态、动作、转移、奖励、策略、轨迹和任务边界都有了明确含义。要把状态、动作、转移与奖励收拢成可复用的 MDP，还差一个条件：环境的一步响应必须能由当前状态和动作描述；策略则是在这个模型上选择动作的规则。否则，同一个状态—动作条件下的转移分布和奖励分布仍会随未记录的历史改变，前面建立的一步接口就不完整。',
       'Markov 性正是对这个条件的检验。动作 Aₜ 已经选定时，若要预测下一状态 Sₜ₊₁ 和奖励 Rₜ₊₁，除了当前状态 Sₜ，还需不需要回看从起点到现在的完整历史？下面用 Hₜ 表示这段历史。',
@@ -164,7 +164,7 @@ const mdpZhPath = [
 
 const mdpEnPath = [
   {
-    id: 'problem-setting', kicker: 'Establish the shared scene', title: 'Observe one complete interaction in the grid world',
+    id: 'problem-setting', kicker: 'Shared setting · Grid world', title: 'The agent chooses; the environment returns state and reward',
     paragraphs: ['Begin with one concrete world: a 5×5 grid. The blue cell is the target, yellow cells are forbidden, and the outside edge is the boundary. Forbidden cells remain accessible but carry a penalty. The map and its rules together form the environment in which the agent operates.', 'The agent—the decision-making entity moving through the grid—may start in any cell. Reaching the target is not enough: boundary collisions, forbidden cells, and needless detours should differ, so the next sections build the objects needed to describe this world.'],
     formulas: [], note: 'This section establishes only the scene. The location, available directions, world response, choice rule, and evaluation signal are named next.',
   },
@@ -179,7 +179,7 @@ const mdpEnPath = [
     formulas: [String.raw`A_t \in \mathcal{A}(S_t)`, String.raw`\mathcal{A}(s_i) = \{a_1, a_2, a_3, a_4, a_5\}`],
   },
   {
-    id: 'transition-model', kicker: 'Environment interface · State transition', title: 'The environment transition model decides what follows an action',
+    id: 'transition-model', kicker: 'Environment interface · State transition', title: 'The transition model determines the next state produced by an action',
     paragraphs: ['A deterministic world can specify one successor for every state–action pair. For example, right from s₁ reaches s₂, while up from s₁ remains at s₁. Forbidden cells are accessible states in this environment, not walls.', 'Wind or execution noise can create several possible successors. A conditional distribution is then required. Determinism is the special case that puts all probability mass on one successor.'],
     formulas: [String.raw`S_{t+1} \sim p(s' \mid S_t,A_t)`, String.raw`p(s_2 \mid s_1,a_2)=1`], note: 'This p belongs to the environment: it answers what the world does after receiving an action.',
   },
@@ -200,12 +200,12 @@ const mdpEnPath = [
     note: 'Index convention: Aₜ is chosen at time t; the reward and successor it produces are Rₜ₊₁ and Sₜ₊₁.',
   },
   {
-    id: 'task-types', kicker: 'Task boundary · Episodic and continuing', title: 'Terminal states separate episodic and continuing tasks',
+    id: 'task-types', kicker: 'Task boundary · Episodic and continuing', title: 'Termination rules determine whether interaction forms an episode or a continuing task',
     paragraphs: ['The termination rule answers the question left above—where the trajectory ends. It is part of the return definition, not an implementation detail: changing the boundary changes which future rewards belong to the trajectory.', 'If interaction stops at a terminal state, the finite trajectory is an episode. Tasks with no terminal state continue indefinitely.', 'Here the target is an ordinary state: the agent may leave it and earn +1 again upon re-entry. A target is therefore not automatically terminal, and later value functions must account for an unbounded future.'],
     formulas: [String.raw`\text{episodic: }S_0,A_0,R_1,\ldots,S_T`, String.raw`\text{continuing: }S_0,A_0,R_1,S_1,A_1,R_2,\ldots`],
   },
   {
-    id: 'mdp-definition', kicker: 'Formalization · MDP and the Markov property', title: 'A one-step environment model requires state to summarize the relevant history',
+    id: 'mdp-definition', kicker: 'Formalization · MDP and the Markov property', title: 'A Markov state summarizes the relevant history and makes a one-step environment model valid',
     paragraphs: [
       'States, actions, transitions, rewards, policy, trajectories, and the task boundary now have explicit meanings. Collecting states, actions, transitions, and rewards into a reusable MDP requires one more condition: the environment’s one-step response must be describable from the current state and action, while policy remains the rule that chooses an action on that model. Otherwise the transition and reward distributions for one recorded state–action pair still change with unrecorded history, so the one-step interface is incomplete.',
       'The Markov property tests exactly this condition. Once action Aₜ has been selected, does predicting successor Sₜ₊₁ and reward Rₜ₊₁ require the complete history from the start, or is current state Sₜ enough? Let Hₜ denote that complete history.',
@@ -224,14 +224,14 @@ const mdpEnPath = [
 
 const mdpDeepeningZh = [
   {
-    id: 'state-sufficiency-counterexample', kicker: '边界案例 · 状态充分性', title: '同一个位置不一定是同一个可预测状态',
+    id: 'state-sufficiency-counterexample', kicker: '边界案例 · 状态充分性', title: '仅记录位置可能不足以预测下一步',
     paragraphs: ['设想网格中还存在“风向”，但状态只记录位置。智能体两次都位于 s₈ 并选择向右：顺风时大概率到 s₉，逆风时却可能留在原地。位置相同、动作相同，后继分布仍依赖更早观察到的风向，说明“位置”不是充分状态。', '修复方式不是取消历史，而是把预测所需的历史信息压缩进当前状态，例如把状态改成“位置 × 风向”。一旦扩展后的状态足够，早期历史对下一步不再提供额外预测信息。'],
     formulas: [String.raw`p(S_{t+1}\mid X_t,A_t,H_{t-1})\ne p(S_{t+1}\mid X_t,A_t)`, String.raw`S_t=(X_t,W_t)\quad\Longrightarrow\quad p(S_{t+1}\mid S_t,A_t,H_{t-1})=p(S_{t+1}\mid S_t,A_t)`],
     theorem: { claim: 'Markov 性是对状态表示的信息要求，不是对世界是否记忆历史的要求。', why: '只要当前状态包含一步预测和决策需要的信息，环境完全可以由具有惯性或隐藏机制的物理过程产生。', conditions: [String.raw`S_t\ \text{is sufficient for predicting}\ (R_{t+1},S_{t+1})`] },
     handoff: 'Markov 性保证我们可以用当前状态预测下一步；但路径的长期评价还取决于这条预测链在何处停止。下面回到目标格，比较“进入即终止”和“进入后继续”两种规则。',
   },
   {
-    id: 'termination-counterfactual', kicker: '反事实 · 目标是否终止', title: '同一个目标格，终止规则会改变长期问题',
+    id: 'termination-counterfactual', kicker: '反事实 · 终止规则', title: '终止规则会让同一个目标格对应不同的长期问题',
     paragraphs: ['Markov 性解决“下一步怎样预测”，终止规则解决“这条预测链何时停止”。若进入目标后 episode 结束，目标之后没有奖励，终止状态的后继价值按零处理；若目标只是普通状态，智能体还能离开并再次进入，一次 +1 只是未来奖励序列中的一项。', '因此“目标”描述偏好，“terminal”描述数据边界，两者不能互换。把 continuing 世界误写成 episodic 世界，会系统性低估目标附近能够反复获得的价值。'],
     formulas: [String.raw`G_t^{\mathrm{episodic}}=\sum_{k=0}^{T-t-1}\gamma^kR_{t+k+1}`, String.raw`G_t^{\mathrm{continuing}}=\sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`],
     example: { title: '进入目标后的两种解释', caption: '相同的第一次 +1，在不同任务边界下产生不同未来。', headers: ['规则', '进入目标后', '后继价值'], rows: [['Episodic', '停止', '0'], ['Continuing', '仍可离开与再次进入', '继续计算']] },
@@ -241,14 +241,14 @@ const mdpDeepeningZh = [
 
 const mdpDeepeningEn = [
   {
-    id: 'state-sufficiency-counterexample', kicker: 'Boundary case · State sufficiency', title: 'The same location need not be the same predictive state',
+    id: 'state-sufficiency-counterexample', kicker: 'Boundary case · State sufficiency', title: 'Location alone may be insufficient for next-step prediction',
     paragraphs: ['Suppose the grid also has wind direction, but state records location only. Two visits to s₈ followed by “right” can have different successor distributions under tailwind and headwind. The same recorded location and action still depend on earlier wind information, so location alone is not sufficient.', 'The repair is not to erase history but to compress the relevant part into the current state—for example, location × wind. Once the augmented state is sufficient, older history adds no one-step predictive information.'],
     formulas: [String.raw`p(S_{t+1}\mid X_t,A_t,H_{t-1})\ne p(S_{t+1}\mid X_t,A_t)`, String.raw`S_t=(X_t,W_t)\quad\Longrightarrow\quad p(S_{t+1}\mid S_t,A_t,H_{t-1})=p(S_{t+1}\mid S_t,A_t)`],
     theorem: { claim: 'The Markov property constrains the information in the state representation, not whether the physical world has a history.', why: 'A process may have inertia or hidden mechanisms; the current state must summarize what one-step prediction and control require.', conditions: [String.raw`S_t\ \text{is sufficient for predicting}\ (R_{t+1},S_{t+1})`] },
     handoff: 'The Markov property lets the current state predict the next step, but long-term evaluation also depends on where that prediction chain stops. The next comparison returns to the target cell and contrasts “terminate on entry” with “continue after entry.”',
   },
   {
-    id: 'termination-counterfactual', kicker: 'Counterfactual · Does the target terminate?', title: 'One target cell creates different long-term problems under different boundaries',
+    id: 'termination-counterfactual', kicker: 'Counterfactual · Termination rule', title: 'The termination rule makes the same target cell define different long-term problems',
     paragraphs: ['The Markov property answers how to predict the next step; the termination rule answers when that prediction chain stops. If entering the target ends an episode, there are no later rewards and terminal successor value is zero. If the target is an ordinary state, the agent may leave and re-enter; the first +1 is only one term in an ongoing reward sequence.', 'Target describes preference, while terminal describes a data boundary. Treating a continuing world as episodic systematically removes future opportunities near the target.'],
     formulas: [String.raw`G_t^{\mathrm{episodic}}=\sum_{k=0}^{T-t-1}\gamma^kR_{t+k+1}`, String.raw`G_t^{\mathrm{continuing}}=\sum_{k=0}^{\infty}\gamma^kR_{t+k+1}`],
     example: { title: 'Two meanings after entering the target', caption: 'The same first +1 leads to different futures.', headers: ['Rule', 'After target entry', 'Successor value'], rows: [['Episodic', 'Stop', '0'], ['Continuing', 'May leave and re-enter', 'Continue evaluating']] },
@@ -261,9 +261,9 @@ export const mdpChapter = assertFoundationChapterDefinition({
   sources,
   zh: {
     prerequisite: '前置：概率分布与条件概率的基本直觉',
-    summaryTitle: '状态决定怎样预测下一步，任务边界决定怎样评价整条路径',
+    summaryTitle: '状态支持一步预测，任务边界限定长期评价',
     eyebrow: '第 1 章 · 从网格世界到完整决策模型',
-    title: '智能体与环境的交互边界',
+    title: '强化学习的基本要素',
     intro: '强化学习先不从算法开始，而从一个具体问题开始：让智能体——也就是需要做出选择的主体——在一张网格地图中寻找通往目标的好路径。先把这个世界摆清楚，再逐一给其中的对象命名。',
     bridge: '状态、动作、转移、奖励、策略、轨迹与任务边界已经建立；同时我们确认，当前格子足以描述下一步，目标格也不会终止交互。下面把这些对象放进同一张交互画布，检查一次选择怎样产生后继状态与奖励，并继续累积成轨迹。',
     experimentIntro: '状态、动作、转移、奖励、策略、轨迹与任务边界已经建立；同时我们确认，当前格子足以描述下一步，目标格也不会终止交互。下面把这些对象放进同一张交互画布，检查一次选择怎样产生后继状态与奖励，并继续累积成轨迹。',
@@ -281,9 +281,9 @@ export const mdpChapter = assertFoundationChapterDefinition({
   },
   en: {
     prerequisite: 'Prerequisites: basic intuition for distributions and conditional probability',
-    summaryTitle: 'State determines next-step prediction; the task boundary determines path evaluation',
+    summaryTitle: 'State supports one-step prediction; task boundaries delimit long-term evaluation',
     eyebrow: 'Chapter 1 · From a grid world to a complete decision model',
-    title: 'The interaction boundary between agent and environment',
+    title: 'Reinforcement Learning',
     intro: 'Reinforcement learning begins with a concrete problem, not an algorithm: an agent—the entity that must make choices—looks for a good route to a target in a grid. Put that world in view first, then name its parts one by one.',
     bridge: 'State, action, transition, reward, policy, trajectory, and task boundary are now established. We have also confirmed that the current cell is sufficient for the next step and that the target does not terminate interaction. The explorer puts these objects on one canvas so a choice can be followed into its successor and reward, then onward into a trajectory.',
     experimentIntro: 'State, action, transition, reward, policy, trajectory, and task boundary are now established. We have also confirmed that the current cell is sufficient for the next step and that the target does not terminate interaction. The explorer puts these objects on one canvas so a choice can be followed into its successor and reward, then onward into a trajectory.',
