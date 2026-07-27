@@ -16,6 +16,7 @@ test('the learning experience stays stateless and performs no remote compute cal
     read('components/ReturnObservatory.jsx'),
     read('components/OptimalitySwitch.jsx'),
     read('components/PlanningLab.jsx'),
+    read('components/PlanningWalkthrough.jsx'),
     read('components/MonteCarloLab.jsx'),
     read('components/PpoLab.jsx'),
     read('components/SystemLab.jsx'),
@@ -482,7 +483,7 @@ test('article prose, algorithms, and worked tables share the inline-math rendere
   const monteCarlo = read('components/MonteCarloChapter.jsx')
   assert.match(app, /import MathText/)
   assert.match(deepening, /<code><MathText>\{line\}<\/MathText><\/code>/)
-  assert.match(deepening, /<span key=\{`\$\{rowIndex\}-\$\{cellIndex\}-\$\{cell\}`\}><MathText>\{cell\}<\/MathText><\/span>/)
+  assert.match(deepening, /<span key=\{`\$\{rowIndex\}-\$\{cellIndex\}`\}><RichContent value=\{cell\} \/><\/span>/)
   assert.match(monteCarlo, /<code><MathText>\{line\}<\/MathText><\/code>/)
 })
 

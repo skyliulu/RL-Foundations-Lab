@@ -1,5 +1,7 @@
 import MathFormula from './MathFormula.jsx'
 import MathText from './MathText.jsx'
+import PlanningWalkthrough from './PlanningWalkthrough.jsx'
+import RichContent from './RichContent.jsx'
 
 function isLatexCondition(condition) {
   return /[\\_^{}=<>]/.test(condition)
@@ -27,7 +29,8 @@ export default function ChapterDeepening({ sections = [], lang }) {
           {section.formulaAfter && <p className="deepening-formula-after"><MathText>{section.formulaAfter}</MathText></p>}
           {section.theorem && <aside className="deepening-theorem"><span>{zh ? '结论与条件' : 'Claim and conditions'}</span><strong><MathText>{section.theorem.claim}</MathText></strong><p><MathText>{section.theorem.why}</MathText></p>{section.theorem.conditions?.map((condition) => isLatexCondition(condition) ? <MathFormula block latex={condition} key={condition} /> : <p className="deepening-condition" key={condition}><MathText>{condition}</MathText></p>)}</aside>}
           {section.pseudocode?.length > 0 && <div className="deepening-pseudocode"><span><MathText>{section.pseudocodeTitle || (zh ? '完整伪代码' : 'Complete pseudocode')}</MathText></span><ol>{section.pseudocode.map((line, index) => <li key={`${index}-${line}`}><b>{String(index + 1).padStart(2, '0')}</b><code><MathText>{line}</MathText></code></li>)}</ol></div>}
-          {section.example?.rows?.length > 0 && <figure className="deepening-example"><figcaption><span>{zh ? '贯穿例子' : 'Worked example'}</span><strong><MathText>{section.example.title}</MathText></strong><p><MathText>{section.example.caption}</MathText></p></figcaption><div className="deepening-example-table" style={{ '--example-columns': section.example.headers.length }}>{section.example.headers.map((header) => <b key={header}><MathText>{header}</MathText></b>)}{section.example.rows.flatMap((row, rowIndex) => row.map((cell, cellIndex) => <span key={`${rowIndex}-${cellIndex}-${cell}`}><MathText>{cell}</MathText></span>))}</div></figure>}
+          {section.walkthrough && <PlanningWalkthrough config={section.walkthrough} lang={lang} />}
+          {section.example?.rows?.length > 0 && !section.walkthrough && <figure className="deepening-example"><figcaption><span>{zh ? '贯穿例子' : 'Worked example'}</span><strong><MathText>{section.example.title}</MathText></strong><p><MathText>{section.example.caption}</MathText></p></figcaption><div className="deepening-example-scroll"><div className="deepening-example-table" style={{ '--example-columns': section.example.headers.length }}>{section.example.headers.map((header, headerIndex) => <b key={`${headerIndex}-${typeof header === 'string' ? header : header?.latex || 'header'}`}><RichContent value={header} /></b>)}{section.example.rows.flatMap((row, rowIndex) => row.map((cell, cellIndex) => <span key={`${rowIndex}-${cellIndex}`}><RichContent value={cell} /></span>))}</div></div></figure>}
           {section.handoff && <p className="deepening-handoff"><MathText className="deepening-handoff-copy">{section.handoff}</MathText></p>}
         </article>
       ))}

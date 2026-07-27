@@ -65,10 +65,48 @@ const orders = {
   ],
   planning: [
     ref('prelude', 'value-iteration', 'section', { formulas: false }),
-    ref('prelude', 'policy-iteration', 'turn', { formulas: false }),
-    derivation(),
+    derivation({
+      id: 'value-iteration-derivation',
+      stepIndices: [0, 1],
+      level: 'embedded',
+      title: {
+        zh: '整表更新反复作用后逼近唯一不动点',
+        en: 'Repeated full-table updates approach one fixed point',
+      },
+      intro: {
+        zh: ['现在每个符号都有了具体对象：', { latex: 'V_k' }, ' 是一张整表，', { latex: 'T^*' }, ' 是一次同步 sweep。接下来需要说明为什么把新表不断送回同一个算子不会来回振荡，以及应该在什么条件下停止。'],
+        en: ['Every symbol now has a concrete object: ', { latex: 'V_k' }, ' is one full table and ', { latex: 'T^*' }, ' is one synchronous sweep. The remaining task is to justify why feeding each new table back into the operator does not oscillate and when the process may stop.'],
+      },
+    }),
     ref('deepening', 'vi-complete-loop', 'topic'),
+    ref('prelude', 'policy-iteration', 'section', { formulas: false }),
+    derivation({
+      id: 'policy-iteration-derivation',
+      stepIndices: [2, 3],
+      level: 'embedded',
+      title: {
+        zh: '准确策略评价与贪心改善组成 Policy Iteration',
+        en: 'Exact policy evaluation and greedy improvement form Policy Iteration',
+      },
+      intro: {
+        zh: '减少外层贪心比较的代价，是先求固定策略自己的 Bellman 不动点。只有这个准确 value 就位后，策略改善定理才能直接保证新策略不差于旧策略。',
+        en: 'Reducing outer greedy comparisons requires first solving the fixed policy’s own Bellman fixed point. Once that exact value is available, the policy-improvement theorem guarantees that the new policy is no worse.',
+      },
+    }),
     ref('deepening', 'pi-four-whys', 'topic'),
+    derivation({
+      id: 'truncated-policy-iteration-derivation',
+      stepIndices: [4],
+      level: 'embedded',
+      title: {
+        zh: '截断内层评价得到可调节的中间算法',
+        en: 'Truncating inner evaluation yields an adjustable middle algorithm',
+      },
+      intro: {
+        zh: '准确评价可能在即将被替换的策略上花费过多 backups。保留上一轮 value 作为 warm start，并把内层评价限制为固定次数，就能显式控制传播深度。',
+        en: 'Exact evaluation can spend too many backups on a policy that will soon be replaced. Reusing the previous value as a warm start and limiting inner evaluation to a fixed number of sweeps makes propagation depth explicit.',
+      },
+    }),
     ref('deepening', 'tpi-continuum', 'topic'),
     ref('sections', 'fair-budget'),
     experiment(),

@@ -69,6 +69,8 @@ test('interactive components route formula-like labels through MathFormula', () 
     'BellmanLab.jsx',
     'CourseWorldExplorer.jsx',
     'MonteCarloLab.jsx',
+    'PlanningLab.jsx',
+    'PlanningWalkthrough.jsx',
     'PpoLab.jsx',
     'ReturnObservatory.jsx',
     'SystemLab.jsx',
