@@ -189,6 +189,7 @@ Rate each chapter separately for conceptual sequence, causal continuity, mathema
 - Classify each source item as main-path required, optional deepening, or intentionally out of scope. Required items must map to a visible article block, derivation, algorithm block, worked example, or experiment; they may not disappear into a summary sentence.
 - Preserve algorithm families and their evolution. Do not collapse MC Basic, data-efficient MC, Exploring Starts, soft-policy control, and epsilon-greedy control into one generic "Monte Carlo" paragraph; apply the same rule to every chapter.
 - Preserve the source's useful repetition when it changes the reader's understanding: a definition, a step-by-step execution, a failure case, and a theorem are different teaching functions even when they reuse one equation.
+- Do not duplicate an exact numerical walkthrough with a static ledger unless the ledger performs a different teaching function. One complete visible destination satisfies coverage; remove evidence that only repeats the same states, values, and conclusions in another container.
 - Treat a chapter as incomplete when its formulas are present but its algorithm variants, pseudocode, assumptions, convergence meaning, or worked examples are missing.
 
 ## Know-Why Contract
@@ -205,6 +206,13 @@ Rate each chapter separately for conceptual sequence, causal continuity, mathema
 - Walk at least one source-aligned example through the algorithm state. Show the exact episode or transition, derived target or return, value before and after, policy before and after, and why the next algorithmic decision changes.
 - Use a dedicated experiment model when chapters manipulate different mathematical objects. A generic curve with renamed labels is not an acceptable substitute for an episode tape, value table, policy map, replay buffer, target network, or actor-critic update loop.
 - Let interactions expose the algorithm's internal evidence and counterfactuals: what would change under another variant, target, step size, exploration rule, or update schedule.
+
+## Iterative Algorithm Playback Contract
+
+- Do not stop an iterative walkthrough after decomposing one update. Expose at least one complete loop boundary and enough of the following loop to show how the previous output becomes the next input.
+- Make every state-role change observable. Show the commit or handoff when a new value table, policy, target network, replay sample, or parameter snapshot becomes the source for the next iteration.
+- Distinguish outer iterations from inner operations such as state backups, evaluation sweeps, minibatches, or gradient steps. Let the reader identify both indices and the condition that advances each one.
+- For alternating algorithms, cross at least one phase boundary such as evaluation to improvement to evaluation under the improved policy. Expose the stable or terminating case whenever it carries teaching meaning.
 
 ## Mathematical Content
 
@@ -304,6 +312,8 @@ Use this shape for derivation data:
 - Traverse all chapter interactions in both languages at narrow mobile, tablet, and desktop widths. Reject any experiment root whose `scrollWidth` exceeds its `clientWidth`, unless the excess belongs to an explicit inner scroll surface whose children remain internally legible.
 - Inspect nested `MathText` and KaTeX markup against component CSS. A rule intended for a structural badge, row, or label must not match the renderer's internal spans.
 - Capture each complete interaction, not only its header or one convenient state, and inspect dense formulas, tables, action lists, and scroll surfaces at their actual rendered size.
+- Exercise every applicable semantic boundary state in an algorithm player: before commit, commit, first step after commit, policy before improvement, policy after improvement, and stable or terminal state.
+- Measure formula size and overflow at the densest playback state, not only at the initial, default, or final state.
 - For every interaction, record its named environment, experiment-root height, largest formula-wrapper height, and largest intentionally empty region at desktop and mobile widths. Reject missing environments, decorative empty bands, and summary diagrams that expand merely because the parent column is wide.
 - List the first occurrence of every chapter-specific technical term and confirm that occurrence includes a definition or local explanation.
 - Confirm required teaching content forms a coherent article without relying on generic card grids.

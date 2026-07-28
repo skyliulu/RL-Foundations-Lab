@@ -45,8 +45,7 @@ function argmaxAction(values) {
   ), { action: ACTION_NAMES[0], index: 0 }).action
 }
 
-function actionDistribution(state, q, variant, epsilon) {
-  const row = q[indexOf(state)]
+function actionDistributionFromRow(row, variant, epsilon) {
   const greedy = argmaxAction(row)
   if (variant !== 'epsilon') {
     return ACTION_NAMES.map((action) => ({ action, probability: action === greedy ? 1 : 0 }))
@@ -55,6 +54,22 @@ function actionDistribution(state, q, variant, epsilon) {
     action,
     probability: epsilon / ACTION_NAMES.length + (action === greedy ? 1 - epsilon : 0),
   }))
+}
+
+function buildPolicy(q, variant, epsilon) {
+  return q.map((row) => actionDistributionFromRow(row, variant, epsilon))
+}
+
+function copyDistribution(distribution) {
+  return distribution.map((item) => ({ ...item }))
+}
+
+function changedPolicyStateIndices(before, after) {
+  return before.flatMap((distribution, stateIndex) => (
+    distribution.some((item, actionIndex) => (
+      Math.abs(item.probability - after[stateIndex][actionIndex].probability) > 1e-12
+    )) ? [stateIndex] : []
+  ))
 }
 
 function sampleAction(distribution, random) {
@@ -67,6 +82,12 @@ function sampleAction(distribution, random) {
   return distribution.at(-1).action
 }
 
+function greedyActionFromDistribution(distribution) {
+  return distribution.reduce((best, item) => (
+    item.probability > best.probability ? item : best
+  ), distribution[0]).action
+}
+
 function stateLabel(state) {
   return `s${indexOf(state) + 1}`
 }
@@ -77,7 +98,7 @@ function pairKey(state, action) {
 
 export function runMonteCarloCourse({
   variant = 'epsilon',
-  episodes = 24,
+  episodes = 240,
   epsilon = 0.2,
   visit = 'every',
   seed = 20260719,
@@ -90,15 +111,20 @@ export function runMonteCarloCourse({
   const q = states.map((state) => ACTION_NAMES.map((action) => (
     action === fixedPolicyAction(state) ? 0.05 : 0
   )))
-  const counts = states.map(() => ACTION_NAMES.map(() => 0))
-  const returnsSums = states.map(() => ACTION_NAMES.map(() => 0))
+  const emptyTable = () => states.map(() => ACTION_NAMES.map(() => 0))
+  const counts = emptyTable()
+  const returnsSums = emptyTable()
+  let basicRoundCounts = emptyTable()
+  let basicRoundSums = emptyTable()
+  let policy = buildPolicy(q, variant, epsilon)
+  let policyVersion = 0
   const episodeRecords = []
 
   let attempts = 0
   let truncatedEpisodes = 0
   while (episodeRecords.length < episodes && attempts < episodes * 30) {
     const episodeIndex = episodeRecords.length
-    const enumeratedPair = attempts % (startStates.length * ACTION_NAMES.length)
+    const enumeratedPair = episodeIndex % (startStates.length * ACTION_NAMES.length)
     let state = variant === 'basic'
       ? startStates[Math.floor(enumeratedPair / ACTION_NAMES.length)]
       : variant === 'exploring'
@@ -110,16 +136,41 @@ export function runMonteCarloCourse({
         ? ACTION_NAMES[Math.floor(random() * ACTION_NAMES.length)]
         : null
     const steps = []
+    const policyBefore = policy.map(copyDistribution)
+    const policyVersionBefore = policyVersion
     let terminated = false
 
     for (let time = 0; time < maxEpisodeSteps; time += 1) {
-      const distribution = actionDistribution(state, q, variant, epsilon)
-      const action = forcedAction || sampleAction(distribution, random)
+      const distribution = policyBefore[indexOf(state)]
+      const greedyAction = greedyActionFromDistribution(distribution)
+      const isForcedStart = forcedAction !== null
+      let action = forcedAction
+      let actionSource = isForcedStart ? 'forced-start' : 'greedy'
+      if (!isForcedStart && variant === 'epsilon') {
+        const explored = random() < epsilon
+        action = explored
+          ? ACTION_NAMES[Math.floor(random() * ACTION_NAMES.length)]
+          : greedyAction
+        actionSource = explored ? 'epsilon-explore' : 'greedy'
+      } else if (!isForcedStart) {
+        action = sampleAction(distribution, random)
+      }
+      const actionProbability = distribution.find((item) => item.action === action)?.probability ?? 0
       forcedAction = null
       const outcome = attemptMove(state, action)
       const reward = rewardForTransition(outcome.state, outcome.boundary)
       terminated = isGoal(outcome.state)
-      steps.push({ time, state, action, reward, nextState: outcome.state, terminated })
+      steps.push({
+        time,
+        state,
+        action,
+        reward,
+        nextState: outcome.state,
+        terminated,
+        greedyAction,
+        actionProbability,
+        actionSource,
+      })
       state = outcome.state
       if (terminated) break
     }
@@ -130,6 +181,8 @@ export function runMonteCarloCourse({
       continue
     }
 
+    const startState = steps[0].state
+    const qBeforeEpisode = q.map((row) => [...row])
     let returnValue = 0
     for (let time = steps.length - 1; time >= 0; time -= 1) {
       returnValue = steps[time].reward + gamma * returnValue
@@ -137,11 +190,21 @@ export function runMonteCarloCourse({
     }
 
     const firstVisit = new Set()
+    const occurrenceCounts = new Map()
+    const firstOccurrenceTimes = new Map()
     const updates = []
     for (let time = 0; time < steps.length; time += 1) {
       const step = steps[time]
       const key = pairKey(step.state, step.action)
-      const shouldUse = visit === 'every' || !firstVisit.has(key)
+      const occurrence = (occurrenceCounts.get(key) ?? 0) + 1
+      occurrenceCounts.set(key, occurrence)
+      if (!firstOccurrenceTimes.has(key)) firstOccurrenceTimes.set(key, time)
+      step.visitOccurrence = occurrence
+      step.firstOccurrenceTime = firstOccurrenceTimes.get(key)
+      step.repeatedVisit = occurrence > 1
+      const shouldUse = variant === 'basic'
+        ? time === 0
+        : visit === 'every' || !firstVisit.has(key)
       firstVisit.add(key)
       step.used = shouldUse
       if (!shouldUse) continue
@@ -149,8 +212,14 @@ export function runMonteCarloCourse({
       const actionIndex = ACTION_NAMES.indexOf(step.action)
       const before = q[stateIndex][actionIndex]
       counts[stateIndex][actionIndex] += 1
-      returnsSums[stateIndex][actionIndex] += step.returnValue
-      q[stateIndex][actionIndex] = returnsSums[stateIndex][actionIndex] / counts[stateIndex][actionIndex]
+      if (variant === 'basic') {
+        basicRoundCounts[stateIndex][actionIndex] += 1
+        basicRoundSums[stateIndex][actionIndex] += step.returnValue
+        q[stateIndex][actionIndex] = basicRoundSums[stateIndex][actionIndex] / basicRoundCounts[stateIndex][actionIndex]
+      } else {
+        returnsSums[stateIndex][actionIndex] += step.returnValue
+        q[stateIndex][actionIndex] = returnsSums[stateIndex][actionIndex] / counts[stateIndex][actionIndex]
+      }
       updates.push({
         time,
         state: stateLabel(step.state),
@@ -161,7 +230,49 @@ export function runMonteCarloCourse({
         visits: counts[stateIndex][actionIndex],
       })
     }
-    episodeRecords.push({ index: episodeIndex, steps, updates, terminated: true, truncated: false })
+
+    const completesBasicEvaluation = variant === 'basic' && (episodeIndex + 1) % (startStates.length * ACTION_NAMES.length) === 0
+    const policyCommitted = variant === 'basic' ? completesBasicEvaluation : true
+    if (policyCommitted) {
+      policy = buildPolicy(q, variant, epsilon)
+      policyVersion += 1
+    }
+    const policyAfter = policy.map(copyDistribution)
+    const changedStateIndices = changedPolicyStateIndices(policyBefore, policyAfter)
+    const inspectionStateIndex = changedStateIndices[0] ?? indexOf(startState)
+    const inspectionState = states[inspectionStateIndex]
+    episodeRecords.push({
+      index: episodeIndex,
+      outerIteration: variant === 'basic'
+        ? Math.floor(episodeIndex / (startStates.length * ACTION_NAMES.length))
+        : episodeIndex,
+      evaluationProgress: variant === 'basic'
+        ? (episodeIndex % (startStates.length * ACTION_NAMES.length)) + 1
+        : 1,
+      evaluationTarget: variant === 'basic' ? startStates.length * ACTION_NAMES.length : 1,
+      steps,
+      updates,
+      terminated: true,
+      truncated: false,
+      policyCommitted,
+      policyChanged: changedStateIndices.length > 0,
+      policyVersionBefore,
+      policyVersionAfter: policyVersion,
+      startState,
+      startStateLabel: stateLabel(startState),
+      startPolicyBefore: copyDistribution(policyBefore[indexOf(startState)]),
+      inspectionState,
+      inspectionStateLabel: stateLabel(inspectionState),
+      focusQBefore: [...qBeforeEpisode[inspectionStateIndex]],
+      focusQAfter: [...q[inspectionStateIndex]],
+      policyBefore: copyDistribution(policyBefore[inspectionStateIndex]),
+      policyAfter: copyDistribution(policyAfter[inspectionStateIndex]),
+    })
+
+    if (completesBasicEvaluation) {
+      basicRoundCounts = emptyTable()
+      basicRoundSums = emptyTable()
+    }
   }
 
   if (episodeRecords.length < episodes) {
@@ -173,9 +284,26 @@ export function runMonteCarloCourse({
   )).filter((count) => count > 0).length
   const totalPairs = startStates.length * ACTION_NAMES.length
   const stateCoverage = counts.map((row) => row.reduce((sum, count) => sum + count, 0))
-  const sampleIndices = [...new Set([0, Math.floor((episodes - 1) / 2), episodes - 1])]
+  const stateActionCoverage = counts.map((row) => row.filter((count) => count > 0).length)
+  const firstPolicyChangeIndex = Math.max(0, episodeRecords.findIndex((record) => record.policyChanged))
+  const sampleIndices = variant === 'basic'
+    ? [...new Set([0, Math.min(totalPairs - 1, episodes - 1), Math.min(totalPairs, episodes - 1), episodes - 1])]
+    : [...new Set([0, firstPolicyChangeIndex, Math.min(firstPolicyChangeIndex + 1, episodes - 1), Math.floor((episodes - 1) / 2), episodes - 1])]
   const samples = sampleIndices.map((index) => episodeRecords[index])
-  const focusState = samples.at(-1).steps[0].state
+  episodeRecords.forEach((record, index) => {
+    const next = episodeRecords[index + 1]
+    record.nextEpisode = next
+      ? {
+          index: next.index,
+          outerIteration: next.outerIteration,
+          policyVersion: next.policyVersionBefore,
+          startState: next.startStateLabel,
+          firstAction: next.steps[0].action,
+          policyAtStart: copyDistribution(next.startPolicyBefore),
+        }
+      : null
+  })
+  const focusState = samples.at(-1).inspectionState
 
   return {
     variant,
@@ -194,9 +322,10 @@ export function runMonteCarloCourse({
     visitedPairs,
     totalPairs,
     stateCoverage,
+    stateActionCoverage,
     samples,
     focusState: stateLabel(focusState),
-    policy: actionDistribution(focusState, q, variant, epsilon),
+    policy: copyDistribution(policy[indexOf(focusState)]),
   }
 }
 

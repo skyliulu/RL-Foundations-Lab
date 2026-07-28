@@ -317,7 +317,7 @@ test('Part II and Part III preserve one bilingual derivation and experiment cont
 test('the Monte Carlo chapter preserves the complete source algorithm family and its why-chain', () => {
   for (const locale of ['zh', 'en']) {
     const content = monteCarloChapter[locale]
-    assert.deepEqual(content.reasoningPath.map((item) => item.id), ['planning-limit', 'sample-evidence', 'control-loop'])
+    assert.deepEqual(content.reasoningPath.map((item) => item.id), ['batch-evaluation', 'episode-gpi', 'coverage-feedback'])
     assert.deepEqual(content.algorithms.map((item) => item.id), ['basic', 'exploring', 'epsilon'])
     content.algorithms.forEach((algorithm) => {
       assert.ok(algorithm.premise.length > 8)
@@ -328,6 +328,8 @@ test('the Monte Carlo chapter preserves the complete source algorithm family and
     assert.ok(content.sections.some((item) => item.id === 'coverage'))
     assert.ok(content.sections.some((item) => item.id === 'optimality'))
     assert.ok(content.sections.some((item) => item.id === 'consistency'))
+    assert.match(content.prelude.find((item) => item.id === 'episode-unit').paragraphs.join(' '), /episode|Episode/)
+    assert.match(content.reasoningPath.find((item) => item.id === 'episode-gpi').paragraphs.join(' '), /Generalized Policy Iteration|广义策略迭代/)
   }
   assert.deepEqual(monteCarloChapter.zh.algorithms.map((item) => item.id), monteCarloChapter.en.algorithms.map((item) => item.id))
 })

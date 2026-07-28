@@ -78,11 +78,12 @@ export const sourceCoverageMatrix = Object.freeze({
     ['coursebook-chapter-5', 'llm-infra-section-6'],
     [
       required('mc-estimation', 'derivation', 'Episode return as an unbiased action-value sample', ['value-definition', 'episode-sample', 'sample-average', 'incremental-mean'], ['mc']),
-      required('mc-basic', 'algorithm', 'MC Basic with complete pseudocode', ['basic'], ['mc']),
-      required('exploring-starts', 'variant', 'MC Exploring Starts', ['exploring'], ['mc']),
+      required('mc-basic', 'algorithm', 'MC Basic batch evaluation with complete pseudocode', ['batch-evaluation', 'basic'], ['mc']),
+      required('episode-gpi', 'comparison', 'Batch policy evaluation versus episode-by-episode generalized policy iteration', ['episode-gpi', 'chapter-experiment'], ['mc']),
+      required('exploring-starts', 'variant', 'MC Exploring Starts', ['coverage-feedback', 'exploring'], ['mc']),
       required('epsilon-greedy-mc', 'variant', 'MC epsilon-greedy control', ['policy-improvement', 'epsilon-greedy', 'epsilon'], ['mc']),
       required('visit-coverage', 'comparison', 'First/every visit and state–action coverage', ['visit-protocol', 'coverage'], ['mc']),
-      required('mc-control-example', 'worked-example', 'Episode tape, return update, and policy improvement', ['control-loop', 'coverage'], ['mc']),
+      required('mc-control-example', 'worked-example', 'Episode path, return update, policy commit, and next-episode handoff', ['episode-gpi', 'chapter-experiment'], ['mc']),
     ],
   ),
   approximation: chapter(

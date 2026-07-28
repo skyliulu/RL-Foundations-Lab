@@ -53,6 +53,7 @@ test('the Monte Carlo family lab reuses the course world and exposes coverage, v
   assert.equal(baseline.totalPairs, 120)
   assert.equal(baseline.samples.every((episode) => episode.terminated && episode.steps.at(-1).terminated), true)
   assert.equal(baseline.samples.every((episode) => episode.steps.length <= baseline.maxEpisodeSteps), true)
+  assert.equal(baseline.stateActionCoverage.every((count) => count >= 0 && count <= 5), true)
   assert.ok(Math.abs(baseline.policy.reduce((sum, item) => sum + item.probability, 0) - 1) < 1e-12)
   assert.ok(baseline.policy.every((item) => item.probability > 0))
 
@@ -64,6 +65,57 @@ test('the Monte Carlo family lab reuses the course world and exposes coverage, v
 
   const greedy = runMonteCarloCourse({ variant: 'exploring' })
   assert.equal(greedy.policy.filter((item) => item.probability === 1).length, 1)
+})
+
+test('Monte Carlo playback preserves each algorithm commit boundary and the next-episode handoff', () => {
+  const basic = runMonteCarloCourse({ variant: 'basic', episodes: 240, visit: 'every' })
+  const beforeCommit = basic.samples.find((episode) => episode.index === 0)
+  const commit = basic.samples.find((episode) => episode.index === 119)
+  const afterCommit = basic.samples.find((episode) => episode.index === 120)
+
+  assert.equal(beforeCommit.policyCommitted, false)
+  assert.equal(beforeCommit.updates.length, 1)
+  assert.equal(beforeCommit.steps.filter((step) => step.used).length, 1)
+  assert.equal(commit.policyCommitted, true)
+  assert.equal(commit.evaluationProgress, commit.evaluationTarget)
+  assert.equal(commit.nextEpisode.index, afterCommit.index)
+  assert.equal(commit.nextEpisode.policyVersion, commit.policyVersionAfter)
+  assert.equal(afterCommit.policyVersionBefore, commit.policyVersionAfter)
+  assert.equal(afterCommit.outerIteration, commit.outerIteration + 1)
+  assert.equal(basic.visitedPairs, basic.totalPairs)
+
+  const exploring = runMonteCarloCourse({ variant: 'exploring', episodes: 120, visit: 'every' })
+  assert.ok(exploring.samples.some((episode) => episode.updates.length > 1))
+  assert.equal(exploring.samples.every((episode) => episode.policyCommitted), true)
+
+  const epsilon = runMonteCarloCourse({ variant: 'epsilon', episodes: 120, visit: 'first' })
+  assert.equal(epsilon.samples.every((episode) => episode.policyCommitted), true)
+  assert.ok(epsilon.samples.some((episode) => episode.nextEpisode?.policyVersion === episode.policyVersionAfter))
+})
+
+test('Monte Carlo visit protocols expose a controlled counterfactual on one repeated episode', () => {
+  const shared = {
+    variant: 'epsilon',
+    episodes: 120,
+    epsilon: 0.2,
+    seed: 20260076,
+  }
+  const first = runMonteCarloCourse({ ...shared, visit: 'first' }).samples[0]
+  const every = runMonteCarloCourse({ ...shared, visit: 'every' }).samples[0]
+  const trajectory = (episode) => episode.steps.map((step) => ({
+    state: step.state,
+    action: step.action,
+    reward: step.reward,
+    returnValue: step.returnValue,
+  }))
+
+  assert.deepEqual(trajectory(first), trajectory(every))
+  assert.ok(every.steps.some((step) => step.repeatedVisit))
+  assert.ok(every.steps.some((step) => step.actionSource === 'epsilon-explore'))
+  assert.equal(every.steps.every((step) => step.visitOccurrence >= 1), true)
+  assert.ok(every.updates.length > first.updates.length)
+  assert.equal(first.updates.length, first.steps.filter((step) => step.visitOccurrence === 1).length)
+  assert.equal(every.updates.length, every.steps.length)
 })
 
 test('Sarsa and Q-learning targets are a controlled counterfactual over one Q snapshot', () => {

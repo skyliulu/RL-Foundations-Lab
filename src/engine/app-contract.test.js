@@ -117,13 +117,46 @@ test('desktop reading width and long equations avoid unnecessary inner scrollbar
   const monteCarlo = read('components/MonteCarloLab.jsx')
   assert.match(styles, /\.clickable-derivation > header\s*\{[^}]*max-width:\s*none/)
   assert.match(styles, /\.learning-lab-stage\s*\{[^}]*minmax\(410px,\.82fr\)/)
-  assert.match(styles, /\.mc-stage\s*\{[^}]*minmax\(250px,\.85fr\)/)
+  assert.match(styles, /\.mc-playback-stage\s*\{[^}]*minmax\(240px,\.95fr\)/)
   assert.doesNotMatch(styles, /\.return-formula-live\s*\{[^}]*white-space:\s*nowrap/)
   assert.match(styles, /\.math-formula > \.katex-display\s*\{[^}]*overflow:\s*visible/)
   assert.match(styles, /div\.math-formula\s*\{[^}]*overflow-x:\s*auto/)
   assert.match(returns, /visibleReturnTerms\.length \/ 4/)
   assert.match(returns, /\\begin\{aligned\}G_0&=/)
   assert.match(monteCarlo, /Q\(S_t,A_t\)\\leftarrow Q\(S_t,A_t\)/)
+})
+
+test('the Monte Carlo lab auto-plays rollout, return propagation, Q writes, and policy handoff', () => {
+  const monteCarlo = read('components/MonteCarloLab.jsx')
+  const styles = read('styles.css')
+
+  assert.match(monteCarlo, /const \[returnRevealCount, setReturnRevealCount\] = useState\(0\)/)
+  assert.match(monteCarlo, /const \[updateRevealCount, setUpdateRevealCount\] = useState\(0\)/)
+  assert.match(monteCarlo, /const \[isPlaying, setIsPlaying\] = useState\(false\)/)
+  assert.match(monteCarlo, /window\.setTimeout/)
+  assert.match(monteCarlo, /sample\.updates\.slice\(0, updateRevealCount\)/)
+  assert.match(monteCarlo, /className="mc-play-button"/)
+  assert.match(monteCarlo, /phase === 'next'[\s\S]*setIsPlaying\(false\)/)
+  assert.match(styles, /\.mc-opening-argument\s*\{\s*margin-bottom:\s*var\(--flow-section-gap\)/)
+  assert.match(styles, /\.mc-playback-progress > i\s*\{[^}]*transition:\s*width/)
+  assert.match(styles, /\.mc-lab\.is-playing \.mc-path-overlay > circle\.is-current\s*\{[^}]*animation:/)
+})
+
+test('the Monte Carlo lab makes algorithm protocols and visit weighting visibly distinct', () => {
+  const monteCarlo = read('components/MonteCarloLab.jsx')
+  const engine = read('engine/learning-labs.js')
+  const styles = read('styles.css')
+
+  assert.match(monteCarlo, /function ProtocolTrack\(/)
+  assert.match(monteCarlo, /function VisitProtocolComparison\(/)
+  assert.match(monteCarlo, /固定同一条回合，不重新采样/)
+  assert.match(monteCarlo, /sample\.steps\.filter\(\(step\) => step\.visitOccurrence === 1\)/)
+  assert.match(monteCarlo, /step\.repeatedVisit && !step\.used/)
+  assert.match(engine, /actionSource = explored \? 'epsilon-explore' : 'greedy'/)
+  assert.match(engine, /step\.visitOccurrence = occurrence/)
+  assert.match(styles, /\.mc-protocol-gates\s*\{[^}]*grid-template-columns:\s*repeat\(3/)
+  assert.match(styles, /\.mc-visit-token-row\s*\{[^}]*overflow-x:\s*auto/)
+  assert.match(styles, /\.mc-tape-body > div\.rejected-repeat/)
 })
 
 test('all chapter explanations use continuous article sections rather than a card grid', () => {
@@ -253,12 +286,14 @@ test('micro-sections are merged into running prose instead of merely demoting th
   assert.doesNotMatch(app, /chapter-prose-lead|chapter-prose-separator/)
   assert.match(mdp, /isMajor \?/)
   assert.doesNotMatch(mdp, /chapter-prose-lead|chapter-prose-separator/)
-  assert.doesNotMatch(monteCarlo, /mc-reasoning-index|mc-reasoning-copy"><h3/)
+  assert.doesNotMatch(monteCarlo, /mc-reasoning-index/)
+  assert.match(monteCarlo, /content\.prelude/)
+  assert.match(monteCarlo, /mc-reasoning-copy/)
   assert.doesNotMatch(monteCarlo, /chapter-prose-lead|chapter-prose-separator/)
   assert.doesNotMatch(articleFlow, /chapter-prose-lead|chapter-prose-separator/)
   assert.match(app, /item\.paragraphs\.join\(lang === 'zh' \? '' : ' '\)/)
   assert.match(mdp, /section\.paragraphs\.join\(lang === 'zh' \? '' : ' '\)/)
-  assert.match(monteCarlo, /section\.paragraphs\.join\(lang === 'zh' \? '' : ' '\)/)
+  assert.match(monteCarlo, /section\.paragraphs\.map\(\(paragraph\)/)
   assert.match(articleFlowBuilder, /descriptor\.mergeParagraphs \?\? descriptor\.type === 'turn'/)
   assert.match(skill, /Demoting a heading from `h2` to `h3`/)
   assert.match(skill, /must not normally open a new visible heading/)
@@ -363,7 +398,7 @@ test('continuous chapter prose has one spacing owner and stable inline leads', a
   const deepeningRule = styles.match(/\.chapter-deepening\s*\{([^}]*)\}/)?.[1] || ''
   const finalDeepeningRule = styles.match(/\.deepening-section:last-child\s*\{([^}]*)\}/)?.[1] || ''
   const proseSequenceRule = styles.match(/\.chapter-prose-sequence\s*\{([^}]*)\}/)?.[1] || ''
-  const proseWrapRule = styles.match(/\.chapter-prose-opening \.math-text,[\s\S]*?\.mc-reasoning-opening \.math-text\s*\{([^}]*)\}/)?.[1] || ''
+  const proseWrapRule = styles.match(/\.mc-opening-argument > article > p,[\s\S]*?\.mc-reasoning-copy > p\s*\{([^}]*)\}/)?.[1] || ''
   const articleBlockRule = styles.match(/\.article-flow-block\s*\{([^}]*)\}/)?.[1] || ''
   const articleDerivationRule = styles.match(/\.article-flow > \.clickable-derivation\s*\{([^}]*)\}/)?.[1] || ''
 
@@ -722,8 +757,8 @@ test('later experiments name their environment and keep summary evidence spatial
   assert.match(ppo, /className="experiment-environment"/)
   assert.match(monteCarlo, /共享的 5×5 网格世界/)
   assert.match(styles, /\.experiment-environment\s*\{[^}]*grid-template-columns:/)
-  assert.match(styles, /\.mc-coverage-grid\s*\{[^}]*max-width:\s*300px/)
-  assert.match(styles, /\.mc-coverage-panel\s*\{[^}]*grid-template-columns:\s*minmax\(240px,300px\)/)
+  assert.match(styles, /\.mc-world-visual\s*\{[^}]*width:\s*min\(100%,\s*300px\)/)
+  assert.match(styles, /\.mc-playback-stage\s*\{[^}]*grid-template-columns:/)
   assert.match(monteCarlo, /\\frac\{G_t-Q\(S_t,A_t\)\}\{N\(S_t,A_t\)\}/)
   assert.match(read('components/TokenMdpLab.jsx'), /className="experiment-environment"/)
   assert.match(read('components/SystemLab.jsx'), /className="experiment-environment"/)
