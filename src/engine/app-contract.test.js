@@ -156,6 +156,8 @@ test('the Monte Carlo lab makes algorithm protocols and visit weighting visibly 
   assert.match(engine, /step\.visitOccurrence = occurrence/)
   assert.match(styles, /\.mc-protocol-gates\s*\{[^}]*grid-template-columns:\s*repeat\(3/)
   assert.match(styles, /\.mc-visit-token-row\s*\{[^}]*overflow-x:\s*auto/)
+  assert.match(styles, /\.mc-tape-scroll\s*\{[^}]*overflow-x:\s*auto/)
+  assert.match(styles, /\.mc-tape-body\s*\{[^}]*min-width:\s*425px[^}]*overflow-x:\s*hidden/)
   assert.match(styles, /\.mc-tape-body > div\.rejected-repeat/)
 })
 

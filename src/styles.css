@@ -3062,7 +3062,9 @@ input[type="range"] { display: block; width: 100%; max-width: 100%; margin: 6px 
 }
 
 .mc-tape-body {
+  min-width: 425px;
   max-height: 345px;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
