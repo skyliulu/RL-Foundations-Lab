@@ -44,6 +44,47 @@ test('stochastic approximation comparison exposes a shared evidence stream and e
   assert.ok(Math.abs(result.constant.series[late] - result.targets[late]) < Math.abs(result.decaying.series[late] - result.targets[late]))
 })
 
+test('stochastic approximation batch comparisons distinguish fixed evidence from fixed updates', () => {
+  const one = runStochasticApproximationComparison({ batchSize: 1, budgetMode: 'samples', sampleBudget: 180 })
+  const five = runStochasticApproximationComparison({ batchSize: 5, budgetMode: 'samples', sampleBudget: 180 })
+  const twenty = runStochasticApproximationComparison({ batchSize: 20, budgetMode: 'samples', sampleBudget: 180 })
+  const fixedUpdates = runStochasticApproximationComparison({ batchSize: 20, budgetMode: 'updates', steps: 36 })
+
+  assert.deepEqual(one.rawPerturbations, five.rawPerturbations)
+  assert.deepEqual(five.rawPerturbations, twenty.rawPerturbations)
+  assert.equal(one.updateCount, 180)
+  assert.equal(five.updateCount, 36)
+  assert.equal(twenty.updateCount, 9)
+  assert.equal(one.sampleCost, 180)
+  assert.equal(twenty.sampleCost, 180)
+  assert.equal(fixedUpdates.updateCount, 36)
+  assert.equal(fixedUpdates.sampleCost, 720)
+  assert.ok(Math.abs(
+    five.observations[0] - (3 + five.rawPerturbations.slice(0, 5).reduce((sum, value) => sum + value, 0) / 5),
+  ) < 1e-12)
+  assert.equal(five.ensemble.size, 12)
+  assert.equal(five.ensemble.decaying.lower.length, five.updateCount)
+  assert.equal(five.ensemble.constant.upper.length, five.updateCount)
+})
+
+test('the linear-root preset exposes repeated state handoff without a static table', () => {
+  const result = runStochasticApproximationComparison({
+    alpha: 0.5,
+    noise: 0,
+    batchSize: 1,
+    sampleBudget: 8,
+    stationaryTarget: 10,
+    initial: 20,
+  })
+
+  assert.deepEqual(result.observations, Array(8).fill(10))
+  assert.deepEqual(result.constant.series.slice(0, 3), [15, 12.5, 11.25])
+  assert.equal(result.constant.ledger[0].before, 20)
+  assert.equal(result.constant.ledger[0].after, result.constant.ledger[1].before)
+  assert.equal(result.stationaryTarget, 10)
+  assert.equal(result.initial, 20)
+})
+
 test('the Monte Carlo family lab reuses the course world and exposes coverage, visit weighting, and policy softness', () => {
   const baseline = runMonteCarloCourse()
   assert.deepEqual(baseline, runMonteCarloCourse())

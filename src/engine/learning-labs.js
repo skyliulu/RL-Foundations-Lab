@@ -386,37 +386,147 @@ function runSchedule(observations, targets, stepAt, initial = -1) {
   return { estimate, series, ledger, weights: historicalWeights(stepSizes) }
 }
 
+function stochasticPerturbations({ seed, noise, totalSamples }) {
+  const random = lcg(seed)
+  return Array.from({ length: totalSamples }, () => (random() + random() - 1) * noise * 2)
+}
+
+function aggregateStochasticEvidence({
+  perturbations,
+  batchSize,
+  budgetMode,
+  updateBudget,
+  sampleBudget,
+  drifting,
+  stationaryTarget,
+  driftTarget,
+}) {
+  const updateCount = budgetMode === 'samples'
+    ? Math.max(1, Math.floor(sampleBudget / batchSize))
+    : updateBudget
+  const usableSamples = updateCount * batchSize
+  const sampleDriftAt = Math.floor(usableSamples / 2)
+  const updateDriftAt = Math.floor(updateCount / 2)
+  const targets = []
+  const observations = []
+  const xValues = []
+
+  for (let update = 0; update < updateCount; update += 1) {
+    let targetTotal = 0
+    let observationTotal = 0
+    for (let withinBatch = 0; withinBatch < batchSize; withinBatch += 1) {
+      const sampleIndex = update * batchSize + withinBatch
+      const afterDrift = budgetMode === 'samples'
+        ? sampleIndex >= sampleDriftAt
+        : update >= updateDriftAt
+      const target = drifting && afterDrift ? driftTarget : stationaryTarget
+      targetTotal += target
+      observationTotal += target + perturbations[sampleIndex]
+    }
+    targets.push(targetTotal / batchSize)
+    observations.push(observationTotal / batchSize)
+    xValues.push((update + 1) * batchSize)
+  }
+
+  return {
+    targets,
+    observations,
+    xValues,
+    updateCount,
+    sampleCost: usableSamples,
+    driftAt: targets.findIndex((target) => Math.abs(target - stationaryTarget) > 1e-9),
+  }
+}
+
+function quantile(values, probability) {
+  const sorted = [...values].sort((left, right) => left - right)
+  const position = (sorted.length - 1) * probability
+  const lower = Math.floor(position)
+  const upper = Math.ceil(position)
+  if (lower === upper) return sorted[lower]
+  const weight = position - lower
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight
+}
+
+function summarizeScheduleBand(runs, schedule) {
+  const length = runs[0][schedule].series.length
+  const columns = Array.from({ length }, (_, index) => runs.map((run) => run[schedule].series[index]))
+  return {
+    lower: columns.map((values) => quantile(values, 0.1)),
+    mean: columns.map((values) => quantile(values, 0.5)),
+    upper: columns.map((values) => quantile(values, 0.9)),
+  }
+}
+
 export function runStochasticApproximationComparison({
   alpha = 0.18,
   noise = 1.4,
-  batchSize = 1,
+  batchSize = 5,
   drifting = false,
   steps = 36,
+  sampleBudget = 180,
+  budgetMode = 'samples',
+  ensembleSize = 12,
   seed = 20260719,
+  stationaryTarget = 3,
+  driftTarget = 5,
+  initial = -1,
 } = {}) {
-  const random = lcg(seed)
-  const driftAt = Math.floor(steps / 2)
-  const targets = Array.from({ length: steps }, (_, index) => (drifting && index >= driftAt ? 5 : 3))
-  const observations = targets.map((target) => {
-    let perturbation = 0
-    for (let sample = 0; sample < batchSize; sample += 1) {
-      perturbation += (random() + random() - 1) * noise * 2
+  const boundedBatchSize = Math.max(1, Math.floor(batchSize))
+  const boundedUpdateBudget = Math.max(2, Math.floor(steps))
+  const boundedSampleBudget = Math.max(boundedBatchSize, Math.floor(sampleBudget / boundedBatchSize) * boundedBatchSize)
+  const normalizedBudgetMode = budgetMode === 'updates' ? 'updates' : 'samples'
+  const totalSamples = normalizedBudgetMode === 'samples'
+    ? boundedSampleBudget
+    : boundedUpdateBudget * boundedBatchSize
+  const seeds = Array.from({ length: Math.max(1, Math.floor(ensembleSize)) }, (_, index) => seed + index * 7919)
+  const runs = seeds.map((runSeed) => {
+    const rawPerturbations = stochasticPerturbations({ seed: runSeed, noise, totalSamples })
+    const evidence = aggregateStochasticEvidence({
+      perturbations: rawPerturbations,
+      batchSize: boundedBatchSize,
+      budgetMode: normalizedBudgetMode,
+      updateBudget: boundedUpdateBudget,
+      sampleBudget: boundedSampleBudget,
+      drifting,
+      stationaryTarget,
+      driftTarget,
+    })
+    return {
+      ...evidence,
+      rawPerturbations,
+      decaying: runSchedule(evidence.observations, evidence.targets, (index) => 1 / (index + 1), initial),
+      constant: runSchedule(evidence.observations, evidence.targets, () => alpha, initial),
     }
-    return target + perturbation / batchSize
   })
-  const decaying = runSchedule(observations, targets, (index) => 1 / (index + 1))
-  const constant = runSchedule(observations, targets, () => alpha)
+  const selectedRun = runs[0]
   return {
     alpha,
     noise,
-    batchSize,
+    batchSize: boundedBatchSize,
     drifting,
-    driftAt,
-    targets,
-    observations,
-    decaying,
-    constant,
-    sampleCost: steps * batchSize,
+    budgetMode: normalizedBudgetMode,
+    updateBudget: boundedUpdateBudget,
+    sampleBudget: boundedSampleBudget,
+    stationaryTarget,
+    driftTarget,
+    initial,
+    seed,
+    seeds,
+    driftAt: selectedRun.driftAt,
+    targets: selectedRun.targets,
+    observations: selectedRun.observations,
+    xValues: selectedRun.xValues,
+    rawPerturbations: selectedRun.rawPerturbations,
+    decaying: selectedRun.decaying,
+    constant: selectedRun.constant,
+    sampleCost: selectedRun.sampleCost,
+    updateCount: selectedRun.updateCount,
+    ensemble: {
+      size: runs.length,
+      decaying: summarizeScheduleBand(runs, 'decaying'),
+      constant: summarizeScheduleBand(runs, 'constant'),
+    },
   }
 }
 

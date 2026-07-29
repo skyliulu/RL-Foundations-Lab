@@ -168,7 +168,9 @@ for (const lang of ['zh', 'en']) {
   copy[lang].bellman.summaryTitle = lang === 'zh'
     ? 'Bellman 方程把策略评价转化为方程求解'
     : 'The Bellman equation turns policy evaluation into equation solving'
-  copy[lang].approximation.summaryTitle = lang === 'zh' ? '步长决定学习器怎样吸收历史证据' : 'Step size determines how a learner absorbs historical evidence'
+  copy[lang].approximation.summaryTitle = lang === 'zh'
+    ? '从样本均值到随机逼近与随机梯度'
+    : 'From sample means to stochastic approximation and stochastic gradients'
   for (const id of articleFlowChapterIds) {
     const labels = derivationLabels[lang][id]
     if (labels) {
