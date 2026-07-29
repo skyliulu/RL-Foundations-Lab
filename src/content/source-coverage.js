@@ -102,9 +102,11 @@ export const sourceCoverageMatrix = Object.freeze({
     [
       required('td-sample-target', 'derivation', 'One transition as a Bellman sample target', ['timing', 'bellman-sample-logic', 'bellman-root', 'sample-target'], ['td']),
       required('td-zero', 'algorithm', 'Complete TD(0) update loop', ['td-error', 'td-update', 'td-zero-complete'], ['td']),
-      required('mc-td', 'comparison', 'MC and TD evidence, availability, bias, and variance', ['mc-td-matched-comparison', 'bias-variance'], ['td']),
+      required('td-target-contraction', 'derivation', 'One TD commit moves the estimate toward its current target', ['target-contraction'], ['td']),
+      required('td-error-innovation', 'derivation', 'Conditional mean TD error is zero at the policy value', ['expected-error'], ['td']),
+      required('mc-td', 'comparison', 'MC and TD evidence, availability, bias, and variance', ['mc-td-matched-comparison'], ['td']),
       required('n-step-return', 'variant', 'n-step TD return', ['n-step'], ['td']),
-      required('online-grid', 'experiment', 'Online value propagation in the shared grid', ['chapter-experiment', 'online'], ['td']),
+      required('online-grid', 'experiment', 'Synchronized online value propagation in the shared course grid', ['chapter-experiment', 'online'], ['td']),
     ],
   ),
   control: chapter(

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import MathFormula from './MathFormula'
 import MathText from './MathText'
 import { learningLabRunners } from '../engine/learning-labs.js'
@@ -6,7 +6,7 @@ import { learningLabRunners } from '../engine/learning-labs.js'
 const defaults = {
   montecarlo: { episodes: 24, epsilon: 0.2, seed: 20260719, visit: 'first' },
   approximation: { alpha: 0.18, decay: true, noise: 1.4, steps: 48, seed: 20260719 },
-  td: { gamma: 0.9, n: 3, value: 2.4, nextValue: 3.1 },
+  td: { gamma: 0.9, alpha: 0.4, n: 2 },
   control: { epsilon: 0.12, alpha: 0.3, seed: 20260719 },
   vfa: { width: 1.2, alpha: 0.24, target: 5 },
   dqn: { replay: 0.7, targetPeriod: 8, steps: 40 },
@@ -16,8 +16,8 @@ const defaults = {
 
 const scenarioCopy = {
   td: {
-    zh: ['共享网格世界轨迹', String.raw`s_1\rightarrow s_2\rightarrow s_2\rightarrow s_7`, '三种 target 读取同一段状态与奖励，只改变等待长度和自举位置。'],
-    en: ['Shared grid-world trajectory', String.raw`s_1\rightarrow s_2\rightarrow s_2\rightarrow s_7`, 'All three targets read the same states and rewards; only the wait and bootstrap boundary change.'],
+    zh: ['共享 5×5 网格中的三条策略轨迹', String.raw`s_{25},\,s_{15},\,s_{5}\rightsquigarrow s_{18}`, '三个不同起点服从同一固定策略；TD(0)、多步目标与 Monte Carlo 在每条轨迹内部读取完全相同的转移证据。'],
+    en: ['Three policy trajectories in the shared 5×5 grid', String.raw`s_{25},\,s_{15},\,s_{5}\rightsquigarrow s_{18}`, 'Three different starts follow one fixed policy; TD(0), multi-step targets, and Monte Carlo read identical transition evidence within each trajectory.'],
   },
   control: {
     zh: ['悬崖网格环境', String.raw`s_{\mathrm{start}}\rightarrow s_{\mathrm{goal}}`, 'Sarsa 与 Q-learning 在同一悬崖环境训练，差异来自后继动作的选择方式。'],
@@ -55,10 +55,10 @@ const configs = {
     metrics: (r, zh) => [[zh ? '最终估计' : 'Final estimate', r.estimate], [zh ? '真实均值' : 'True mean', r.target], [zh ? '绝对误差' : 'Absolute error', r.error]],
   },
   td: {
-    formula: String.raw`G_t^{(n)}=\sum_{k=0}^{n-1}\gamma^kR_{t+k+1}+\gamma^nV(S_{t+n})`,
-    controls: [['gamma', 0.4, 0.99, 0.01], ['n', 1, 5, 1]],
-    labels: { zh: ['折扣 γ', '步数 n'], en: ['Discount γ', 'Steps n'] },
-    metrics: (r) => [['TD(0)', r.td], ['n-step', r.nStep], ['Monte Carlo', r.mc]],
+    formula: String.raw`V(S_t)\leftarrow V(S_t)+\alpha\left(R_{t+1}+\gamma V(S_{t+1})-V(S_t)\right)`,
+    controls: [['gamma', 0.4, 0.99, 0.01], ['alpha', 0.05, 1, 0.05], ['n', 1, 3, 1]],
+    labels: { zh: ['折扣因子', '更新步长', '真实奖励步数'], en: ['Discount factor', 'Update step size', 'Realized-reward horizon'] },
+    metrics: (r, zh) => [[zh ? '完整更新次数' : 'Committed updates', r.updates.length], [zh ? '不同轨迹数' : 'Distinct trajectories', r.trajectories.length], [zh ? '终点编号' : 'Terminal index', 18]],
   },
   control: {
     formula: String.raw`\text{Sarsa}:Q(S',A')\qquad \text{Q-learning}:\max_a Q(S',a)`,
@@ -99,40 +99,170 @@ function format(value) {
   return Math.abs(value) >= 10 ? value.toFixed(1) : value.toFixed(3)
 }
 
+const tdTrajectoryColors = ['#176f68', '#315f9b', '#a55f24']
+
+function tdTrajectoryPoint(stateId, offset = 0) {
+  const index = stateId - 1
+  return {
+    x: (index % 5) * 20 + 10 + offset,
+    y: Math.floor(index / 5) * 20 + 10 + offset,
+  }
+}
+
+function TdTrajectoryOverlay({ trajectories, activeEpisode, transitionIndex }) {
+  const offsets = [-2.2, 0, 2.2]
+  return (
+    <svg className="td-trajectory-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        {trajectories.map((trajectory, index) => <marker id={`td-trajectory-arrow-${trajectory.id}`} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto" key={trajectory.id}>
+          <path d="M0,0 L5,2.5 L0,5 Z" fill={tdTrajectoryColors[index]} />
+        </marker>)}
+      </defs>
+      {trajectories.map((trajectory, trajectoryIndex) => {
+        const active = trajectory.id === activeEpisode
+        const offset = offsets[trajectoryIndex]
+        const start = tdTrajectoryPoint(trajectory.stateIds[0], offset)
+        return <g className={active ? 'is-active' : ''} style={{ '--td-trajectory-color': tdTrajectoryColors[trajectoryIndex] }} key={trajectory.id}>
+          {trajectory.stateIds.slice(0, -1).map((stateId, segmentIndex) => {
+            const from = tdTrajectoryPoint(stateId, offset)
+            const to = tdTrajectoryPoint(trajectory.stateIds[segmentIndex + 1], offset)
+            const current = active && segmentIndex === transitionIndex
+            const traversed = active && segmentIndex < transitionIndex
+            return <line
+              className={`${traversed ? 'is-traversed' : ''} ${current ? 'is-current' : ''}`}
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
+              markerEnd={current ? `url(#td-trajectory-arrow-${trajectory.id})` : undefined}
+              key={`${trajectory.id}-${segmentIndex}`}
+            />
+          })}
+          <circle cx={start.x} cy={start.y} r={active ? 1.8 : 1.25} />
+        </g>
+      })}
+    </svg>
+  )
+}
+
 function TdEvidenceStage({ params, result, zh }) {
+  const [step, setStep] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const last = result.frames.length - 1
+  const frame = result.frames[Math.min(step, last)]
+  const update = result.updates[frame.updateIndex]
+  const comparison = update.comparison
+  const activeTrajectory = result.trajectories[update.episode - 1]
+  const pathStates = new Set(activeTrajectory.stateIds)
+  const traversedStates = new Set(activeTrajectory.stateIds.slice(0, update.transitionIndex + 2))
+
+  useEffect(() => {
+    setPlaying(false)
+    setStep(0)
+  }, [params.gamma, params.alpha, params.n])
+
+  useEffect(() => {
+    if (!playing) return undefined
+    const timer = window.setInterval(() => {
+      setStep((current) => {
+        if (current >= last) {
+          setPlaying(false)
+          return current
+        }
+        return current + 1
+      })
+    }, 620)
+    return () => window.clearInterval(timer)
+  }, [last, playing])
+
+  const move = (next) => {
+    setPlaying(false)
+    setStep(Math.max(0, Math.min(last, next)))
+  }
+
+  const phaseCopy = frame.phase === 'ready'
+    ? (zh ? '尚未提交：先观察第一条转移' : 'Before commit: observe the first transition')
+    : frame.phase === 'target'
+      ? (zh ? '目标与误差已就绪，价值表尚未写回' : 'Target and error are ready; the value table is not committed')
+      : (zh ? '修正量已写回；下一帧将把新表作为输入' : 'Correction committed; the next frame reads the updated table')
+
   return (
     <div className="td-evidence-stage">
-      <section className="td-trajectory-ledger">
-        <header><span>{zh ? '轨迹与当前价值表' : 'Trajectory and current value table'}</span><small>{zh ? '自举项直接读取高亮表项' : 'The bootstrap term reads the highlighted table entry'}</small></header>
-        <div className="td-value-table">
-          {result.valueTable.map((item) => <article className={`${item.time === result.bootstrap.time ? 'is-bootstrap' : ''} ${item.terminal ? 'is-terminal' : ''}`} key={item.time}>
-            <b><MathFormula latex={String.raw`S_${item.time}=s_{${item.stateId}}`} /></b>
-            <MathFormula latex={String.raw`V(S_${item.time})=${item.estimate.toFixed(2)}`} />
-            <small>{item.time === result.bootstrap.time ? (zh ? `${params.n} 步目标从这里自举` : `${params.n}-step target bootstraps here`) : item.terminal ? (zh ? '终止状态价值为零' : 'terminal value is zero') : (zh ? '当前表项' : 'current table entry')}</small>
-          </article>)}
+      <div className="td-playback-toolbar">
+        <div>
+          <span>{zh ? `轨迹 ${update.episode} · 转移 ${update.transitionIndex + 1}/${update.episodeLength}` : `Trajectory ${update.episode} · transition ${update.transitionIndex + 1}/${update.episodeLength}`}</span>
+          <strong>{phaseCopy}</strong>
         </div>
-        <div className="td-tape">
-          {result.trajectory.slice(0, -1).map((item) => <div className={item.time < params.n ? 'is-observed' : ''} key={item.time}>
-            <b><MathFormula latex={String.raw`S_${item.time}`} /></b>
-            <span><MathFormula latex={String.raw`R_${item.time + 1}=${item.rewardToNext}`} /></span>
-            <small>{item.time < params.n ? (zh ? '奖励已进入目标' : 'reward included') : (zh ? '尚未等待到此步' : 'not yet observed')}</small>
-          </div>)}
+        <div className="td-playback-actions">
+          <button type="button" disabled={step === 0} onClick={() => move(step - 1)}>{zh ? '上一步' : 'Previous'}</button>
+          <button type="button" className="is-primary" aria-pressed={playing} onClick={() => { if (step === last) setStep(0); setPlaying((value) => !value) }}>{playing ? (zh ? '暂停' : 'Pause') : (zh ? '自动播放' : 'Auto play')}</button>
+          <button type="button" disabled={step === last} onClick={() => move(step + 1)}>{zh ? '下一步' : 'Next'}</button>
+          <button type="button" onClick={() => move(0)}>{zh ? '重置播放' : 'Reset playback'}</button>
+        </div>
+        <label><span>{zh ? '播放位置' : 'Playback position'}</span><input aria-label={zh ? '播放位置' : 'Playback position'} type="range" min="0" max={last} step="1" value={step} onChange={(event) => move(Number(event.target.value))} /></label>
+      </div>
+
+      <section className="td-course-grid-panel">
+        <header><span>{zh ? '共享网格与在线价值表' : 'Shared grid and online value table'}</span><small>{zh ? '三条轨迹、当前转移和写回值保持同步' : 'Three trajectories, the active transition, and committed values stay synchronized'}</small></header>
+        <div className="td-course-grid" role="grid" aria-label={zh ? '共享五乘五网格中的 TD 轨迹' : 'TD trajectory in the shared five-by-five grid'}>
+          {result.environment.states.map((state) => {
+            const onPath = pathStates.has(state.stateId)
+            const current = state.stateId === update.stateId
+            const successor = state.stateId === update.nextStateId
+            const traversed = traversedStates.has(state.stateId)
+            return <div role="gridcell" className={`${state.forbidden ? 'is-forbidden' : ''} ${state.goal ? 'is-goal' : ''} ${onPath ? 'is-path' : ''} ${traversed ? 'is-traversed' : ''} ${current ? 'is-current' : ''} ${successor ? 'is-successor' : ''}`} key={state.stateId}>
+              <span className="td-grid-state"><MathFormula latex={String.raw`s_{${state.stateId}}`} /></span>
+              <i className="td-grid-center" aria-hidden="true">{state.goal ? '◎' : ''}</i>
+              <strong className="td-grid-value"><MathFormula latex={String.raw`${frame.values[state.stateId - 1].toFixed(3)}`} /></strong>
+            </div>
+          })}
+          <TdTrajectoryOverlay trajectories={result.trajectories} activeEpisode={update.episode} transitionIndex={update.transitionIndex} />
+        </div>
+        <div className="td-trajectory-key">
+          {result.trajectories.map((trajectory, index) => <span className={trajectory.id === update.episode ? 'is-active' : ''} style={{ '--td-trajectory-color': tdTrajectoryColors[index] }} key={trajectory.id}>
+            <i aria-hidden="true" />
+            <b>{zh ? `轨迹 ${trajectory.id}` : `Trajectory ${trajectory.id}`}</b>
+            <MathFormula latex={String.raw`s_{${trajectory.startStateId}}\rightarrow s_{18}`} />
+            <small>{zh ? `${trajectory.transitions.length} 次转移` : `${trajectory.transitions.length} transitions`}</small>
+          </span>)}
+        </div>
+        <div className="td-grid-legend">
+          <span><i className="td-legend-current" />{zh ? '当前状态' : 'current state'}</span>
+          <span><i className="td-legend-successor" />{zh ? '后继状态' : 'successor'}</span>
+          <span><i className="td-legend-goal" />{zh ? '目标状态，进入时奖励为 1' : 'goal, reward 1 on entry'}</span>
         </div>
       </section>
-      <section className="td-target-ledger">
-        <header><span>{zh ? '三种监督信号' : 'Three target contracts'}</span><small>{zh ? '只改变可用证据范围' : 'Only the evidence horizon changes'}</small></header>
-        <div>
-          <article><span>TD(0)</span><MathFormula block latex={String.raw`R_1+\gamma V(S_1)`} /><strong>{format(result.td)}</strong><p>{zh ? '一步后立即可用，依赖当前后继估计。' : 'Available after one step; depends on the current successor estimate.'}</p></article>
-          <article className="is-focus"><span>{params.n}-step</span><MathFormula block latex={String.raw`\sum_{k=0}^{n-1}\gamma^kR_{k+1}+\gamma^nV(S_n)`} /><strong>{format(result.nStep)}</strong><p>{zh ? `等待 ${params.n} 个奖励，再用价值补全尾部。` : `Waits for ${params.n} rewards, then bootstraps the tail.`}</p></article>
-          <article><span>Monte Carlo</span><MathFormula block latex={String.raw`\sum_{k=0}^{T-1}\gamma^kR_{k+1}`} /><strong>{format(result.mc)}</strong><p>{zh ? '等待终点，不依赖当前价值表。' : 'Waits for termination and does not use the current value table.'}</p></article>
+
+      <section className="td-update-inspector">
+        <header><span>{zh ? '一次 TD(0) 更新的数据流' : 'Data flow of one TD(0) update'}</span><small>{zh ? '黄色为环境证据，蓝色为当前表项' : 'Amber is observed evidence; blue is the current table'}</small></header>
+        <div className="td-transition-strip">
+          <span><MathFormula latex={String.raw`S_t=s_{${update.stateId}}`} /></span><i>→</i>
+          <span><MathFormula latex={String.raw`A_t=\mathrm{${update.action}}`} /></span><i>→</i>
+          <span className="is-evidence"><MathFormula latex={String.raw`R_{t+1}=${update.reward}`} /></span><i>→</i>
+          <span className="is-successor"><MathFormula latex={String.raw`S_{t+1}=s_{${update.nextStateId}}`} /></span>
         </div>
+        <div className="td-update-ledger">
+          <article><span>{zh ? '更新前预测' : 'Prediction before'}</span><MathFormula block latex={String.raw`V(S_t)=${update.before.toFixed(3)}`} /></article>
+          <article><span>{zh ? '学习目标' : 'Learning target'}</span><MathFormula block latex={String.raw`U_t=${update.reward}+${params.gamma.toFixed(2)}\times${update.successorBefore.toFixed(3)}=${update.target.toFixed(3)}`} /></article>
+          <article><span>{zh ? '时间差分误差' : 'TD error'}</span><MathFormula block latex={String.raw`\delta_t=${update.target.toFixed(3)}-${update.before.toFixed(3)}=${update.delta.toFixed(3)}`} /></article>
+          <article><span>{zh ? '本次修正' : 'Correction'}</span><MathFormula block latex={String.raw`\alpha\delta_t=${params.alpha.toFixed(2)}\times${update.delta.toFixed(3)}=${update.correction.toFixed(3)}`} /></article>
+          <article className={frame.phase === 'commit' ? 'is-committed' : ''}><span>{zh ? '写回价值表' : 'Commit to value table'}</span><MathFormula block latex={String.raw`V(s_{${update.stateId}}):${update.before.toFixed(3)}\rightarrow${update.after.toFixed(3)}`} /><small>{frame.phase === 'commit' ? (zh ? '已提交' : 'committed') : (zh ? '等待提交' : 'pending')}</small></article>
+        </div>
+        <p>{zh
+          ? update.episode === 1 && update.transitionIndex < 2
+            ? '终点奖励尚未传播到这里，因此本步修正为零；继续播放即可看到它从后向前逐回合移动。'
+            : `本步写回后，状态 s${update.stateId} 的新价值会保留在表中，并成为后续转移或下一回合的输入。`
+          : update.episode === 1 && update.transitionIndex < 2
+            ? 'The terminal reward has not reached this state yet, so this correction is zero. Continue to watch it propagate backward across episodes.'
+            : `After commit, the new value of state s${update.stateId} remains in the table and becomes input to a later transition or the next episode.`}</p>
       </section>
-      <section className="td-target-breakdown">
-        <header><span>{zh ? `${params.n} 步目标的逐项账本` : `Term-by-term ledger for the ${params.n}-step target`}</span><small>{zh ? '奖励来自轨迹，尾项来自同一张价值表' : 'Rewards come from the trajectory; the tail comes from the displayed table'}</small></header>
+
+      <section className="td-method-clock">
+        <header><span>{zh ? '同一证据下的三种可用时钟' : 'Three availability clocks on the same evidence'}</span><small>{zh ? '只改变等待长度和是否自举' : 'Only wait length and bootstrapping change'}</small></header>
         <div>
-          {result.rewardContributions.map((item) => <article key={item.step}><span>{zh ? `第 ${item.step} 个奖励` : `Reward ${item.step}`}</span><MathFormula latex={String.raw`\gamma^{${item.step - 1}}R_${item.step}=${item.contribution.toFixed(3)}`} /></article>)}
-          <article className="is-bootstrap"><span>{zh ? '自举尾项' : 'Bootstrap tail'}</span><MathFormula latex={String.raw`\gamma^{${params.n}}V(S_${params.n})=${result.bootstrap.contribution.toFixed(3)}`} /><small><MathFormula latex={String.raw`V(S_${params.n})=V(s_{${result.bootstrap.stateId}})=${result.bootstrap.value.toFixed(2)}`} /></small></article>
-          <strong><MathFormula latex={String.raw`G_0^{(${params.n})}=${result.nStep.toFixed(3)}`} /></strong>
+          <article className="is-td"><span>TD(0)</span><strong>{zh ? '1 步后' : 'after 1 step'}</strong><MathFormula latex={String.raw`U_t=${comparison.td.toFixed(3)}`} /><p>{zh ? '一个真实奖励，加当前后继估计。' : 'One realized reward plus the current successor estimate.'}</p></article>
+          <article><span><MathFormula latex={String.raw`${comparison.horizon}\text{-step}`} /></span><strong>{zh ? `${comparison.horizon} 步后` : `after ${comparison.horizon} steps`}</strong><MathFormula latex={String.raw`G_t^{(${comparison.horizon})}=${comparison.nStep.toFixed(3)}`} /><p>{comparison.bootstrap.terminal ? (zh ? '已经到达终点，不再需要自举尾项。' : 'The horizon reaches termination, so no bootstrap tail remains.') : (zh ? `从状态 s${comparison.bootstrap.stateId} 的当前价值补上尾部。` : `The current value at state s${comparison.bootstrap.stateId} supplies the tail.`)}</p></article>
+          <article><span>Monte Carlo</span><strong>{zh ? `${comparison.remaining} 步后` : `after ${comparison.remaining} steps`}</strong><MathFormula latex={String.raw`G_t=${comparison.mc.toFixed(3)}`} /><p>{zh ? '必须等到终点，只使用实际奖励。' : 'Waits for termination and uses realized rewards only.'}</p></article>
         </div>
       </section>
     </div>
@@ -380,10 +510,10 @@ export default function LearningLab({ id, lang, content }) {
         {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} aria-pressed={params.decay === value} onClick={() => set('decay', value)}><MathText>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</MathText></button>)}</div></fieldset>}
       </div>
       <DedicatedLearningStage id={id} params={params} result={result} zh={zh} set={set} />
-      <aside className="learning-compact-summary">
+      {id !== 'td' && <aside className="learning-compact-summary">
         <MathFormula latex={config.formula} />
         <div className="learning-summary-metrics">{metrics.map(([label, value]) => <span key={label}><small><MathText>{label}</MathText></small><strong>{format(value)}</strong></span>)}</div>
-      </aside>
+      </aside>}
       <footer><span>{zh ? '读图提示' : 'Reading cue'}</span><p><MathText>{content.explorer.cue}</MathText></p></footer>
     </section>
   )

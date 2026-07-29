@@ -530,50 +530,169 @@ export function runStochasticApproximationComparison({
   }
 }
 
-export function compareTdTargets({ gamma = 0.9, n = 3, value = 2.4, nextValue = 3.1 } = {}) {
-  const rewards = [0, -1, 0.5, 0, 4]
-  const stateIds = [1, 2, 2, 7, 8, 9]
-  const stateValues = [value, nextValue, nextValue, 3.8, 4.1, 0]
-  const boundedN = Math.max(1, Math.min(rewards.length, n))
-  const trajectory = stateIds.map((stateId, index) => ({
-    time: index,
-    stateId,
-    value: stateValues[index],
-    rewardToNext: rewards[index] ?? null,
-    terminal: index === stateIds.length - 1,
-  }))
-  const mc = rewards.reduce((total, reward, index) => total + gamma ** index * reward, 0)
-  const td = rewards[0] + gamma * stateValues[1]
-  const rewardContributions = rewards.slice(0, boundedN).map((reward, index) => ({
+const TD_EPISODES = [
+  {
+    id: 1,
+    stateIds: [25, 24, 23, 18],
+    actions: ['left', 'left', 'up'],
+  },
+  {
+    id: 2,
+    stateIds: [15, 20, 25, 24, 23, 18],
+    actions: ['down', 'down', 'left', 'left', 'up'],
+  },
+  {
+    id: 3,
+    stateIds: [5, 10, 15, 20, 25, 24, 23, 18],
+    actions: ['down', 'down', 'down', 'down', 'left', 'left', 'up'],
+  },
+]
+
+function tdState(stateId) {
+  const index = stateId - 1
+  return { row: Math.floor(index / 5), col: index % 5 }
+}
+
+function buildTdEpisode(spec) {
+  const states = spec.stateIds.map(tdState)
+  const transitions = spec.actions.map((action, index) => {
+    const from = states[index]
+    const attempted = attemptMove(from, action)
+    const expectedNext = states[index + 1]
+    if (fixedPolicyAction(from) !== action) {
+      throw new Error(`TD episode ${spec.id} departs from the fixed course-grid policy at transition ${index}`)
+    }
+    if (attempted.state.row !== expectedNext.row || attempted.state.col !== expectedNext.col) {
+      throw new Error(`Invalid TD course-grid trajectory in episode ${spec.id} at transition ${index}`)
+    }
+    return {
+      time: index,
+      stateId: spec.stateIds[index],
+      nextStateId: spec.stateIds[index + 1],
+      action,
+      reward: rewardForTransition(attempted.state, attempted.boundary),
+      terminal: isGoal(attempted.state),
+    }
+  })
+  return {
+    id: spec.id,
+    startStateId: spec.stateIds[0],
+    stateIds: [...spec.stateIds],
+    transitions,
+    rewards: transitions.map((transition) => transition.reward),
+  }
+}
+
+function tdComparison(update, n, gamma) {
+  const remainingRewards = update.episodeRewards.slice(update.transitionIndex)
+  const remainingStates = update.episodeStates.slice(update.transitionIndex)
+  const boundedN = Math.max(1, Math.min(remainingRewards.length, n))
+  const td = remainingRewards[0] + gamma * (remainingRewards.length === 1 ? 0 : update.valuesBefore[remainingStates[1] - 1])
+  const rewardContributions = remainingRewards.slice(0, boundedN).map((reward, index) => ({
     step: index + 1,
     reward,
     discount: gamma ** index,
     contribution: gamma ** index * reward,
   }))
   const prefix = rewardContributions.reduce((total, item) => total + item.contribution, 0)
-  const bootstrappedValue = stateValues[boundedN]
-  const bootstrapContribution = gamma ** boundedN * bootstrappedValue
-  const nStep = prefix + bootstrapContribution
+  const reachesTerminal = boundedN >= remainingRewards.length
+  const bootstrapStateId = reachesTerminal ? null : remainingStates[boundedN]
+  const bootstrapValue = bootstrapStateId == null ? 0 : update.valuesBefore[bootstrapStateId - 1]
+  const bootstrapContribution = bootstrapStateId == null ? 0 : gamma ** boundedN * bootstrapValue
+  const mc = remainingRewards.reduce((total, reward, index) => total + gamma ** index * reward, 0)
   return {
-    series: [td, nStep, mc],
     td,
-    nStep,
+    nStep: prefix + bootstrapContribution,
     mc,
-    delta: td - value,
-    value,
-    n: boundedN,
-    gamma,
-    trajectory,
-    valueTable: trajectory.map(({ time, stateId, value: estimate, terminal }) => ({ time, stateId, estimate, terminal })),
+    horizon: boundedN,
+    remaining: remainingRewards.length,
     rewardContributions,
     bootstrap: {
-      time: boundedN,
-      stateId: stateIds[boundedN],
-      value: bootstrappedValue,
-      discount: gamma ** boundedN,
+      stateId: bootstrapStateId,
+      value: bootstrapValue,
       contribution: bootstrapContribution,
-      terminal: boundedN === rewards.length,
+      terminal: reachesTerminal,
     },
+  }
+}
+
+export function compareTdTargets({ gamma = 0.9, n = 2, alpha = 0.4 } = {}) {
+  const boundedGamma = Math.max(0, Math.min(0.99, gamma))
+  const boundedAlpha = Math.max(0.05, Math.min(1, alpha))
+  const trajectories = TD_EPISODES.map(buildTdEpisode)
+  const values = Array.from({ length: 25 }, () => 0)
+  const updates = []
+
+  trajectories.forEach((trajectory, episodeIndex) => {
+    trajectory.transitions.forEach((transition, transitionIndex) => {
+      const valuesBefore = [...values]
+      const before = valuesBefore[transition.stateId - 1]
+      const successorBefore = transition.terminal ? 0 : valuesBefore[transition.nextStateId - 1]
+      const target = transition.reward + boundedGamma * successorBefore
+      const delta = target - before
+      const correction = boundedAlpha * delta
+      const after = before + correction
+      values[transition.stateId - 1] = after
+      const update = {
+        episode: episodeIndex + 1,
+        transitionIndex,
+        episodeLength: trajectory.transitions.length,
+        episodeStartStateId: trajectory.startStateId,
+        stateId: transition.stateId,
+        nextStateId: transition.nextStateId,
+        action: transition.action,
+        reward: transition.reward,
+        terminal: transition.terminal,
+        before,
+        successorBefore,
+        target,
+        delta,
+        correction,
+        after,
+        valuesBefore,
+        valuesAfter: [...values],
+        episodeRewards: trajectory.rewards,
+        episodeStates: trajectory.stateIds,
+      }
+      update.comparison = tdComparison(update, n, boundedGamma)
+      updates.push(update)
+    })
+  })
+
+  const frames = [{
+    phase: 'ready',
+    updateIndex: 0,
+    values: Array.from({ length: 25 }, () => 0),
+  }]
+  updates.forEach((update, updateIndex) => {
+    frames.push({ phase: 'target', updateIndex, values: update.valuesBefore })
+    frames.push({ phase: 'commit', updateIndex, values: update.valuesAfter })
+  })
+
+  return {
+    series: updates.map((update) => update.after),
+    gamma: boundedGamma,
+    alpha: boundedAlpha,
+    n: Math.max(1, Math.min(Math.max(...trajectories.map((trajectory) => trajectory.transitions.length)), n)),
+    environment: {
+      name: 'course-grid-5x5',
+      size: 5,
+      states: allStates().map((state) => ({
+        ...state,
+        stateId: indexOf(state) + 1,
+        forbidden: rewardForTransition(state, false) === -1,
+        goal: isGoal(state),
+      })),
+    },
+    trajectory: trajectories[0].transitions,
+    pathStateIds: trajectories[0].stateIds,
+    trajectories,
+    updates,
+    frames,
+    finalValues: [...values],
+    td: updates[0].comparison.td,
+    nStep: updates[0].comparison.nStep,
+    mc: updates[0].comparison.mc,
   }
 }
 

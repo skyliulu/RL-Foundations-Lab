@@ -119,7 +119,7 @@ const orders = {
     derivation(),
     ref('deepening', 'td-zero-complete', 'topic'),
     ref('deepening', 'mc-td-matched-comparison', 'topic', { formulas: false }),
-    ref('sections', 'bias-variance', 'turn', { formulas: false }),
+    ref('sections', 'n-step', 'turn'),
     experiment(),
     ref('sections', 'online'),
     ref('sections', 'forward'),

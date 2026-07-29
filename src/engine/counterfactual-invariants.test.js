@@ -35,16 +35,19 @@ test('DQN replay changes sampling order while preserving the observed stream and
   assert.notDeepEqual(sequential.sampledKeys, replayed.sampledKeys)
 })
 
-test('n-step TD changes only the target horizon over one trajectory and value table', () => {
+test('n-step TD changes only the comparison horizon over one shared-grid playback', () => {
   const oneStep = compareTdTargets({ n: 1, gamma: 0.9 })
-  const fourStep = compareTdTargets({ n: 4, gamma: 0.9 })
+  const threeStep = compareTdTargets({ n: 3, gamma: 0.9 })
 
-  assert.deepEqual(oneStep.trajectory, fourStep.trajectory)
-  assert.deepEqual(oneStep.valueTable, fourStep.valueTable)
-  assert.equal(oneStep.bootstrap.time, 1)
-  assert.equal(fourStep.bootstrap.time, 4)
-  assert.equal(oneStep.rewardContributions.length, 1)
-  assert.equal(fourStep.rewardContributions.length, 4)
+  assert.deepEqual(oneStep.trajectories, threeStep.trajectories)
+  assert.deepEqual(
+    oneStep.updates.map((update) => update.valuesAfter),
+    threeStep.updates.map((update) => update.valuesAfter),
+  )
+  assert.equal(oneStep.updates[0].comparison.horizon, 1)
+  assert.equal(threeStep.updates[0].comparison.horizon, 3)
+  assert.equal(oneStep.updates[0].comparison.rewardContributions.length, 1)
+  assert.equal(threeStep.updates[0].comparison.rewardContributions.length, 3)
 })
 
 test('a policy-gradient baseline preserves sampled evidence and only recenters contributions', () => {

@@ -339,12 +339,12 @@ test('chapter eight explains TD timing in natural Chinese and keeps prose visual
   const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
   const zh = copy.zh.td
 
-  assert.match(zh.intro, /每执行一步.*即时奖励和下一状态/)
-  assert.match(zh.prelude[0].paragraphs.join(''), /完整回报.*尚未发生.*局部一致性/)
-  assert.match(zh.prelude[1].paragraphs.join(''), /bootstrapping（自举）/)
-  assert.match(zh.sections[0].paragraphs.join(''), /n=1.*完整回报/)
+  assert.match(zh.intro, /每一步.*即时奖励和后继状态/)
+  assert.match(zh.prelude[0].paragraphs.join(''), /完整回报.*不可用.*Bellman/)
+  assert.match(zh.prelude[1].paragraphs.join(''), /自举（bootstrapping）/)
+  assert.match(zh.sections[0].paragraphs.join(''), /TD\(0\).*Monte Carlo/)
   assert.match(zh.deepening[2].title, /target 使用哪些信息、何时能够计算/)
-  assert.match(zh.deepening[2].paragraphs.join(''), /episodic task.*continuing task/)
+  assert.match(zh.deepening[2].paragraphs.join(''), /回合制任务.*持续型任务/)
   assert.doesNotMatch(zh.deepening[2].title, /同一轨迹、同一预算下分解/)
 
   const proseSequenceRule = styles.match(/\.chapter-prose-sequence\s*\{([^}]*)\}/)?.[1] || ''
@@ -820,9 +820,11 @@ test('phase-three interactions expose their algorithm-specific internal evidence
   const modern = read('components/ModernExtensionLab.jsx')
   const styles = read('styles.css')
 
-  assert.match(learning, /className="td-value-table"/)
-  assert.match(learning, /result\.bootstrap\.value/)
-  assert.match(learning, /className="td-target-breakdown"/)
+  assert.match(learning, /className="td-course-grid"/)
+  assert.match(learning, /className="td-update-ledger"/)
+  assert.match(learning, /className="td-method-clock"/)
+  assert.match(learning, /result\.frames/)
+  assert.match(learning, /update\.correction/)
   assert.match(learning, /className="pg-variance-panel"/)
   assert.match(learning, /result\.stepContributions/)
   assert.match(learning, /result\.varianceWithBaseline/)
@@ -835,6 +837,7 @@ test('phase-three interactions expose their algorithm-specific internal evidence
   assert.match(system, /buildRlhfBatchContract/)
   assert.match(modern, /result\.gradients\.chosen/)
   assert.match(modern, /result\.gradients\.rejected/)
+  assert.match(styles, /\.td-course-grid\s*\{/)
   assert.match(styles, /\.ac-evidence-stage\s*\{\s*grid-template-columns:\s*1fr/)
 })
 

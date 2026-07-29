@@ -12,18 +12,30 @@ test('Part II lab outputs are deterministic and parameter-sensitive', () => {
   assert.ok(control.qDanger > control.sarsaDanger)
 })
 
-test('n-step TD reads its bootstrap from the displayed value table', () => {
-  for (const n of [1, 2, 3, 4, 5]) {
-    const result = compareTdTargets({ n, gamma: 0.9 })
-    const tableEntry = result.valueTable[n]
-    assert.equal(result.bootstrap.time, n)
-    assert.equal(result.bootstrap.stateId, tableEntry.stateId)
-    assert.equal(result.bootstrap.value, tableEntry.estimate)
-    assert.equal(
-      result.nStep,
-      result.rewardContributions.reduce((sum, item) => sum + item.contribution, 0) + result.bootstrap.contribution,
-    )
-  }
+test('TD playback aggregates distinct fixed-policy trajectories into one shared value table', () => {
+  const result = compareTdTargets({ n: 2, gamma: 0.9, alpha: 0.4 })
+  assert.deepEqual(result.trajectories.map((trajectory) => trajectory.stateIds), [
+    [25, 24, 23, 18],
+    [15, 20, 25, 24, 23, 18],
+    [5, 10, 15, 20, 25, 24, 23, 18],
+  ])
+  assert.deepEqual(result.trajectories.map((trajectory) => trajectory.startStateId), [25, 15, 5])
+  result.trajectories.forEach((trajectory) => {
+    assert.deepEqual(trajectory.rewards, [...Array(trajectory.transitions.length - 1).fill(0), 1])
+    assert.equal(trajectory.transitions.at(-1).terminal, true)
+  })
+  assert.equal(result.updates.length, 15)
+  assert.equal(result.frames.length, 31)
+  result.updates.forEach((update, index) => {
+    assert.deepEqual(result.frames[index * 2 + 1].values, update.valuesBefore)
+    assert.deepEqual(result.frames[index * 2 + 2].values, update.valuesAfter)
+    assert.equal(update.after, update.before + update.correction)
+  })
+  assert.equal(result.updates.at(-1).comparison.bootstrap.terminal, true)
+  assert.equal(result.updates.at(-1).comparison.bootstrap.stateId, null)
+  assert.ok(result.finalValues[24] > 0)
+  assert.ok(result.finalValues[23] > 0)
+  assert.ok(result.finalValues[22] > result.finalValues[23])
 })
 
 test('stochastic approximation comparison exposes a shared evidence stream and exact update ledger', () => {
