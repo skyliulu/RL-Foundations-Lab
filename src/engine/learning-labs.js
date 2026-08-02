@@ -696,24 +696,21 @@ export function compareTdTargets({ gamma = 0.9, n = 2, alpha = 0.4 } = {}) {
   }
 }
 
-const CLIFF_WIDTH = 7
-const CLIFF_HEIGHT = 4
-const CLIFF_START = (CLIFF_HEIGHT - 1) * CLIFF_WIDTH
-const CLIFF_GOAL = CLIFF_START + CLIFF_WIDTH - 1
-const CLIFF_ACTIONS = ['up', 'right', 'down', 'left']
+const COURSE_CONTROL_SIZE = 5
+const COURSE_CONTROL_STATES = allStates()
+const COURSE_CONTROL_START = 24
+const COURSE_CONTROL_GOAL = COURSE_CONTROL_STATES.findIndex((state) => isGoal(state))
+const CONTROL_ACTIONS = [...ACTION_NAMES]
 
-function cliffMove(state, action) {
-  const row = Math.floor(state / CLIFF_WIDTH)
-  const col = state % CLIFF_WIDTH
-  const nextRow = Math.max(0, Math.min(CLIFF_HEIGHT - 1, row + (action === 'down' ? 1 : action === 'up' ? -1 : 0)))
-  const nextCol = Math.max(0, Math.min(CLIFF_WIDTH - 1, col + (action === 'right' ? 1 : action === 'left' ? -1 : 0)))
-  const candidate = nextRow * CLIFF_WIDTH + nextCol
-  const fell = nextRow === CLIFF_HEIGHT - 1 && nextCol > 0 && nextCol < CLIFF_WIDTH - 1
+function courseControlMove(stateIndex, action) {
+  const outcome = attemptMove(COURSE_CONTROL_STATES[stateIndex], action)
+  const nextState = indexOf(outcome.state)
   return {
-    state: fell ? CLIFF_START : candidate,
-    reward: fell ? -100 : -1,
-    fell,
-    terminal: candidate === CLIFF_GOAL,
+    state: nextState,
+    reward: rewardForTransition(outcome.state, outcome.boundary),
+    forbidden: rewardForTransition(outcome.state, outcome.boundary) === -1 && !outcome.boundary,
+    boundary: outcome.boundary,
+    terminal: isGoal(outcome.state),
   }
 }
 
@@ -721,24 +718,55 @@ function greedyIndex(row) {
   return row.reduce((best, value, index) => value > row[best] ? index : best, 0)
 }
 
-function epsilonAction(row, epsilon, random) {
-  return random() < epsilon ? Math.floor(random() * CLIFF_ACTIONS.length) : greedyIndex(row)
+function copyQTable(q) {
+  return q.map((row) => [...row])
 }
 
-function trainCliffControl(kind, { epsilon, alpha, seed, episodes = 120 }) {
+function epsilonActionSample(row, epsilon, random) {
+  const greedyActionIndex = greedyIndex(row)
+  const explorationDraw = random()
+  if (explorationDraw < epsilon) {
+    const actionDraw = random()
+    return {
+      index: Math.floor(actionDraw * CONTROL_ACTIONS.length),
+      explored: true,
+      explorationDraw,
+      actionDraw,
+      greedyIndex: greedyActionIndex,
+    }
+  }
+  return {
+    index: greedyActionIndex,
+    explored: false,
+    explorationDraw,
+    actionDraw: null,
+    greedyIndex: greedyActionIndex,
+  }
+}
+
+function epsilonAction(row, epsilon, random) {
+  return epsilonActionSample(row, epsilon, random).index
+}
+
+function trainCourseControl(kind, { epsilon, alpha, seed, episodes = 140 }) {
   const random = lcg(seed)
-  const q = Array.from({ length: CLIFF_WIDTH * CLIFF_HEIGHT }, () => Array(CLIFF_ACTIONS.length).fill(0))
+  const q = Array.from({ length: COURSE_CONTROL_SIZE ** 2 }, () => Array(CONTROL_ACTIONS.length).fill(0))
   const episodeReturns = []
-  let falls = 0
+  const episodeForbiddenVisits = []
+  let forbiddenVisits = 0
 
   for (let episode = 0; episode < episodes; episode += 1) {
-    let state = CLIFF_START
+    let state = COURSE_CONTROL_START
     let actionIndex = epsilonAction(q[state], epsilon, random)
     let total = 0
+    let forbiddenThisEpisode = 0
     for (let step = 0; step < 180; step += 1) {
-      const outcome = cliffMove(state, CLIFF_ACTIONS[actionIndex])
+      const outcome = courseControlMove(state, CONTROL_ACTIONS[actionIndex])
       total += outcome.reward
-      if (outcome.fell) falls += 1
+      if (outcome.forbidden) {
+        forbiddenVisits += 1
+        forbiddenThisEpisode += 1
+      }
       const nextActionIndex = epsilonAction(q[outcome.state], epsilon, random)
       const bootstrap = outcome.terminal
         ? 0
@@ -751,60 +779,157 @@ function trainCliffControl(kind, { epsilon, alpha, seed, episodes = 120 }) {
       if (outcome.terminal) break
     }
     episodeReturns.push(total)
+    episodeForbiddenVisits.push(forbiddenThisEpisode)
   }
 
-  const path = [CLIFF_START]
-  let state = CLIFF_START
-  for (let step = 0; step < 40 && state !== CLIFF_GOAL; step += 1) {
+  const path = [COURSE_CONTROL_START]
+  const visited = new Set(path)
+  let state = COURSE_CONTROL_START
+  for (let step = 0; step < 40 && state !== COURSE_CONTROL_GOAL; step += 1) {
     const actionIndex = greedyIndex(q[state])
-    const outcome = cliffMove(state, CLIFF_ACTIONS[actionIndex])
+    const outcome = courseControlMove(state, CONTROL_ACTIONS[actionIndex])
     state = outcome.state
     path.push(state)
-    if (outcome.fell) break
+    if (outcome.terminal || visited.has(state)) break
+    visited.add(state)
   }
 
   return {
     q,
-    policy: q.map((row) => CLIFF_ACTIONS[greedyIndex(row)]),
+    policy: q.map((row) => CONTROL_ACTIONS[greedyIndex(row)]),
     path,
-    falls,
-    danger: falls / episodes,
+    forbiddenVisits,
+    forbiddenRate: episodeForbiddenVisits.filter((count) => count > 0).length / episodes,
+    averageForbiddenVisits: forbiddenVisits / episodes,
     meanReturn: mean(episodeReturns.slice(-20)),
     episodeReturns,
+    episodeForbiddenVisits,
+  }
+}
+
+function buildControlTrace(kind, { epsilon, alpha, seed, warmupEpisodes = 60, updateCount = 48 }) {
+  const random = lcg(seed)
+  const q = Array.from({ length: COURSE_CONTROL_SIZE ** 2 }, () => Array(CONTROL_ACTIONS.length).fill(0))
+  const frames = []
+  let episodeNumber = 0
+
+  const runEpisode = (capture) => {
+    episodeNumber += 1
+    let state = COURSE_CONTROL_START
+    let actionSample = epsilonActionSample(q[state], epsilon, random)
+    let path = [COURSE_CONTROL_START]
+    let episodeReturn = 0
+
+    for (let episodeStep = 0; episodeStep < 180; episodeStep += 1) {
+      const actionIndex = actionSample.index
+      const outcome = courseControlMove(state, CONTROL_ACTIONS[actionIndex])
+      const nextActionSample = outcome.terminal
+        ? null
+        : epsilonActionSample(q[outcome.state], epsilon, random)
+      const targetActionIndex = outcome.terminal
+        ? null
+        : kind === 'sarsa'
+          ? nextActionSample.index
+          : greedyIndex(q[outcome.state])
+      const successorRow = outcome.terminal
+        ? Array(CONTROL_ACTIONS.length).fill(0)
+        : [...q[outcome.state]]
+      const bootstrap = targetActionIndex == null ? 0 : successorRow[targetActionIndex]
+      const before = q[state][actionIndex]
+      const target = outcome.reward + 0.9 * bootstrap
+      const delta = target - before
+      q[state][actionIndex] += alpha * delta
+      episodeReturn += outcome.reward
+
+      const visiblePath = [...path, outcome.state]
+      if (capture && frames.length < updateCount) {
+        frames.push({
+          index: frames.length,
+          kind,
+          episode: episodeNumber,
+          episodeStep: episodeStep + 1,
+          state,
+          actionIndex,
+          action: CONTROL_ACTIONS[actionIndex],
+          actionExplored: actionSample.explored,
+          reward: outcome.reward,
+          nextState: outcome.state,
+          forbidden: outcome.forbidden,
+          boundary: outcome.boundary,
+          terminal: outcome.terminal,
+          behaviorNextIndex: nextActionSample?.index ?? null,
+          behaviorNextAction: nextActionSample ? CONTROL_ACTIONS[nextActionSample.index] : null,
+          behaviorNextExplored: Boolean(nextActionSample?.explored),
+          targetActionIndex,
+          targetAction: targetActionIndex == null ? null : CONTROL_ACTIONS[targetActionIndex],
+          successorRow,
+          before,
+          bootstrap,
+          target,
+          delta,
+          after: q[state][actionIndex],
+          q: copyQTable(q),
+          policy: q.map((row) => CONTROL_ACTIONS[greedyIndex(row)]),
+          path: visiblePath,
+          episodeReturn,
+        })
+      }
+
+      if (outcome.terminal || frames.length >= updateCount && capture) break
+      path = visiblePath
+      state = outcome.state
+      actionSample = nextActionSample
+    }
+  }
+
+  for (let episode = 0; episode < warmupEpisodes; episode += 1) runEpisode(false)
+  const initialQ = copyQTable(q)
+  while (frames.length < updateCount) runEpisode(true)
+
+  return {
+    kind,
+    warmupEpisodes,
+    initialQ,
+    initialPolicy: initialQ.map((row) => CONTROL_ACTIONS[greedyIndex(row)]),
+    frames,
   }
 }
 
 export function compareControl({ epsilon = 0.12, alpha = 0.3, seed = 20260719 } = {}) {
-  const sarsa = trainCliffControl('sarsa', { epsilon, alpha, seed })
-  const qLearning = trainCliffControl('qlearning', { epsilon, alpha, seed })
-  const focusState = (CLIFF_HEIGHT - 2) * CLIFF_WIDTH
-  const nextState = focusState + 1
-  const qSnapshot = sarsa.q.map((row) => [...row])
-  const successorRow = qSnapshot[nextState]
-  const qGreedyIndex = greedyIndex(successorRow)
-  const rankedActions = successorRow
-    .map((value, index) => ({ value, index }))
-    .sort((first, second) => second.value - first.value)
-  const sarsaNextIndex = epsilon > 0 ? rankedActions[1].index : qGreedyIndex
-  const sarsaNextAction = CLIFF_ACTIONS[sarsaNextIndex]
-  const qGreedyAction = CLIFF_ACTIONS[qGreedyIndex]
-  const sarsaTarget = -1 + 0.9 * successorRow[sarsaNextIndex]
-  const qTarget = -1 + 0.9 * successorRow[qGreedyIndex]
+  const seeds = Array.from({ length: 5 }, (_, index) => seed + index * 7919)
+  const sarsaRuns = seeds.map((runSeed) => trainCourseControl('sarsa', { epsilon, alpha, seed: runSeed }))
+  const qLearningRuns = seeds.map((runSeed) => trainCourseControl('qlearning', { epsilon, alpha, seed: runSeed }))
+  const sarsa = sarsaRuns[0]
+  const qLearning = qLearningRuns[0]
+  const traces = {
+    sarsa: buildControlTrace('sarsa', { epsilon, alpha, seed: seed ^ 0x51ed270b }),
+    qLearning: buildControlTrace('qlearning', { epsilon, alpha, seed: seed ^ 0x51ed270b }),
+  }
+
   return {
     series: [sarsa.meanReturn, qLearning.meanReturn],
-    sarsaDanger: sarsa.danger,
-    qDanger: qLearning.danger,
-    sarsaReturn: sarsa.meanReturn,
-    qReturn: qLearning.meanReturn,
-    targetGap: Math.abs(sarsaTarget - qTarget),
-    sarsaTarget,
-    qTarget,
-    qSnapshot,
-    successorValues: successorRow.map((value, index) => ({ action: CLIFF_ACTIONS[index], value })),
-    transition: { state: focusState, action: 'right', reward: -1, nextState, sarsaNextAction, qGreedyAction },
+    sarsaForbiddenRate: mean(sarsaRuns.map((run) => run.forbiddenRate)),
+    qForbiddenRate: mean(qLearningRuns.map((run) => run.forbiddenRate)),
+    sarsaAverageForbiddenVisits: mean(sarsaRuns.map((run) => run.averageForbiddenVisits)),
+    qAverageForbiddenVisits: mean(qLearningRuns.map((run) => run.averageForbiddenVisits)),
+    sarsaReturn: mean(sarsaRuns.map((run) => run.meanReturn)),
+    qReturn: mean(qLearningRuns.map((run) => run.meanReturn)),
+    traces,
+    seeds,
     sarsa,
     qLearning,
-    grid: { width: CLIFF_WIDTH, height: CLIFF_HEIGHT, start: CLIFF_START, goal: CLIFF_GOAL },
+    grid: {
+      width: COURSE_CONTROL_SIZE,
+      height: COURSE_CONTROL_SIZE,
+      start: COURSE_CONTROL_START,
+      goal: COURSE_CONTROL_GOAL,
+      states: COURSE_CONTROL_STATES.map((state, index) => ({
+        index,
+        stateId: index + 1,
+        forbidden: rewardForTransition(state, false) === -1,
+        goal: isGoal(state),
+      })),
+    },
   }
 }
 

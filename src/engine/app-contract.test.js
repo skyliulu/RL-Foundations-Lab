@@ -672,6 +672,32 @@ test('all rebuilt chapters expose one bilingual causal article flow with one exp
   assert.match(copy.zh.bellman.microscope.singleBackupNote, /其余 24 个状态保持不变/)
 })
 
+test('chapter nine uses compact bilingual headings and the shared square course grid', async () => {
+  const { copy } = await import('../content.js')
+  const styles = read('styles.css')
+  const zh = copy.zh.control
+  const en = copy.en.control
+
+  assert.equal(copy.zh.chapters.find(({ id }) => id === 'control').subtitle, '比较实际下一动作与后继最大值')
+  assert.equal(copy.en.chapters.find(({ id }) => id === 'control').subtitle, 'Compare the realized next action with the successor maximum')
+  assert.equal(zh.prelude[0].kicker, '从预测到控制')
+  assert.equal(zh.prelude[0].title, '动作价值开始影响后续行为')
+  assert.equal(zh.derivationTitle, '后继动作规则区分 Sarsa 与 Q-learning')
+  assert.deepEqual(zh.deepening.map(({ kicker, title }) => [kicker, title]), [
+    ['策略内更新', 'Sarsa 跟随实际下一动作更新'],
+    ['多步回报', 'n-step Sarsa 等待更多真实奖励'],
+    ['策略外更新', 'Q-learning 根据后继最大值更新'],
+    ['路径风险', '持续探索使两种算法走向不同路径'],
+    ['目标比较', '四种算法共享同一更新结构'],
+  ])
+  assert.deepEqual(en.deepening.map(({ id }) => id), zh.deepening.map(({ id }) => id))
+  assert.match(styles, /\.control-course-grid > div\s*\{[^}]*aspect-ratio:\s*1;/)
+  assert.match(styles, /\.control-course-grid\s*\{[^}]*width:\s*min\(100%,430px\);/)
+  assert.match(styles, /\.control-course-grid > div\.is-forbidden\s*\{[^}]*background:\s*#efb126;/)
+  assert.match(styles, /\.control-course-grid > div\.is-goal\s*\{[^}]*background:\s*#55c6d8;/)
+  assert.doesNotMatch(read('components/LearningLab.jsx'), /role="tablist"|与前文章节一致/)
+})
+
 test('short article turns keep formula interpretation separate from the preceding claim', async () => {
   const { copy } = await import('../content.js')
   for (const lang of ['zh', 'en']) {

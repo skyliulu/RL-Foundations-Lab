@@ -113,10 +113,13 @@ export const sourceCoverageMatrix = Object.freeze({
     ['coursebook-chapter-7', 'llm-infra-section-8'],
     [
       required('sarsa', 'algorithm', 'Complete on-policy Sarsa loop', ['sarsa-target', 'sarsa-update', 'sarsa-complete-loop'], ['control']),
+      required('sarsa-convergence', 'theorem', 'Fixed-policy Sarsa convergence conditions and control caveat', ['sarsa-complete-loop'], ['control']),
       required('q-learning', 'algorithm', 'Complete off-policy Q-learning loop', ['q-target', 'q-update', 'q-learning-off-policy'], ['control']),
+      required('q-learning-data-modes', 'variant', 'Online and externally generated experience for Q-learning', ['q-learning-off-policy'], ['control']),
       required('policy-roles', 'comparison', 'Behavior and target policy roles', ['policy-roles', 'fair-comparison'], ['control']),
-      required('n-step-sarsa', 'variant', 'n-step Sarsa', ['n-step-and-cliff'], ['control']),
-      required('cliff-world', 'worked-example', 'On-policy and off-policy behavior in the cliff world', ['n-step-and-cliff', 'chapter-experiment'], ['control']),
+      required('n-step-sarsa', 'variant', 'n-step Sarsa target, delayed update, endpoints, and complete loop', ['n-step-sarsa'], ['control']),
+      required('shared-grid-control', 'worked-example', 'On-policy and off-policy behavior in the shared 5×5 grid', ['shared-grid-policy-risk', 'chapter-experiment'], ['control']),
+      required('control-target-family', 'comparison', 'Unified Sarsa, n-step Sarsa, Q-learning, and Monte Carlo targets', ['td-target-family'], ['control']),
     ],
   ),
   vfa: chapter(

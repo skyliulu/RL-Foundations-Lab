@@ -129,9 +129,11 @@ const orders = {
     ref('prelude', 'fair-comparison'),
     derivation(),
     ref('deepening', 'sarsa-complete-loop', 'topic'),
+    ref('deepening', 'n-step-sarsa', 'topic'),
     ref('deepening', 'q-learning-off-policy', 'topic'),
-    ref('deepening', 'n-step-and-cliff', 'topic'),
+    ref('deepening', 'shared-grid-policy-risk', 'topic'),
     experiment(),
+    ref('deepening', 'td-target-family', 'topic'),
     ref('sections', 'forward'),
   ],
   vfa: [

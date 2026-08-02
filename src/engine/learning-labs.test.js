@@ -9,7 +9,7 @@ test('Part II lab outputs are deterministic and parameter-sensitive', () => {
   const targets = compareTdTargets({ n: 1 })
   assert.equal(targets.nStep, targets.td)
   const control = compareControl({ epsilon: 0.4 })
-  assert.ok(control.qDanger > control.sarsaDanger)
+  assert.notEqual(control.qForbiddenRate, control.sarsaForbiddenRate)
 })
 
 test('TD playback aggregates distinct fixed-policy trajectories into one shared value table', () => {
@@ -171,17 +171,43 @@ test('Monte Carlo visit protocols expose a controlled counterfactual on one repe
   assert.equal(every.updates.length, every.steps.length)
 })
 
-test('Sarsa and Q-learning targets are a controlled counterfactual over one Q snapshot', () => {
+test('Sarsa and Q-learning expose long independent traces with synchronized target and commit state', () => {
   const result = compareControl({ epsilon: 0.12, alpha: 0.3, seed: 20260719 })
-  const { nextState, sarsaNextAction, qGreedyAction, reward } = result.transition
-  const actions = ['up', 'right', 'down', 'left']
-  const row = result.qSnapshot[nextState]
-  const sarsaValue = row[actions.indexOf(sarsaNextAction)]
-  const greedyValue = row[actions.indexOf(qGreedyAction)]
-  assert.equal(result.sarsaTarget, reward + 0.9 * sarsaValue)
-  assert.equal(result.qTarget, reward + 0.9 * greedyValue)
-  assert.equal(result.qTarget, reward + 0.9 * Math.max(...row))
-  assert.notEqual(sarsaNextAction, qGreedyAction)
+  assert.equal(result.seeds.length, 5)
+  assert.equal(result.traces.sarsa.frames.length, 48)
+  assert.equal(result.traces.qLearning.frames.length, 48)
+  assert.equal(result.traces.sarsa.warmupEpisodes, 60)
+  assert.equal(result.traces.qLearning.warmupEpisodes, 60)
+
+  for (const [kind, trace] of Object.entries(result.traces)) {
+    trace.frames.forEach((frame, index) => {
+      assert.equal(frame.index, index)
+      assert.equal(frame.after, frame.before + 0.3 * frame.delta)
+      assert.equal(frame.q[frame.state][frame.actionIndex], frame.after)
+      assert.equal(frame.path[0], result.grid.start)
+      if (!frame.terminal) {
+        const expectedBootstrap = kind === 'sarsa'
+          ? frame.successorRow[frame.behaviorNextIndex]
+          : Math.max(...frame.successorRow)
+        assert.equal(frame.bootstrap, expectedBootstrap)
+        assert.equal(frame.target, frame.reward + 0.9 * expectedBootstrap)
+      }
+    })
+  }
+
+  assert.ok(result.traces.sarsa.frames.some((frame) => frame.behaviorNextExplored))
+  assert.ok(result.traces.qLearning.frames.some((frame) => frame.behaviorNextExplored))
+  assert.ok(result.traces.sarsa.frames.some((frame, index) => (
+    frame.policy.some((action, state) => action !== result.traces.qLearning.frames[index].policy[state])
+  )))
+  assert.equal(result.grid.width, 5)
+  assert.equal(result.grid.height, 5)
+  assert.equal(result.grid.start, 24)
+  assert.equal(result.grid.goal, 17)
+  assert.deepEqual(result.grid.states.filter((state) => state.forbidden).map((state) => state.stateId), [7, 8, 13, 17, 19, 22])
+  assert.equal(result.grid.states.filter((state) => state.goal).map((state) => state.stateId).join(','), '18')
+  assert.ok(result.sarsaForbiddenRate >= 0 && result.sarsaForbiddenRate <= 1)
+  assert.ok(result.qForbiddenRate >= 0 && result.qForbiddenRate <= 1)
 })
 
 test('Part III labs expose sharing, stability, policy, and actor-critic effects', () => {

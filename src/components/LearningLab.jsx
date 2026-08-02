@@ -20,8 +20,8 @@ const scenarioCopy = {
     en: ['Three policy trajectories in the shared 5×5 grid', String.raw`s_{25},\,s_{15},\,s_{5}\rightsquigarrow s_{18}`, 'Three different starts follow one fixed policy; TD(0), multi-step targets, and Monte Carlo read identical transition evidence within each trajectory.'],
   },
   control: {
-    zh: ['悬崖网格环境', String.raw`s_{\mathrm{start}}\rightarrow s_{\mathrm{goal}}`, 'Sarsa 与 Q-learning 在同一悬崖环境训练，差异来自后继动作的选择方式。'],
-    en: ['Cliff-grid environment', String.raw`s_{\mathrm{start}}\rightarrow s_{\mathrm{goal}}`, 'Sarsa and Q-learning train in one cliff world; only successor-action selection differs.'],
+    zh: ['共享的 5×5 课程网格', String.raw`s_{25}\rightarrow s_{18}`, '两种算法使用相同的起点、禁区、目标区、训练预算和探索率。'],
+    en: ['Shared 5×5 grid', String.raw`s_{25}\rightarrow s_{18}`, 'Both algorithms use the same start, forbidden states, target, training budget, and exploration rate.'],
   },
   vfa: {
     zh: ['网格状态的共享表示', String.raw`s_{11}\leftrightarrow s_{12}\leftrightarrow s_{13}`, '相邻网格状态共享特征，因此一次更新会传播到未被直接采样的邻居。'],
@@ -64,7 +64,7 @@ const configs = {
     formula: String.raw`\text{Sarsa}:Q(S',A')\qquad \text{Q-learning}:\max_a Q(S',a)`,
     controls: [['epsilon', 0.02, 0.5, 0.02], ['alpha', 0.05, 0.8, 0.05]],
     labels: { zh: ['探索率 ε', '步长 α'], en: ['Exploration ε', 'Step size α'] },
-    metrics: (r, zh) => [[zh ? 'Sarsa 危险率' : 'Sarsa danger', `${(r.sarsaDanger * 100).toFixed(1)}%`], [zh ? 'Q-learning 危险率' : 'Q-learning danger', `${(r.qDanger * 100).toFixed(1)}%`], [zh ? '目标差' : 'Target gap', r.targetGap]],
+    metrics: (r, zh) => [[zh ? 'Sarsa 禁区回合' : 'Sarsa forbidden-state episodes', `${(r.sarsaForbiddenRate * 100).toFixed(1)}%`], [zh ? 'Q-learning 禁区回合' : 'Q-learning forbidden-state episodes', `${(r.qForbiddenRate * 100).toFixed(1)}%`], [zh ? '连续动态写回' : 'Visible consecutive commits', r.traces.sarsa.frames.length]],
   },
   vfa: {
     formula: String.raw`\mathbf w\leftarrow\mathbf w+\alpha\left(U_t-\widehat v(S_t,\mathbf w)\right)\nabla_{\mathbf w}\widehat v(S_t,\mathbf w)`,
@@ -269,57 +269,172 @@ function TdEvidenceStage({ params, result, zh }) {
   )
 }
 
-const cliffArrows = { up: '↑', right: '→', down: '↓', left: '←' }
+const controlArrows = { up: '↑', right: '→', down: '↓', left: '←', stay: '○' }
+const CONTROL_ACTIONS_FOR_VIEW = ['up', 'right', 'down', 'left', 'stay']
 
-function CliffPolicyMap({ run, grid, label, zh }) {
-  const path = new Set(run.path)
+function controlGridPoint(state, grid) {
+  return {
+    x: ((state % grid.width) + 0.5) * (100 / grid.width),
+    y: (Math.floor(state / grid.width) + 0.5) * (100 / grid.height),
+  }
+}
+
+function ControlTrajectoryOverlay({ path, grid, color, id, currentIndex = path.length - 1 }) {
+  const visiblePath = path.slice(0, Math.max(1, currentIndex + 1))
+  const points = visiblePath.map((state) => controlGridPoint(state, grid))
   return (
-    <figure className="cliff-policy-map">
-      <header><span>{label}</span><strong>{zh ? '末 20 回合平均回报' : 'Mean return, last 20'} {format(run.meanReturn)}</strong></header>
-      <div style={{ '--cliff-columns': grid.width }}>
-        {run.policy.map((action, state) => {
-          const row = Math.floor(state / grid.width)
-          const isCliff = row === grid.height - 1 && state > grid.start && state < grid.goal
-          return <span className={`${isCliff ? 'is-cliff' : ''} ${path.has(state) ? 'is-path' : ''} ${state === grid.start ? 'is-start' : ''} ${state === grid.goal ? 'is-goal' : ''}`} key={state}>
-            {state === grid.start ? 'S' : state === grid.goal ? 'G' : isCliff ? '×' : cliffArrows[action]}
-          </span>
-        })}
+    <svg className={`control-trajectory-overlay is-${color}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <marker id={`control-arrow-${id}`} markerWidth="5" markerHeight="5" refX="4.2" refY="2.5" orient="auto">
+          <path d="M0,0 L5,2.5 L0,5 Z" />
+        </marker>
+      </defs>
+      {points.slice(0, -1).map((point, index) => {
+        const next = points[index + 1]
+        return <line x1={point.x} y1={point.y} x2={next.x} y2={next.y} markerEnd={`url(#control-arrow-${id})`} key={`${point.x}-${point.y}-${index}`} />
+      })}
+      {points.map((point, index) => <circle className={index === points.length - 1 ? 'is-current' : ''} cx={point.x} cy={point.y} r={index === points.length - 1 ? 2 : 1.25} key={`${point.x}-${point.y}-dot-${index}`} />)}
+    </svg>
+  )
+}
+
+function ControlCourseGrid({ trace, frame, grid, color, id, label, zh }) {
+  const q = frame?.q || trace.initialQ
+  const policy = frame?.policy || trace.initialPolicy
+  const path = frame?.path || [grid.start]
+  const currentState = frame?.state ?? grid.start
+  const successorState = frame?.nextState ?? null
+  return (
+    <figure className={`control-course-map is-${color}`}>
+      <figcaption><span>{label}</span><small>{zh ? `${trace.warmupEpisodes} 回合预热后，连续显示 ${trace.frames.length} 次写回` : `${trace.warmupEpisodes} warm-up episodes, then ${trace.frames.length} consecutive commits`}</small></figcaption>
+      <div className="control-course-grid" style={{ '--control-grid-columns': grid.width }} role="grid" aria-label={zh ? `${label} 在共享五乘五网格中的动态策略与动作价值` : `${label} dynamic policy and action values in the shared five-by-five grid`}>
+      {policy.map((action, state) => {
+        const stateMeta = grid.states[state]
+        const value = Math.max(...q[state])
+        return <div role="gridcell" className={`${stateMeta.forbidden ? 'is-forbidden' : ''} ${state === grid.start ? 'is-start' : ''} ${stateMeta.goal ? 'is-goal' : ''} ${state === currentState ? 'is-current' : ''} ${state === successorState ? 'is-successor' : ''}`} key={state}>
+          <span className="control-grid-state"><MathFormula latex={String.raw`s_{${state + 1}}`} /></span>
+          {(state === grid.start || stateMeta.goal) && <b className="control-grid-role">{state === grid.start ? (zh ? '起点' : 'start') : (zh ? '目标' : 'target')}</b>}
+          <i className="control-grid-action" aria-hidden="true">{stateMeta.goal ? '◎' : controlArrows[action]}</i>
+          <strong className="control-grid-value"><MathFormula latex={String.raw`${value.toFixed(1)}`} /></strong>
+        </div>
+      })}
+        <ControlTrajectoryOverlay path={path} grid={grid} color={color} id={id} currentIndex={path.length - 1} />
       </div>
-      <figcaption>{zh ? `训练期坠落 ${run.falls} 次；箭头是学习后的贪心策略。` : `${run.falls} training falls; arrows show the learned greedy policy.`}</figcaption>
     </figure>
   )
 }
 
-function ControlEvidenceStage({ result, zh }) {
-  const transition = result.transition
+function ControlEvidenceStage({ params, result, zh }) {
+  const [step, setStep] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const traces = result.traces || {}
+  const frameCount = Math.min(traces.sarsa?.frames.length || 0, traces.qLearning?.frames.length || 0)
+  const last = Math.max(0, frameCount - 1)
+
+  useEffect(() => {
+    setPlaying(false)
+    setStep(0)
+  }, [params.epsilon, params.alpha, params.seed])
+
+  useEffect(() => {
+    if (!playing) return undefined
+    const timer = window.setInterval(() => {
+      setStep((current) => {
+        if (current >= last) {
+          setPlaying(false)
+          return current
+        }
+        return current + 1
+      })
+    }, 520)
+    return () => window.clearInterval(timer)
+  }, [last, playing])
+
+  if (!traces.sarsa?.frames.length || !traces.qLearning?.frames.length) {
+    return <div className="control-evidence-stage"><p>{zh ? '正在重建控制轨迹…' : 'Rebuilding the control trajectory…'}</p></div>
+  }
+
+  const sarsaFrame = traces.sarsa.frames[Math.min(step, last)]
+  const qFrame = traces.qLearning.frames[Math.min(step, last)]
+  const activeTraces = [
+    { trace: traces.sarsa, frame: sarsaFrame, color: 'sarsa', id: 'sarsa-live', label: 'Sarsa' },
+    { trace: traces.qLearning, frame: qFrame, color: 'q', id: 'q-live', label: 'Q-learning' },
+  ]
+
+  const move = (next) => {
+    setPlaying(false)
+    setStep(Math.max(0, Math.min(last, next)))
+  }
+
+  const renderInspector = ({ frame, color, label }) => {
+    const selectedIndex = frame.targetActionIndex
+    const targetRule = frame.kind === 'sarsa'
+      ? String.raw`U_t=R_{t+1}+\gamma Q(S_{t+1},A_{t+1})`
+      : String.raw`U_t=R_{t+1}+\gamma\max_a Q(S_{t+1},a)`
+    return <article className={`control-algorithm-inspector is-${color}`} key={frame.kind}>
+      <header><span>{label}</span><small>{frame.kind === 'sarsa' ? (zh ? '读取实际选中的后继动作' : 'reads the realized successor action') : (zh ? '读取后继状态中的最大动作价值' : 'reads the successor maximum')}</small></header>
+      <div className="control-transition-row">
+        <b><MathFormula latex={String.raw`S_t=s_{${frame.state + 1}}`} /></b><i>→</i>
+        <b><MathFormula latex={String.raw`A_t=\mathrm{${frame.action}}`} /></b><i>→</i>
+        <b><MathFormula latex={String.raw`R_{t+1}=${frame.reward}`} /></b><i>→</i>
+        <b><MathFormula latex={String.raw`S_{t+1}=s_{${frame.nextState + 1}}`} /></b>
+      </div>
+      {!frame.terminal && <div className="control-successor-strip">
+        {frame.successorRow.map((value, index) => <span className={index === selectedIndex ? 'is-selected' : ''} key={CONTROL_ACTIONS_FOR_VIEW[index]}>
+          <i>{controlArrows[CONTROL_ACTIONS_FOR_VIEW[index]]}</i><MathFormula latex={String.raw`${value.toFixed(2)}`} />
+        </span>)}
+      </div>}
+      <div className="control-target-rule"><MathFormula block latex={targetRule} /><MathFormula block latex={String.raw`U_t=${frame.target.toFixed(2)},\quad \delta_t=${frame.delta.toFixed(2)}`} /></div>
+      <p><MathFormula latex={String.raw`Q(s_{${frame.state + 1}},\mathrm{${frame.action}}):${frame.before.toFixed(2)}\rightarrow${frame.after.toFixed(2)}`} /></p>
+      <small className="control-frame-note">{frame.terminal
+          ? (zh ? '本步到达终点；下一帧从新回合起点继续。' : 'This step reaches the goal; the next frame starts a new episode.')
+          : frame.forbidden
+            ? (zh ? '本步进入禁区并收到负奖励；轨迹仍从该状态继续。' : 'This step enters a forbidden state and receives a negative reward; the trajectory continues from there.')
+            : frame.boundary
+              ? (zh ? '本步撞到边界并留在原状态，同时收到负奖励。' : 'This step hits the boundary, remains in place, and receives a negative reward.')
+          : frame.behaviorNextExplored
+            ? (zh ? `行为策略下一步探索为 ${controlArrows[frame.behaviorNextAction]}；只有 Sarsa 会把它直接放进 target。` : `Behavior explores ${controlArrows[frame.behaviorNextAction]} next; only Sarsa puts that action directly into its target.`)
+            : (zh ? '写回后的动作价值立即成为下一次决策的输入。' : 'The committed action value becomes input to the next decision.')}</small>
+    </article>
+  }
+
   return (
     <div className="control-evidence-stage">
-      <section className="control-shared-transition">
-        <header><span>{zh ? '同一条经验、同一张冻结 Q 表' : 'Same experience and one frozen Q table'}</span><small>{zh ? '只替换后继动作的读取规则' : 'Only the successor-action readout changes'}</small></header>
-        <div className="control-transition-row">
-          <b><MathFormula latex={String.raw`S_t=s_{${transition.state}}`} /></b><i>→</i><b><MathFormula latex={String.raw`A_t=\mathrm{right}`} /></b><i>→</i><b><MathFormula latex={String.raw`R_{t+1}=${transition.reward}`} /></b><i>→</i><b><MathFormula latex={String.raw`S_{t+1}=s_{${transition.nextState}}`} /></b>
+      <div className="control-playback-toolbar">
+        <div><span>{zh ? `训练写回 ${step + 1}/${frameCount}` : `Training commit ${step + 1}/${frameCount}`}</span><strong>{zh ? '每一帧都会更新 Q 表、动作箭头和当前轨迹' : 'Every frame updates the Q table, policy arrows, and current trajectory'}</strong></div>
+        <div className="control-playback-actions">
+          <button type="button" disabled={step === 0} onClick={() => move(step - 1)}>{zh ? '上一步' : 'Previous'}</button>
+          <button type="button" className="is-primary" aria-pressed={playing} onClick={() => { if (step === last) setStep(0); setPlaying((value) => !value) }}>{playing ? (zh ? '暂停' : 'Pause') : (zh ? '自动播放' : 'Auto play')}</button>
+          <button type="button" disabled={step === last} onClick={() => move(step + 1)}>{zh ? '下一步' : 'Next'}</button>
+          <button type="button" onClick={() => move(0)}>{zh ? '重置播放' : 'Reset playback'}</button>
         </div>
-        <p>{zh ? '下面两个 target 都读取同一个 Q snapshot。Sarsa 使用行为策略可能采到的探索动作；Q-learning 在同一行上读取最大值，因此数值差只能来自后继动作规则。' : 'Both targets below read one Q snapshot. Sarsa uses an exploratory action that the behavior policy can sample; Q-learning reads the maximum from the same row, so only the successor-action rule can create a difference.'}</p>
+        <label><span>{zh ? '播放位置' : 'Playback position'}</span><input aria-label={zh ? '控制算法播放位置' : 'Control playback position'} type="range" min="0" max={last} step="1" value={step} onChange={(event) => move(Number(event.target.value))} /></label>
+      </div>
+
+      <section className="control-playback-grid-panel">
+        <header><span>{zh ? '两种目标规则在同一共享网格中独立学习' : 'Both target rules learn independently in the shared grid'}</span><small>{zh ? '橙色为禁区，青色为目标区；中央箭头来自各自的动作价值表' : 'Orange marks forbidden states, cyan marks the target, and center arrows come from each action-value table'}</small></header>
+        <div className="control-live-maps">
+          {activeTraces.map((item) => <ControlCourseGrid {...item} grid={result.grid} zh={zh} key={item.id} />)}
+        </div>
+        <div className="control-grid-legend">
+          <span><i className="is-current" />{zh ? '本次更新状态' : 'updated state'}</span>
+          <span><i className="is-successor" />{zh ? '实际进入位置' : 'entered location'}</span>
+          <span><i className="is-forbidden" />{zh ? '禁区' : 'forbidden state'}</span>
+          <span><i className="is-target" />{zh ? '目标区' : 'target state'}</span>
+          <span><i className="is-sarsa" />Sarsa {zh ? '轨迹' : 'path'}</span>
+          <span><i className="is-q" />Q-learning {zh ? '轨迹' : 'path'}</span>
+        </div>
       </section>
-      <section className="control-q-snapshot">
-        <header><span>{zh ? '冻结的后继状态动作价值' : 'Frozen successor-state action values'}</span><small><MathFormula latex={String.raw`Q_{\mathrm{shared}}(S_{t+1},\cdot)`} /></small></header>
-        <div>{result.successorValues.map((item) => <span className={item.action === transition.sarsaNextAction ? 'is-behavior' : item.action === transition.qGreedyAction ? 'is-greedy' : ''} key={item.action}><b>{cliffArrows[item.action]}</b><MathFormula latex={String.raw`${item.value.toFixed(2)}`} /></span>)}</div>
+
+      <section className="control-update-inspector">
+        <header><span>{zh ? '同一步数下的目标读取与写回' : 'Target readout and commit at the same training index'}</span><small>{zh ? '两种算法独立行动；分歧出现后，轨迹不再被强行固定' : 'The algorithms act independently; their trajectories are not frozen after they diverge'}</small></header>
+        <div className="control-live-inspectors">{activeTraces.map(renderInspector)}</div>
       </section>
-      <section className="control-target-comparison">
-        <article>
-          <span>Sarsa · on-policy</span>
-          <MathFormula block latex={String.raw`U_t=R_{t+1}+\gamma Q(S_{t+1},A_{t+1})`} />
-          <p><MathFormula latex={String.raw`A_{t+1}=\mathrm{${transition.sarsaNextAction}}`} /> · <strong><MathFormula latex={String.raw`U_t=${result.sarsaTarget.toFixed(2)}`} /></strong></p>
-        </article>
-        <article>
-          <span>Q-learning · off-policy</span>
-          <MathFormula block latex={String.raw`U_t=R_{t+1}+\gamma\max_aQ(S_{t+1},a)`} />
-          <p><MathFormula latex={String.raw`a^*=\mathrm{${transition.qGreedyAction}}`} /> · <strong><MathFormula latex={String.raw`U_t=${result.qTarget.toFixed(2)}`} /></strong></p>
-        </article>
-      </section>
-      <section className="control-policy-comparison">
-        <CliffPolicyMap run={result.sarsa} grid={result.grid} label="Sarsa" zh={zh} />
-        <CliffPolicyMap run={result.qLearning} grid={result.grid} label="Q-learning" zh={zh} />
+
+      <section className="control-training-summary">
+        <span>{zh ? `${result.seeds.length} 个固定随机种子的长期训练汇总` : `Long-run aggregate across ${result.seeds.length} fixed seeds`}</span>
+        <div><b>Sarsa</b><small>{zh ? '进入禁区的回合' : 'episodes entering forbidden states'} {(result.sarsaForbiddenRate * 100).toFixed(1)}%</small><small>{zh ? '末段回报' : 'late return'} {format(result.sarsaReturn)}</small></div>
+        <div><b>Q-learning</b><small>{zh ? '进入禁区的回合' : 'episodes entering forbidden states'} {(result.qForbiddenRate * 100).toFixed(1)}%</small><small>{zh ? '末段回报' : 'late return'} {format(result.qReturn)}</small></div>
       </section>
     </div>
   )
@@ -483,7 +598,7 @@ function ActorCriticEvidenceStage({ params, result, zh }) {
 
 function DedicatedLearningStage({ id, params, result, zh, set }) {
   if (id === 'td') return <TdEvidenceStage params={params} result={result} zh={zh} />
-  if (id === 'control') return <ControlEvidenceStage params={params} result={result} zh={zh} />
+  if (id === 'control') return <ControlEvidenceStage key={`${params.epsilon}-${params.alpha}-${params.seed}`} params={params} result={result} zh={zh} />
   if (id === 'vfa') return <VfaEvidenceStage result={result} zh={zh} />
   if (id === 'dqn') return <DqnEvidenceStage params={params} result={result} zh={zh} />
   if (id === 'policygradient') return <PolicyGradientEvidenceStage params={params} result={result} zh={zh} set={set} />
