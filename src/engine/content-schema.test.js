@@ -28,6 +28,29 @@ function collectVisibleIds(value, result = new Set()) {
   return result
 }
 
+function collectRenderedChapterIds(chapterId, chapterContent) {
+  if (Array.isArray(chapterContent?.articleFlow)) {
+    return collectVisibleIds(chapterContent.articleFlow)
+  }
+  if (chapterId === 'mdp') {
+    const ids = collectVisibleIds([chapterContent.learningPath, chapterContent.deepening])
+    ids.add('chapter-experiment')
+    return ids
+  }
+  if (chapterId === 'montecarlo') {
+    const ids = collectVisibleIds([
+      chapterContent.prelude,
+      chapterContent.derivation,
+      chapterContent.reasoningPath,
+      chapterContent.algorithms,
+      chapterContent.sections,
+    ])
+    ids.add('chapter-experiment')
+    return ids
+  }
+  return collectVisibleIds(chapterContent)
+}
+
 function findVisibleNode(value, id) {
   if (!value || typeof value !== 'object') return null
   if (value.id === id) return value
@@ -376,8 +399,8 @@ test('the 21-chapter source-coverage matrix maps every required source item to v
     assert.ok(coverage.sourceBasis.length > 0, `${chapterId} source basis`)
     assert.ok(coverage.items.length >= 5, `${chapterId} coverage breadth`)
 
-    const zhIds = collectVisibleIds(copy.zh[chapterId])
-    const enIds = collectVisibleIds(copy.en[chapterId])
+    const zhIds = collectRenderedChapterIds(chapterId, copy.zh[chapterId])
+    const enIds = collectRenderedChapterIds(chapterId, copy.en[chapterId])
     const sourceIds = new Set(copy.zh[chapterId].sources.map((source) => source.id))
     const itemIds = new Set()
 

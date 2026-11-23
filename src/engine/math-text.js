@@ -44,8 +44,9 @@ export function normalizeMathText(source) {
     .replace(/\bGreedy(?=\()/g, String.raw`\operatorname{Greedy}`)
 }
 
-export function splitMathText(source) {
-  const text = String(source ?? '')
+const explicitInlineLatexPattern = /\$([^$\n]+?)\$/g
+
+function splitLegacyMathText(text) {
   const segments = []
   let cursor = 0
 
@@ -64,8 +65,29 @@ export function splitMathText(source) {
   return segments.length ? segments : [{ type: 'text', value: text }]
 }
 
+export function splitMathText(source) {
+  const text = String(source ?? '')
+  if (!text.includes('$')) return splitLegacyMathText(text)
+
+  const segments = []
+  let cursor = 0
+  for (const match of text.matchAll(explicitInlineLatexPattern)) {
+    if (match.index > cursor) {
+      segments.push(...splitLegacyMathText(text.slice(cursor, match.index)))
+    }
+    const latex = match[1].trim()
+    if (latex) segments.push({ type: 'math', value: latex })
+    cursor = match.index + match[0].length
+  }
+  if (cursor < text.length) {
+    segments.push(...splitLegacyMathText(text.slice(cursor)))
+  }
+  return segments.length ? segments : [{ type: 'text', value: text }]
+}
+
 export function isStandaloneFormula(source) {
   const text = String(source ?? '').trim()
+  if (text.includes('$')) return false
   const hasFullWidthProsePunctuation = /[，。；：！？、]/.test(text)
   return Boolean(text && distinctiveMathPattern.test(text) && !/[\u3400-\u9fff]/.test(text) && !hasFullWidthProsePunctuation && !proseWordPattern.test(text))
 }

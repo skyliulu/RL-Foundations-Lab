@@ -933,36 +933,213 @@ export function compareControl({ epsilon = 0.12, alpha = 0.3, seed = 20260719 } 
   }
 }
 
-export function runFunctionApproximation({ width = 1.2, alpha = 0.24, target = 5 } = {}) {
-  const positions = [-2, -1, 0, 1, 2]
-  const features = positions.map((position) => Math.exp(-(position ** 2) / (2 * width ** 2)))
-  const before = positions.map((position) => 1.2 + 0.25 * position)
-  const centerError = target - before[2]
-  const after = before.map((value, index) => value + alpha * centerError * features[index])
-  return { series: after, before, after, features, centerError, spillover: Math.abs(after[1] - before[1]) }
+const VFA_ANCHOR_STATE_IDS = [11, 12, 13, 14, 15, 18]
+const VFA_ROW_STATE_IDS = [11, 12, 13, 14, 15]
+
+const VFA_SCENARIOS = {
+  interfere: {
+    probeStateId: 18,
+    referenceValues: { 11: 1.6, 12: 2.1, 13: -1.5, 14: 2.4, 15: 2.0, 18: 4.0 },
+    samples: [
+      { stateId: 18, target: 4.0, role: 'goal' },
+      { stateId: 13, target: -1.5, role: 'forbidden' },
+      { stateId: 18, target: 4.0, role: 'goal' },
+      { stateId: 13, target: -1.5, role: 'forbidden' },
+      { stateId: 14, target: 2.4, role: 'safe' },
+      { stateId: 13, target: -1.5, role: 'forbidden' },
+      { stateId: 18, target: 4.0, role: 'goal' },
+      { stateId: 13, target: -1.5, role: 'forbidden' },
+    ],
+  },
+  generalize: {
+    probeStateId: 15,
+    referenceValues: { 11: 1.8, 12: 2.2, 13: 2.5, 14: 2.7, 15: 2.4, 18: 3.4 },
+    samples: [
+      { stateId: 14, target: 2.7, role: 'safe' },
+      { stateId: 12, target: 2.2, role: 'safe' },
+      { stateId: 14, target: 2.7, role: 'safe' },
+      { stateId: 11, target: 1.8, role: 'safe' },
+      { stateId: 14, target: 2.7, role: 'safe' },
+      { stateId: 12, target: 2.2, role: 'safe' },
+      { stateId: 18, target: 3.4, role: 'goal' },
+      { stateId: 14, target: 2.7, role: 'safe' },
+    ],
+  },
 }
 
-export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, seed = 20260719 } = {}) {
+function vfaStateCoords(stateId) {
+  const index = stateId - 1
+  return { row: Math.floor(index / 5), col: index % 5 }
+}
+
+function vfaFeatureVector(stateId, width) {
+  const point = vfaStateCoords(stateId)
+  const raw = VFA_ANCHOR_STATE_IDS.map((anchorId) => {
+    const anchor = vfaStateCoords(anchorId)
+    const distSq = (point.row - anchor.row) ** 2 + (point.col - anchor.col) ** 2
+    return Math.exp(-distSq / (2 * width ** 2))
+  })
+  const norm = Math.sqrt(raw.reduce((sum, value) => sum + value * value, 0)) || 1
+  return raw.map((value) => value / norm)
+}
+
+function dot(a, b) {
+  return a.reduce((sum, value, index) => sum + value * b[index], 0)
+}
+
+export function runFunctionApproximation({ width = 1.2, alpha = 0.35, target = 5, scenario = 'interfere' } = {}) {
+  const boundedWidth = Math.max(0.35, Math.min(2.5, width))
+  const boundedAlpha = Math.max(0.05, Math.min(0.8, alpha))
+  const scenarioKey = VFA_SCENARIOS[scenario] ? scenario : 'interfere'
+  const spec = VFA_SCENARIOS[scenarioKey]
+  const gridStates = allStates().map((state, index) => ({
+    ...state,
+    index,
+    stateId: index + 1,
+    forbidden: rewardForTransition(state, false) === -1,
+    goal: isGoal(state),
+  }))
+
+  const featureMatrix = gridStates.map((state) => vfaFeatureVector(state.stateId, boundedWidth))
+  const evalAll = (weights) => featureMatrix.map((phi) => dot(phi, weights))
+  const evalReferenceMse = (values) => {
+    const entries = Object.entries(spec.referenceValues)
+    const squared = entries.reduce((sum, [stateId, truth]) => {
+      const diff = values[Number(stateId) - 1] - truth
+      return sum + diff * diff
+    }, 0)
+    return squared / entries.length
+  }
+
+  let weights = Array(VFA_ANCHOR_STATE_IDS.length).fill(0)
+  const tabular = Array(25).fill(0)
+  const frames = []
+  let interferenceEvents = 0
+
+  spec.samples.forEach((sample, stepIndex) => {
+    const stateIndex = sample.stateId - 1
+    const phiSample = featureMatrix[stateIndex]
+    const weightsBefore = [...weights]
+    const valuesBefore = evalAll(weightsBefore)
+    const tabularBefore = [...tabular]
+    const predictionBefore = valuesBefore[stateIndex]
+    const error = sample.target - predictionBefore
+    const deltaWeights = phiSample.map((value) => boundedAlpha * error * value)
+    weights = weightsBefore.map((value, index) => value + deltaWeights[index])
+    const valuesAfter = evalAll(weights)
+    const deltas = valuesAfter.map((value, index) => value - valuesBefore[index])
+    const innerProducts = featureMatrix.map((phi) => dot(phi, phiSample))
+
+    const tabularPrediction = tabularBefore[stateIndex]
+    const tabularError = sample.target - tabularPrediction
+    tabular[stateIndex] = tabularPrediction + boundedAlpha * tabularError
+    const tabularAfter = [...tabular]
+
+    const probeIndex = spec.probeStateId - 1
+    const probeTruth = spec.referenceValues[spec.probeStateId]
+    const probeBeforeError = Math.abs(valuesBefore[probeIndex] - probeTruth)
+    const probeAfterError = Math.abs(valuesAfter[probeIndex] - probeTruth)
+    const causedInterference = sample.stateId !== spec.probeStateId && probeAfterError > probeBeforeError + 0.02
+    if (causedInterference) interferenceEvents += 1
+
+    frames.push({
+      index: stepIndex,
+      stateId: sample.stateId,
+      role: sample.role,
+      target: sample.target,
+      phiSample,
+      weightsBefore,
+      deltaWeights,
+      weightsAfter: [...weights],
+      predictionBefore,
+      predictionAfter: valuesAfter[stateIndex],
+      error,
+      valuesBefore,
+      valuesAfter,
+      deltas,
+      innerProducts,
+      rowBefore: VFA_ROW_STATE_IDS.map((id) => valuesBefore[id - 1]),
+      rowAfter: VFA_ROW_STATE_IDS.map((id) => valuesAfter[id - 1]),
+      rowInnerProducts: VFA_ROW_STATE_IDS.map((id) => innerProducts[id - 1]),
+      tabularBefore,
+      tabularAfter,
+      linearMse: evalReferenceMse(valuesAfter),
+      tabularMse: evalReferenceMse(tabularAfter),
+      probeStateId: spec.probeStateId,
+      probeTruth,
+      probeLinearBefore: valuesBefore[probeIndex],
+      probeLinearAfter: valuesAfter[probeIndex],
+      probeDelta: deltas[probeIndex],
+      probeTabularAfter: tabularAfter[probeIndex],
+      causedInterference,
+    })
+  })
+
+  // Deterministic center-state inner-product summary along Row 3 (s_11..s_15)
+  const centerPhi = featureMatrix[12]
+  const rowFeatures = VFA_ROW_STATE_IDS.map((id) => dot(featureMatrix[id - 1], centerPhi))
+  const lastFrame = frames.at(-1)
+  const rowBefore = lastFrame.rowBefore
+  const rowAfter = lastFrame.rowAfter
+  const centerError = target - rowBefore[2]
+  const neighborInnerProduct = dot(featureMatrix[11], centerPhi)
+  const spillover = Math.abs(boundedAlpha * centerError * neighborInnerProduct)
+  const conflictInnerProduct = dot(featureMatrix[12], featureMatrix[17])
+
+  return {
+    scenario: scenarioKey,
+    width: boundedWidth,
+    alpha: boundedAlpha,
+    anchors: [...VFA_ANCHOR_STATE_IDS],
+    rowStateIds: [...VFA_ROW_STATE_IDS],
+    grid: {
+      size: 5,
+      states: gridStates,
+    },
+    frames,
+    finalWeights: [...weights],
+    finalValues: lastFrame.valuesAfter,
+    finalTabularValues: lastFrame.tabularAfter,
+    linearMse: lastFrame.linearMse,
+    tabularMse: lastFrame.tabularMse,
+    interferenceEvents,
+    conflictInnerProduct,
+    neighborInnerProduct,
+    series: rowAfter,
+    before: rowBefore,
+    after: rowAfter,
+    features: rowFeatures,
+    centerError,
+    spillover,
+  }
+}
+
+const DQN_GRID_STREAM = [
+  { id: 1, stateId: 25, actionName: 'left', nextStateId: 24, feature: 0.25, action: 0, reward: 0, nextFeature: 0.38 },
+  { id: 2, stateId: 24, actionName: 'up', nextStateId: 19, feature: 0.38, action: 1, reward: -1, nextFeature: 0.31 },
+  { id: 3, stateId: 24, actionName: 'left', nextStateId: 23, feature: 0.52, action: 0, reward: 0, nextFeature: 0.66 },
+  { id: 4, stateId: 23, actionName: 'up', nextStateId: 18, feature: 0.66, action: 1, reward: 1, nextFeature: 0.81 },
+  { id: 5, stateId: 15, actionName: 'down', nextStateId: 20, feature: 0.81, action: 0, reward: 0, nextFeature: 0.94 },
+  { id: 6, stateId: 14, actionName: 'down', nextStateId: 19, feature: 0.94, action: 1, reward: 2, nextFeature: 1 },
+]
+
+function simulateDqnTrajectory({ replay = 0.7, targetPeriod = 8, steps = 40, seed = 20260719 } = {}) {
+  const boundedPeriod = Math.max(1, Math.round(targetPeriod))
   const random = lcg(seed)
-  const stream = [
-    { id: 1, feature: 0.25, action: 0, reward: 0, nextFeature: 0.38 },
-    { id: 2, feature: 0.38, action: 1, reward: -1, nextFeature: 0.31 },
-    { id: 3, feature: 0.52, action: 0, reward: 0, nextFeature: 0.66 },
-    { id: 4, feature: 0.66, action: 1, reward: 1, nextFeature: 0.81 },
-    { id: 5, feature: 0.81, action: 0, reward: 0, nextFeature: 0.94 },
-    { id: 6, feature: 0.94, action: 1, reward: 2, nextFeature: 1 },
-  ]
   const buffer = []
   const sampledKeys = []
   const sampledFeatures = []
   const series = []
+  const frames = []
+  const reuseCounts = new Map()
   let online = [0.15, -0.08]
   let target = [...online]
+  let syncCount = 0
   let lastUpdate = null
   const predict = (weights, feature, action) => weights[0] * feature + weights[1] * (action ? 1 : -1)
 
   for (let step = 0; step < steps; step += 1) {
-    const observed = stream[step % stream.length]
+    const observed = DQN_GRID_STREAM[step % DQN_GRID_STREAM.length]
     const stored = { ...observed, time: step, key: `${step}:${observed.id}` }
     buffer.push(stored)
     if (buffer.length > 24) buffer.shift()
@@ -970,6 +1147,8 @@ export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, se
     const sample = buffer[sampleIndex]
     sampledKeys.push(sample.key)
     sampledFeatures.push(sample.feature)
+    reuseCounts.set(sample.key, (reuseCounts.get(sample.key) || 0) + 1)
+
     const onlineBefore = [...online]
     const targetBefore = [...target]
     const nextActionValues = [predict(targetBefore, sample.nextFeature, 0), predict(targetBefore, sample.nextFeature, 1)]
@@ -983,12 +1162,22 @@ export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, se
       onlineBefore[0] + updateVector[0],
       onlineBefore[1] + updateVector[1],
     ]
-    const synced = (step + 1) % targetPeriod === 0
-    if (synced) target = [...online]
-    lastUpdate = {
+    const synced = (step + 1) % boundedPeriod === 0
+    if (synced) {
+      target = [...online]
+      syncCount += 1
+    }
+
+    const probeOnlineQ = predict(online, 0.75, 1)
+    const probeTargetQ = predict(target, 0.75, 1)
+    const probeTargetBeforeQ = predict(targetBefore, 0.75, 1)
+    const updatesSinceSync = (step + 1) % boundedPeriod
+    const stepsUntilSync = boundedPeriod - (updatesSinceSync || boundedPeriod)
+    const frame = {
       number: step + 1,
       sample,
       sampleIndex,
+      sampleReuseCount: reuseCounts.get(sample.key),
       onlineBefore,
       targetBefore,
       nextActionValues,
@@ -999,27 +1188,59 @@ export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, se
       updateVector,
       onlineAfter: [...online],
       targetAfter: [...target],
+      probeOnlineQ,
+      probeTargetQ,
+      probeTargetBeforeQ,
+      instantDrift: Math.abs(probeOnlineQ - probeTargetQ),
       synced,
+      updatesSinceSync,
+      stepsUntilSync,
+      bufferWindow: buffer.slice(-8).map((item) => ({
+        ...item,
+        reuseCount: reuseCounts.get(item.key) || 0,
+      })),
+      recentSampledKeys: sampledKeys.slice(-6),
     }
+    frames.push(frame)
+    lastUpdate = frame
     series.push(Math.abs(error))
   }
 
-  const adjacentFeatureDistance = mean(sampledFeatures.slice(1).map((feature, index) => Math.abs(feature - sampledFeatures[index])))
+  const adjacentFeatureDistance = sampledFeatures.length > 1
+    ? mean(sampledFeatures.slice(1).map((feature, index) => Math.abs(feature - sampledFeatures[index])))
+    : 0
   const correlation = Math.max(0, 1 - adjacentFeatureDistance / 0.75)
   const drift = Math.abs(predict(online, 0.75, 1) - predict(target, 0.75, 1))
+  const totalReused = [...reuseCounts.values()].filter((count) => count > 1).length
+
   return {
     series,
+    frames,
     correlation,
     drift,
+    syncCount,
+    targetMoveRate: steps > 0 ? syncCount / steps : 0,
+    reusedTransitionCount: totalReused,
     replaySize: buffer.length,
-    targetPeriod,
+    targetPeriod: boundedPeriod,
     buffer: buffer.slice(-6),
     sampledKeys: sampledKeys.slice(-6),
     online,
     target,
     lastUpdate,
-    updatesSinceSync: steps % targetPeriod,
-    stepsUntilSync: targetPeriod - (steps % targetPeriod || targetPeriod),
+    updatesSinceSync: steps % boundedPeriod,
+    stepsUntilSync: boundedPeriod - (steps % boundedPeriod || boundedPeriod),
+  }
+}
+
+export function runDqnStability({ replay = 0.7, targetPeriod = 8, steps = 42, seed = 20260719 } = {}) {
+  const main = simulateDqnTrajectory({ replay, targetPeriod, steps, seed })
+  const naive = simulateDqnTrajectory({ replay: 0, targetPeriod: 1, steps, seed })
+  return {
+    ...main,
+    naiveSeries: naive.frames.map((frame) => frame.probeOnlineQ),
+    naiveCorrelation: naive.correlation,
+    naiveTargetMoveRate: naive.targetMoveRate,
   }
 }
 
@@ -1093,6 +1314,59 @@ export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, b
     const average = mean(values)
     return mean(values.map((value) => (value - average) ** 2))
   }
+
+  // 12-episode REINFORCE policy-evolution counterfactual on one fixed stream (with vs without baseline)
+  // All returns are positive (1.0..2.6) with mean ~1.48, so b=0 mistakenly reinforces suboptimal positive draws
+  // while b≈1.4 suppresses suboptimal actions and lowers gradient step jitter.
+  const episodeStream = [
+    { actionIndex: 0, returnValue: 1.2 },
+    { actionIndex: 2, returnValue: 1.0 },
+    { actionIndex: 1, returnValue: 2.4 },
+    { actionIndex: 0, returnValue: 1.3 },
+    { actionIndex: 2, returnValue: 1.1 },
+    { actionIndex: 1, returnValue: 2.5 },
+    { actionIndex: 0, returnValue: 1.2 },
+    { actionIndex: 2, returnValue: 1.0 },
+    { actionIndex: 1, returnValue: 2.3 },
+    { actionIndex: 0, returnValue: 1.1 },
+    { actionIndex: 2, returnValue: 1.0 },
+    { actionIndex: 1, returnValue: 2.6 },
+  ]
+  const stepLogitsInit = [0.25, 0.0, -0.25]
+  let logitsWith = [...stepLogitsInit]
+  let logitsRaw = [...stepLogitsInit]
+  const evolutionFrames = episodeStream.map((ep, index) => {
+    const probsWithBefore = normalize(logitsWith)
+    const probsRawBefore = normalize(logitsRaw)
+    const weightWith = ep.returnValue - baseline
+    const weightRaw = ep.returnValue
+    const gradWith = probsWithBefore.map((p, a) => weightWith * ((a === ep.actionIndex ? 1 : 0) - p))
+    const gradRaw = probsRawBefore.map((p, a) => weightRaw * ((a === ep.actionIndex ? 1 : 0) - p))
+    logitsWith = logitsWith.map((v, a) => v + alpha * gradWith[a])
+    logitsRaw = logitsRaw.map((v, a) => v + alpha * gradRaw[a])
+    const probsWithAfter = normalize(logitsWith)
+    const probsRawAfter = normalize(logitsRaw)
+    return {
+      episode: index + 1,
+      actionIndex: ep.actionIndex,
+      returnValue: ep.returnValue,
+      withBaseline: {
+        weight: weightWith,
+        probsBefore: probsWithBefore,
+        probsAfter: probsWithAfter,
+        optimalProb: probsWithAfter[1],
+        stepMagnitude: Math.sqrt(gradWith.reduce((sum, v) => sum + v * v, 0)),
+      },
+      withoutBaseline: {
+        weight: weightRaw,
+        probsBefore: probsRawBefore,
+        probsAfter: probsRawAfter,
+        optimalProb: probsRawAfter[1],
+        stepMagnitude: Math.sqrt(gradRaw.reduce((sum, v) => sum + v * v, 0)),
+      },
+    }
+  })
+
   return {
     series: [probability, nextProbability],
     probability,
@@ -1118,6 +1392,7 @@ export function runPolicyGradient({ theta = 0, selectedStep = 0, alpha = 0.18, b
     })),
     stepContributions,
     rollouts,
+    evolutionFrames,
     varianceWithoutBaseline: variance(rollouts.map((rollout) => rollout.rawContribution)),
     varianceWithBaseline: variance(rollouts.map((rollout) => rollout.centeredContribution)),
   }
@@ -1142,6 +1417,56 @@ export function runActorCritic({ reward = 1, gamma = 0.9, value = 2.2, nextValue
   const logitsAfter = logitsBefore.map((logit, index) => logit + actorUpdateVector[index])
   const probabilitiesAfter = normalize(logitsAfter)
   const actorStep = actorAlpha * ratio * delta
+
+  // 16-step coupled Actor-Critic loop (Step 0 matches the single-transition microscope exactly)
+  const actionTargets = [
+    reward * 0.35 + gamma * (nextValue * 0.72),
+    target,
+    reward * 0.1 + gamma * (nextValue * 0.55),
+  ]
+  const loopActions = [1, 0, 1, 2, 1, 0, 1, 1, 2, 1, 0, 1, 1, 0, 1, 1]
+  let vCur = value
+  let hCur = [...logitsBefore]
+  const loopFrames = loopActions.map((act, index) => {
+    const stepTarget = actionTargets[act]
+    const stepDelta = stepTarget - vCur
+    const vBefore = vCur
+    const vCorr = criticAlpha * stepDelta
+    vCur = vBefore + vCorr
+    const pBefore = normalize(hCur)
+    const score = pBefore.map((p, a) => (a === act ? 1 : 0) - p)
+    const hBefore = [...hCur]
+    const hDelta = score.map((s) => actorAlpha * ratio * stepDelta * s)
+    hCur = hBefore.map((h, a) => h + hDelta[a])
+    const pAfter = normalize(hCur)
+    const trueStateValue = pBefore.reduce((sum, p, a) => sum + p * actionTargets[a], 0)
+    return {
+      step: index + 1,
+      actionIndex: act,
+      target: stepTarget,
+      trueStateValue,
+      delta: stepDelta,
+      critic: {
+        valueBefore: vBefore,
+        target: stepTarget,
+        delta: stepDelta,
+        correction: vCorr,
+        valueAfter: vCur,
+      },
+      actor: {
+        actionIndex: act,
+        logitsBefore: hBefore,
+        probabilitiesBefore: pBefore,
+        scoreVector: score,
+        updateVector: hDelta,
+        logitsAfter: [...hCur],
+        probabilitiesAfter: pAfter,
+        optimalProb: pAfter[1],
+        stepScale: actorAlpha * ratio * stepDelta,
+      },
+    }
+  })
+
   return {
     series: [value, target, nextValueEstimate],
     delta,
@@ -1149,6 +1474,8 @@ export function runActorCritic({ reward = 1, gamma = 0.9, value = 2.2, nextValue
     nextValueEstimate,
     actorStep,
     ratio,
+    actorAlpha,
+    criticAlpha,
     critic: {
       valueBefore: value,
       target,
@@ -1165,6 +1492,7 @@ export function runActorCritic({ reward = 1, gamma = 0.9, value = 2.2, nextValue
       logitsAfter,
       probabilitiesAfter,
     },
+    loopFrames,
   }
 }
 

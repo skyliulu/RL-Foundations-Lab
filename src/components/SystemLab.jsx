@@ -93,8 +93,8 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
           </div>
           <div className="algorithm-columns">
             <div><small>{lang === 'zh' ? '旧策略概率' : 'Old policy'}</small><strong><MathFormula latex={String.raw`\pi_{\mathrm{old}}(a_t\mid s_t)=${selected.oldProbability.toFixed(2)}`} /></strong></div>
-            <div><small>{c.ratio}</small><strong><MathFormula latex={String.raw`r_t=${selected.ratio.toFixed(3)}`} /></strong></div>
-            <div><small>{c.advantage}</small><strong><MathFormula latex={String.raw`\widehat A_t=${selected.advantage.toFixed(2)}`} /></strong></div>
+            <div><small><MathText>{c.ratio}</MathText></small><strong><MathFormula latex={String.raw`r_t=${selected.ratio.toFixed(3)}`} /></strong></div>
+            <div><small><MathText>{c.advantage}</MathText></small><strong><MathFormula latex={String.raw`\widehat A_t=${selected.advantage.toFixed(2)}`} /></strong></div>
             <div className={selected.clipped ? 'warn' : ''}><small><MathFormula latex={String.raw`\operatorname{clip}(r_t)`} /></small><strong>{selected.clippedRatio.toFixed(3)}</strong></div>
           </div>
           <div className="shared-equation"><MathFormula block latex={String.raw`L_t=\min\!\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)-\beta D_{\mathrm{KL}}\!\left(\pi_\theta\,\|\,\pi_{\mathrm{ref}}\right)`} /><strong><MathFormula latex={String.raw`${selected.surrogate.toFixed(3)}-${klBeta.toFixed(2)}\times ${selected.approxKl.toFixed(3)}`} /></strong></div>
@@ -110,7 +110,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
           </div>
           <div className="branch-lines" aria-hidden="true"><span>↙</span><span>↓</span><span>↘</span></div>
           <div className="pipeline-row scoring-flow">
-            <PipelineNode id="reference" label={c.reference} iconLatex={String.raw`\pi_0`} active={selectedNode === 'reference'} onClick={setSelectedNode} />
+            <PipelineNode id="reference" label={c.reference} iconLatex={String.raw`\pi_{\mathrm{ref}}`} active={selectedNode === 'reference'} onClick={setSelectedNode} />
             <PipelineNode id="rewardModel" label={c.rewardModel} iconLatex={String.raw`R`} active={selectedNode === 'rewardModel'} onClick={setSelectedNode} />
             <PipelineNode id="valueModel" label={c.valueModel} iconLatex={String.raw`V`} active={selectedNode === 'valueModel'} onClick={setSelectedNode} />
           </div>

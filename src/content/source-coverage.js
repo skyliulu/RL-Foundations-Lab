@@ -43,7 +43,7 @@ export const sourceCoverageMatrix = Object.freeze({
   bellman: chapter(
     ['coursebook-chapter-2', 'llm-infra-section-3'],
     [
-      required('bellman-expectation', 'derivation', 'Bellman expectation equation from return recursion', ['value-definition', 'substitute-return-recursion', 'total-expectation', 'recognize-successor-value', 'bellman-equation'], ['return-recursion', 'bellman-derivation']),
+      required('bellman-expectation', 'derivation', 'Bellman expectation equation from return recursion', ['conditional-expectation', 'substitute-return-recursion', 'total-expectation', 'recognize-successor-value', 'bellman-equation'], ['return-recursion', 'bellman-derivation']),
       required('four-state-system', 'worked-example', 'Four-state coupled Bellman system', ['four-state-worked-system'], ['bellman-derivation']),
       required('matrix-solution', 'comparison', 'Matrix solution and iterative policy evaluation', ['matrix-and-iteration'], ['matrix-policy-evaluation']),
       required('bootstrapping', 'definition', 'One-step target and bootstrapping', ['target-anatomy', 'bootstrapping'], ['bellman-derivation']),
@@ -126,9 +126,9 @@ export const sourceCoverageMatrix = Object.freeze({
     ['coursebook-chapter-8', 'llm-infra-section-9'],
     [
       required('parameterized-value', 'definition', 'Parameterized value function', ['capacity', 'parameterization'], ['vfa']),
-      required('weighted-objective', 'derivation', 'Weighted mean-squared value error', ['distribution', 'objective', 'objective-and-semi-gradient'], ['vfa']),
+      required('weighted-objective', 'derivation', 'Weighted mean-squared value error', ['distribution', 'objective'], ['vfa']),
       required('semi-gradient', 'algorithm', 'Semi-gradient TD update', ['sample-target', 'semi-gradient'], ['vfa']),
-      required('linear-features', 'worked-example', 'Linear features and parameter sharing', ['linear', 'linear-sharing', 'generalization', 'interference'], ['vfa']),
+      required('linear-features', 'worked-example', 'Linear features and parameter sharing', ['linear', 'linear-sharing', 'interference'], ['vfa']),
       required('approximate-control', 'variant', 'Approximate Sarsa and Q-learning control', ['approximate-control'], ['vfa']),
     ],
   ),
@@ -136,7 +136,7 @@ export const sourceCoverageMatrix = Object.freeze({
     ['coursebook-chapter-8', 'llm-infra-section-9'],
     [
       required('network-q', 'definition', 'Neural action-value approximation', ['coupling', 'network-q'], ['dqn']),
-      required('moving-target', 'failure-case', 'Moving bootstrap target instability', ['two-instabilities', 'naive-target', 'moving-target'], ['dqn']),
+      required('moving-target', 'failure-case', 'Moving bootstrap target instability', ['coupling', 'naive-target', 'moving-target'], ['dqn']),
       required('target-network', 'mechanism', 'Frozen target network and synchronization', ['target-network', 'sync'], ['dqn']),
       required('experience-replay', 'mechanism', 'Experience replay and replay loss', ['replay-why', 'replay-loss'], ['dqn']),
       required('dqn-loop', 'algorithm', 'Complete DQN training loop', ['dqn-complete'], ['dqn']),
@@ -167,11 +167,11 @@ export const sourceCoverageMatrix = Object.freeze({
   ppo: chapter(
     ['ppo-paper', 'llm-infra-section-12'],
     [
-      required('actor-critic-interface', 'definition', 'Actor, critic, and advantage interface', ['actor-critic-loop', 'policy-gradient', 'baseline', 'td-advantage'], ['actor-critic']),
+      required('actor-critic-interface', 'definition', 'Actor, critic, and advantage interface', ['actor-critic-loop', 'chapter-experiment'], ['actor-critic']),
       required('importance-ratio', 'derivation', 'Old-to-new policy probability ratio', ['ratio', 'surrogate'], ['ppo-paper']),
       required('clipped-objective', 'derivation', 'Clipped surrogate objective and four sign cases', ['clipped-objective', 'ratio-to-clipping-cases'], ['ppo-paper']),
       required('gae', 'variant', 'Generalized advantage estimation', ['gae'], ['ppo-paper']),
-      required('ppo-objective', 'algorithm', 'Complete PPO objective and update loop', ['full-objective', 'update-cycle', 'ppo-complete-loop'], ['ppo-paper']),
+      required('ppo-objective', 'algorithm', 'Complete PPO objective and update loop', ['full-objective', 'ppo-complete-loop'], ['ppo-paper']),
       required('clip-plane', 'experiment', 'Fixed-batch clipping counterfactual', ['chapter-experiment'], ['ppo-paper']),
     ],
   ),
@@ -190,10 +190,10 @@ export const sourceCoverageMatrix = Object.freeze({
     ['instructgpt', 'ppo', 'llm-infra-section-13'],
     [
       required('training-stages', 'comparison', 'SFT, reward modeling, and online PPO stages', ['pipeline-level'], ['instructgpt']),
-      required('model-roles', 'definition', 'Policy, old, reference, reward, and value roles', ['role-separation', 'model-provenance', 'model-roles'], ['instructgpt', 'ppo']),
+      required('model-roles', 'definition', 'Policy, old, reference, reward, and value roles', ['model-provenance', 'chapter-experiment'], ['instructgpt', 'ppo']),
       required('sequence-reward', 'derivation', 'Sequence preference score to token reward', ['reward-model', 'reference-kl', 'sequence-to-token-reward'], ['instructgpt']),
       required('token-gae', 'derivation', 'Token value, GAE, and PPO targets', ['token-gae', 'ppo-update'], ['ppo']),
-      required('batch-contract', 'definition', 'PPO batch provenance, alignment, and failure modes', ['batch-contract-and-failures', 'batch-contract'], ['instructgpt']),
+      required('batch-contract', 'definition', 'PPO batch provenance, alignment, and failure modes', ['batch-contract-and-failures', 'chapter-experiment'], ['instructgpt']),
       required('online-lifecycle', 'algorithm', 'Rollout, update, publish, and refresh lifecycle', ['refresh-loop', 'online-loop', 'chapter-experiment'], ['instructgpt']),
     ],
   ),

@@ -59,3 +59,28 @@ test('full-width prose punctuation cannot turn a mixed pseudocode line into one 
   assert.equal(isStandaloneFormula('Δ ← max(Δ, |new−V(s)|)；V(s) ← new'), false)
   assert.equal(isStandaloneFormula('π(a|s) ← ε/|A|，a≠a*'), false)
 })
+
+test('explicit dollar-delimited inline LaTeX splits cleanly and renders strictly in KaTeX', () => {
+  const sample = String.raw`在线性近似 $\widehat v(s,\mathbf w)=\boldsymbol\phi(s)^{\top}\mathbf w$ 中，更新为 $\Delta\mathbf w=\alpha\delta\boldsymbol\phi(S_t)$。`
+  assert.equal(isStandaloneFormula(sample), false)
+  const segments = splitMathText(sample)
+  assert.deepEqual(
+    segments.filter((segment) => segment.type === 'math').map((segment) => segment.value),
+    [
+      String.raw`\widehat v(s,\mathbf w)=\boldsymbol\phi(s)^{\top}\mathbf w`,
+      String.raw`\Delta\mathbf w=\alpha\delta\boldsymbol\phi(S_t)`,
+    ],
+  )
+  for (const locale of ['zh', 'en']) {
+    collectStrings(copy[locale]).filter((source) => source.includes('$')).forEach((source) => {
+      splitMathText(source)
+        .filter((segment) => segment.type === 'math')
+        .forEach((segment) => {
+          assert.doesNotThrow(
+            () => katex.renderToString(segment.value, { throwOnError: true, strict: 'error' }),
+            `${locale}: ${source} -> ${segment.value}`,
+          )
+        })
+    })
+  }
+})

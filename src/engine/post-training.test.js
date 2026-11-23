@@ -22,4 +22,22 @@ describe('post-training method calculations', () => {
     assert.ok(Math.abs(meanAdvantage) < 1e-8)
     assert.ok(result.samples.some((sample) => sample.ratio !== sample.clippedRatio))
   })
+
+  it('GRPO supports variable group sizes and filters uninformative groups under dynamic sampling', () => {
+    const large = evaluateGrpo({ rewards: [0.2, 0.9, 0.55, -0.05, 0.75, 0.1, 0.85, 0.3] })
+    assert.equal(large.groupSize, 8)
+    assert.equal(large.activeCount, 8)
+    assert.equal(large.informative, true)
+
+    const flatUnfiltered = evaluateGrpo({ rewards: [1, 1, 1, 1], dynamicSampling: false })
+    assert.equal(flatUnfiltered.informative, false)
+    assert.equal(flatUnfiltered.filteredOut, false)
+    assert.equal(flatUnfiltered.activeCount, 4)
+
+    const flatFiltered = evaluateGrpo({ rewards: [1, 1, 1, 1], dynamicSampling: true })
+    assert.equal(flatFiltered.informative, false)
+    assert.equal(flatFiltered.filteredOut, true)
+    assert.equal(flatFiltered.activeCount, 0)
+    assert.ok(flatFiltered.samples.every((sample) => !sample.usedInUpdate && sample.effectiveObjective === 0))
+  })
 })

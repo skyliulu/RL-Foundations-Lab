@@ -890,3 +890,21 @@ test('every chapter closes with a chapter-specific bilingual summary title', asy
     }
   }
 })
+
+test('chapter 8 bridges chapters 6 and 7 while chapter 18 exposes group-size, dynamic sampling, and a post-experiment transition', async () => {
+  const { copy } = await import('../content.js')
+  const modern = read('components/ModernExtensionLab.jsx')
+  const learning = read('components/LearningLab.jsx')
+
+  assert.match(copy.zh.td.intro, /第 06 章.*第 07 章/)
+  assert.match(copy.en.td.intro, /Chapter 6.*Chapter 7/)
+
+  assert.equal(copy.zh.grpo.articleFlow.at(-1).id, 'coding-bridge')
+  assert.equal(copy.en.grpo.articleFlow.at(-1).id, 'coding-bridge')
+  assert.match(modern, /grpo-size-segmented/)
+  assert.match(modern, /grpo-filter-toggle/)
+  assert.match(modern, /dynamicSampling/)
+
+  assert.match(learning, /s_\{11\}\\leftrightarrow s_\{12\}\\leftrightarrow s_\{13\}\\leftrightarrow s_\{14\}\\leftrightarrow s_\{15\}/)
+  assert.match(learning, /s_\{\$\{index \+ 11\}\}/)
+})

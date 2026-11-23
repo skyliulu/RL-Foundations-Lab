@@ -256,6 +256,7 @@ const orders = {
     ref('deepening', 'complete-grpo', 'topic'),
     ref('sections', 'group-cost', 'turn', { formulas: false }),
     experiment(),
+    ref('sections', 'coding-bridge', 'turn', { formulas: false }),
   ],
   codingrl: [
     ref('prelude', 'code-as-action', 'section'),

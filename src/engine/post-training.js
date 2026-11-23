@@ -37,17 +37,46 @@ export function evaluateDpo({ beta = 0.1, contrast = 0.54, chosenShift = contras
   }
 }
 
-export function evaluateGrpo({ rewards = [0.2, 0.9, 0.55, -0.05], clip = 0.2, klBeta = 0.08 } = {}) {
-  const ratios = [0.88, 1.24, 1.08, 0.76]
-  const kls = [0.018, 0.041, 0.024, 0.052]
+export function evaluateGrpo({
+  rewards = [0.2, 0.9, 0.55, -0.05],
+  clip = 0.2,
+  klBeta = 0.08,
+  dynamicSampling = false,
+  varianceThreshold = 0.02,
+} = {}) {
+  const ratios = [0.88, 1.24, 1.08, 0.76, 1.15, 0.94, 1.31, 0.82]
+  const kls = [0.018, 0.041, 0.024, 0.052, 0.031, 0.019, 0.047, 0.027]
   const mean = rewards.reduce((sum, value) => sum + value, 0) / rewards.length
   const variance = rewards.reduce((sum, value) => sum + (value - mean) ** 2, 0) / rewards.length
   const std = Math.sqrt(variance)
+  const informative = std >= varianceThreshold
+  const filteredOut = Boolean(dynamicSampling && !informative)
   const samples = rewards.map((reward, index) => {
+    const ratio = ratios[index % ratios.length]
+    const kl = kls[index % kls.length]
     const advantage = (reward - mean) / (std + 1e-8)
-    const clippedRatio = Math.min(1 + clip, Math.max(1 - clip, ratios[index]))
-    const surrogate = Math.min(ratios[index] * advantage, clippedRatio * advantage)
-    return { id: String.fromCharCode(65 + index), reward, advantage, ratio: ratios[index], clippedRatio, kl: kls[index], objective: surrogate - klBeta * kls[index] }
+    const clippedRatio = Math.min(1 + clip, Math.max(1 - clip, ratio))
+    const surrogate = Math.min(ratio * advantage, clippedRatio * advantage)
+    const objective = surrogate - klBeta * kl
+    return {
+      id: String.fromCharCode(65 + index),
+      reward,
+      advantage,
+      ratio,
+      clippedRatio,
+      kl,
+      objective,
+      usedInUpdate: !filteredOut,
+      effectiveObjective: filteredOut ? 0 : objective,
+    }
   })
-  return { mean, std, samples }
+  return {
+    mean,
+    std,
+    informative,
+    filteredOut,
+    activeCount: filteredOut ? 0 : samples.length,
+    groupSize: samples.length,
+    samples,
+  }
 }

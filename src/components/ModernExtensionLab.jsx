@@ -35,10 +35,10 @@ function DpoLab({ lang }) {
   const result = useMemo(() => evaluateDpo({ beta, chosenShift, rejectedShift, learningRate }), [beta, chosenShift, rejectedShift, learningRate])
   return <div className="modern-lab-body">
     <div className="modern-controls dpo-controls"><label><span><MathFormula latex={String.raw`\beta`} /> <output>{beta.toFixed(2)}</output></span><input aria-label="beta" type="range" min="0.05" max="1.2" step="0.05" value={beta} onChange={(event) => setBeta(Number(event.target.value))} /></label><label><span>{lang === 'zh' ? 'chosen 相对参考模型的变化' : 'Chosen shift from reference'} <output>{chosenShift.toFixed(2)}</output></span><input aria-label="chosen shift" type="range" min="-0.8" max="1.2" step="0.05" value={chosenShift} onChange={(event) => setChosenShift(Number(event.target.value))} /></label><label><span>{lang === 'zh' ? 'rejected 相对参考模型的变化' : 'Rejected shift from reference'} <output>{rejectedShift.toFixed(2)}</output></span><input aria-label="rejected shift" type="range" min="-1.2" max="0.8" step="0.05" value={rejectedShift} onChange={(event) => setRejectedShift(Number(event.target.value))} /></label><label><span>{lang === 'zh' ? '单步学习率' : 'One-step learning rate'} <MathFormula latex={String.raw`\alpha`} /> <output>{learningRate.toFixed(2)}</output></span><input aria-label="DPO learning rate" type="range" min="0.1" max="1.2" step="0.05" value={learningRate} onChange={(event) => setLearningRate(Number(event.target.value))} /></label></div>
-    <div className="preference-pair"><article className="chosen"><small>{lang === 'zh' ? 'CHOSEN 回答' : 'CHOSEN RESPONSE'}</small><p>{lang === 'zh' ? '解释原因并覆盖边界条件。' : 'Explains the cause and covers edge cases.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=${result.chosenShift.toFixed(2)}`} /></b></article><span>≻</span><article><small>{lang === 'zh' ? 'REJECTED 回答' : 'REJECTED RESPONSE'}</small><p>{lang === 'zh' ? '只给结论，遗漏关键条件。' : 'States a conclusion and misses key conditions.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=${result.rejectedShift.toFixed(2)}`} /></b></article></div>
+    <div className="preference-pair"><article className="chosen"><small>{lang === 'zh' ? '偏好回答 ' : 'Chosen response '}<MathFormula latex={String.raw`y_w`} /></small><p>{lang === 'zh' ? '解释原因并覆盖边界条件。' : 'Explains the cause and covers edge cases.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=${result.chosenShift.toFixed(2)}`} /></b></article><span className="preference-relation"><MathFormula latex={String.raw`\succ`} /></span><article><small>{lang === 'zh' ? '被拒回答 ' : 'Rejected response '}<MathFormula latex={String.raw`y_l`} /></small><p>{lang === 'zh' ? '只给结论，遗漏关键条件。' : 'States a conclusion and misses key conditions.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=${result.rejectedShift.toFixed(2)}`} /></b></article></div>
     <div className="dpo-logprob-ledger">
       <span>{lang === 'zh' ? '回答' : 'Response'}</span><span>{lang === 'zh' ? '参考模型' : 'Reference'}</span><span>{lang === 'zh' ? '当前策略' : 'Current policy'}</span><span>{lang === 'zh' ? '相对变化' : 'Shift'}</span>
-      {['chosen', 'rejected'].map((key) => <div key={key}><strong>{key}</strong><MathFormula latex={String.raw`\log\pi_{\rm ref}=${result.pair[key].referenceLogp.toFixed(2)}`} /><MathFormula latex={String.raw`\log\pi_\theta=${result.pair[key].currentLogp.toFixed(2)}`} /><MathFormula latex={String.raw`\Delta=${result[`${key}Shift`].toFixed(2)}`} /></div>)}
+      {['chosen', 'rejected'].map((key) => <div key={key}><strong>{lang === 'zh' ? (key === 'chosen' ? '偏好回答' : '被拒回答') : key}</strong><MathFormula latex={String.raw`\log\pi_{\rm ref}=${result.pair[key].referenceLogp.toFixed(2)}`} /><MathFormula latex={String.raw`\log\pi_\theta=${result.pair[key].currentLogp.toFixed(2)}`} /><MathFormula latex={String.raw`\Delta=${result[`${key}Shift`].toFixed(2)}`} /></div>)}
     </div>
     <div className="dpo-update-ledger">
       <article><span>{lang === 'zh' ? '更新前' : 'Before'}</span><MathFormula latex={String.raw`m=${result.margin.toFixed(3)}`} /><strong><MathFormula latex={String.raw`\mathcal L=${result.loss.toFixed(3)}`} /></strong></article>
@@ -47,19 +47,51 @@ function DpoLab({ lang }) {
       <i aria-hidden="true">→</i>
       <article className="is-after"><span>{lang === 'zh' ? '更新后' : 'After'}</span><MathFormula latex={String.raw`m'=${result.after.margin.toFixed(3)}`} /><strong><MathFormula latex={String.raw`\mathcal L'=${result.after.loss.toFixed(3)}`} /></strong></article>
     </div>
-    <div className="modern-equation"><MathFormula block latex={String.raw`m=\beta(\Delta_w-\Delta_l),\qquad\mathcal L=-\log\sigma(m)`} /><strong>margin {result.margin.toFixed(3)} · p(chosen) {result.preferenceProbability.toFixed(3)} · loss {result.loss.toFixed(3)}</strong></div>
+    <div className="modern-equation"><MathFormula block latex={String.raw`m=\beta(\Delta_w-\Delta_l),\qquad\mathcal L=-\log\sigma(m)`} /><strong>{lang === 'zh' ? '间隔 ' : 'Margin '}<MathFormula latex={String.raw`m=${result.margin.toFixed(3)}`} /> · <MathFormula latex={String.raw`p(y_w\succ y_l)=${result.preferenceProbability.toFixed(3)}`} /> · {lang === 'zh' ? '损失 ' : 'Loss '}<MathFormula latex={String.raw`\mathcal L=${result.loss.toFixed(3)}`} /></strong></div>
   </div>
 }
 
 function GrpoLab({ lang }) {
-  const scenarios = { mixed: [0.2, 0.9, 0.55, -0.05], allRight: [1, 1, 1, 1], allWrong: [0, 0, 0, 0], close: [0.48, 0.52, 0.5, 0.51] }
+  const scenarios = {
+    mixed: [0.2, 0.9, 0.55, -0.05, 0.78, 0.12, 0.84, 0.32],
+    allRight: [1, 1, 1, 1, 1, 1, 1, 1],
+    allWrong: [0, 0, 0, 0, 0, 0, 0, 0],
+    close: [0.48, 0.52, 0.5, 0.51, 0.49, 0.51, 0.5, 0.49],
+  }
+  const groupSizes = [2, 4, 6, 8]
   const [scenario, setScenario] = useState('mixed')
+  const [groupSize, setGroupSize] = useState(4)
   const [clip, setClip] = useState(0.2)
-  const result = useMemo(() => evaluateGrpo({ rewards: scenarios[scenario], clip }), [scenario, clip])
+  const [dynamicSampling, setDynamicSampling] = useState(false)
+  const rewards = scenarios[scenario].slice(0, groupSize)
+  const result = useMemo(
+    () => evaluateGrpo({ rewards, clip, dynamicSampling }),
+    [scenario, groupSize, clip, dynamicSampling],
+  )
   return <div className="modern-lab-body">
-    <div className="modern-controls"><div className="modern-segmented">{Object.keys(scenarios).map((id) => <button type="button" className={scenario === id ? 'active' : ''} aria-pressed={scenario === id} key={id} onClick={() => setScenario(id)}>{({ mixed: lang === 'zh' ? '有区分' : 'Mixed', allRight: lang === 'zh' ? '全对' : 'All right', allWrong: lang === 'zh' ? '全错' : 'All wrong', close: lang === 'zh' ? '近似同分' : 'Low variance' })[id]}</button>)}</div><label><span>clip <MathFormula latex={String.raw`\epsilon`} /> <output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label></div>
-    <div className="group-responses">{result.samples.map((sample) => <article key={sample.id} className={sample.advantage > 0.01 ? 'positive' : sample.advantage < -0.01 ? 'negative' : ''}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong><MathFormula latex={String.raw`R=${sample.reward.toFixed(2)}`} /></strong><span><MathFormula latex={String.raw`A=${sample.advantage.toFixed(2)}`} /></span><span><MathFormula latex={String.raw`r:${sample.ratio.toFixed(2)}\rightarrow${sample.clippedRatio.toFixed(2)}`} /></span><b><MathFormula latex={String.raw`J=${sample.objective.toFixed(3)}`} /></b></article>)}</div>
-    <div className={`variance-banner ${result.std < 0.02 ? 'warn' : ''}`}><b><MathFormula latex={String.raw`\mu=${result.mean.toFixed(3)}\;\cdot\;\sigma=${result.std.toFixed(3)}`} /></b><span>{result.std < 0.02 ? (lang === 'zh' ? '组内没有可靠排序信号，应过滤或调整难度。' : 'The group has no reliable ranking signal; filter it or change difficulty.') : (lang === 'zh' ? '组内奖励能够形成相对优势。' : 'Within-group rewards provide relative advantage.')}</span></div>
+    <div className="modern-controls grpo-controls">
+      <div className="grpo-control-group">
+        <span className="grpo-control-label">{lang === 'zh' ? '奖励分布' : 'Reward distribution'}</span>
+        <div className="modern-segmented">{Object.keys(scenarios).map((id) => <button type="button" className={scenario === id ? 'active' : ''} aria-pressed={scenario === id} key={id} onClick={() => setScenario(id)}>{({ mixed: lang === 'zh' ? '有区分' : 'Mixed', allRight: lang === 'zh' ? '全对' : 'All right', allWrong: lang === 'zh' ? '全错' : 'All wrong', close: lang === 'zh' ? '近似同分' : 'Low variance' })[id]}</button>)}</div>
+      </div>
+      <div className="grpo-control-group">
+        <span className="grpo-control-label">{lang === 'zh' ? '回答组大小' : 'Group size'} <MathFormula latex={String.raw`G`} /></span>
+        <div className="modern-segmented grpo-size-segmented">{groupSizes.map((size) => <button type="button" className={groupSize === size ? 'active' : ''} aria-pressed={groupSize === size} key={size} onClick={() => setGroupSize(size)}><MathFormula latex={String.raw`G=${size}`} /></button>)}</div>
+      </div>
+      <label><span>{lang === 'zh' ? '裁剪范围' : 'Clip'} <MathFormula latex={String.raw`\epsilon`} /> <output>{clip.toFixed(2)}</output></span><input aria-label="GRPO clip range" type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
+      <div className="grpo-control-group">
+        <span className="grpo-control-label">{lang === 'zh' ? '有信息组筛选' : 'Informative-group filter'}</span>
+        <div className="modern-segmented grpo-filter-toggle">
+          <button type="button" className={dynamicSampling ? 'active' : ''} aria-pressed={dynamicSampling} onClick={() => setDynamicSampling((value) => !value)}>
+            {dynamicSampling
+              ? (lang === 'zh' ? '动态采样：已开启（过滤低方差组）' : 'Dynamic sampling: On (filter flat groups)')
+              : (lang === 'zh' ? '动态采样：关闭（保留全部组）' : 'Dynamic sampling: Off (keep all groups)')}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div className={`group-responses grpo-group-responses${result.filteredOut ? ' is-filtered' : ''}`}>{result.samples.map((sample) => <article key={sample.id} className={`${sample.advantage > 0.01 ? 'positive' : sample.advantage < -0.01 ? 'negative' : ''}${result.filteredOut ? ' is-skipped' : ''}`}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong><MathFormula latex={String.raw`R=${sample.reward.toFixed(2)}`} /></strong><span><MathFormula latex={String.raw`A=${sample.advantage.toFixed(2)}`} /></span><span><MathFormula latex={String.raw`r:${sample.ratio.toFixed(2)}\rightarrow${sample.clippedRatio.toFixed(2)}`} /></span><b><MathFormula latex={String.raw`J=${sample.effectiveObjective.toFixed(3)}`} /></b>{result.filteredOut && <em className="grpo-skip-tag">{lang === 'zh' ? '已过滤 · 不进入更新' : 'Filtered · skipped'}</em>}</article>)}</div>
+    <div className={`variance-banner ${!result.informative ? 'warn' : ''}`}><b><MathFormula latex={String.raw`\mu=${result.mean.toFixed(3)}\;\cdot\;\sigma=${result.std.toFixed(3)}`} /> · {lang === 'zh' ? `进入更新 ${result.activeCount}/${result.groupSize}` : `In update ${result.activeCount}/${result.groupSize}`}</b><span>{!result.informative ? (result.filteredOut ? (lang === 'zh' ? '动态采样已过滤该无信息组：这批样本不产生梯度，需重新采样或调整题目难度。' : 'Dynamic sampling filtered this flat group: zero samples enter the update, freeing budget for informative prompts.') : (lang === 'zh' ? '组内没有可靠排序信号，但当前未开启筛选；开启“动态采样”可将该组移出更新批次。' : 'The group has no reliable ranking signal, yet remains in the batch. Enable dynamic sampling to drop it before updating.')) : (lang === 'zh' ? '组内奖励存在有效差异，全部候选均可提供相对优势并进入本轮更新。' : 'Within-group rewards separate candidates, so all responses provide relative advantage for this update.')}</span></div>
   </div>
 }
 
@@ -102,7 +134,7 @@ function AgentLab({ lang }) {
       </div>
       <aside><span>{lang === 'zh' ? '当前选择的真实路径' : 'Current realized path'}</span><strong>{trajectory.pathIds.join(' → ')}</strong><p>{lang === 'zh' ? '每个分支共享此前状态，但选择不同动作后会收到不同观察，并改变后续可达终局。浅色节点是当前状态下没有选择的反事实分支。' : 'Branches share the preceding state. Different actions produce different observations and reachable outcomes. Muted nodes are counterfactual branches not selected on this run.'}</p></aside>
     </div>
-    <div className={`trajectory-result ${trajectory.success ? 'success' : 'failed'}`}><b>{trajectory.success ? (lang === 'zh' ? '任务成功' : 'Task success') : (lang === 'zh' ? '轨迹失败' : 'Trajectory failure')}</b><span>{trajectory.terminal} · cost {trajectory.cost.toFixed(1)}</span></div>
+    <div className={`trajectory-result ${trajectory.success ? 'success' : 'failed'}`}><b>{trajectory.success ? (lang === 'zh' ? '任务成功' : 'Task success') : (lang === 'zh' ? '轨迹失败' : 'Trajectory failure')}</b><span>{trajectory.terminal} · {lang === 'zh' ? '成本' : 'cost'} {trajectory.cost.toFixed(1)}</span></div>
   </div>
 }
 
