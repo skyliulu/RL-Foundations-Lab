@@ -26,6 +26,7 @@ export default function TokenMdpLab({ lang, content }) {
   const [beta, setBeta] = useState(0.2)
   const [gamma, setGamma] = useState(1)
   const [truncationValue, setTruncationValue] = useState(0.8)
+  const [selectedTokenIndex, setSelectedTokenIndex] = useState(4)
   const options = responses[lang]
   const selected = options.find((item) => item.id === variant) || options[0]
   const trajectory = useMemo(() => buildTokenTrajectory({
@@ -36,6 +37,13 @@ export default function TokenMdpLab({ lang, content }) {
     truncationValue,
   }), [selected, terminalReward, beta, gamma, truncationValue])
   const rows = trajectory.rows
+  const tokenIdx = Math.min(selectedTokenIndex, rows.length - 1)
+  const focusRow = rows[tokenIdx]
+  const isLast = tokenIdx === rows.length - 1
+  const nextFuture = isLast
+    ? (trajectory.truncated ? truncationValue : 0)
+    : rows[tokenIdx + 1].returnValue
+  const terminalContribution = isLast ? terminalReward : 0
 
   return (
     <section className="token-mdp-lab" aria-label={content.figure}>
@@ -49,9 +57,45 @@ export default function TokenMdpLab({ lang, content }) {
         <label className={trajectory.truncated ? '' : 'disabled'}><span>{zh ? '截断后的价值估计' : 'Value beyond truncation'} <output>{number(truncationValue)}</output></span><input type="range" min="-1" max="3" step="0.1" value={truncationValue} disabled={!trajectory.truncated} onChange={(event) => setTruncationValue(Number(event.target.value))} /></label>
       </div>
       <div className="token-mdp-equation"><MathFormula block latex={String.raw`r_t=r_t^{\mathrm{process}}-\beta(\log\pi_{\mathrm{old},t}-\log\pi_{\mathrm{ref},t})+\mathbf 1[t=T-1]R_{\mathrm{terminal}}`} /></div>
+
+      <section className="token-microscope" aria-label={zh ? '单步 token 算术显微镜' : 'Per-token arithmetic microscope'}>
+        <div className="token-step-strip" role="group" aria-label={zh ? '选择要检查的 token 步' : 'Select token step to inspect'}>
+          {rows.map((row) => (
+            <button
+              type="button"
+              key={`${row.index}-${row.token}`}
+              className={row.index === tokenIdx ? 'active' : ''}
+              aria-pressed={row.index === tokenIdx}
+              onClick={() => setSelectedTokenIndex(row.index)}
+            >
+              <b><MathFormula latex={String.raw`t=${row.index}`} /></b>
+              <strong>{row.token}</strong>
+              <small><MathFormula latex={String.raw`r=${number(row.reward)}`} /></small>
+            </button>
+          ))}
+        </div>
+        <div className="token-microscope-cards">
+          <article>
+            <span>{zh ? '① 状态前缀 → 动作' : '① Prefix state → action'}</span>
+            <strong>{focusRow.index === 0 ? (zh ? '仅 Prompt' : 'Prompt only') : selected.tokens.slice(0, focusRow.index).join(' ')} → {focusRow.token}</strong>
+            <small>{zh ? `损失掩码 ${focusRow.lossMask} · 自举掩码 ${focusRow.bootstrapMask}` : `loss mask ${focusRow.lossMask} · bootstrap mask ${focusRow.bootstrapMask}`}</small>
+          </article>
+          <article>
+            <span>{zh ? '② 逐步奖励拆解' : '② Token reward breakdown'}</span>
+            <MathFormula block latex={String.raw`r_${focusRow.index}=${number(focusRow.process)}+(${number(focusRow.klCost)})+${number(terminalContribution)}=${number(focusRow.reward)}`} />
+            <small>{zh ? '过程奖励 + KL 代价 + 末位序列分' : 'process + KL cost + terminal score'}</small>
+          </article>
+          <article>
+            <span>{zh ? '③ 反向回报与优势' : '③ Backward return and advantage'}</span>
+            <MathFormula block latex={String.raw`G_${focusRow.index}=${number(focusRow.reward)}+${number(gamma)}\cdot${focusRow.bootstrapMask}\cdot(${number(nextFuture)})=${number(focusRow.returnValue)}`} />
+            <small>{zh ? '优势 ' : 'Advantage '}<MathFormula latex={String.raw`\widehat A_${focusRow.index}=G_${focusRow.index}-V=${number(focusRow.advantage)}`} /></small>
+          </article>
+        </div>
+      </section>
+
       <div className="token-trajectory-ledger" role="table" aria-label={zh ? 'Token 轨迹账本' : 'Token trajectory ledger'}>
-        <div className="token-trajectory-head" role="row"><b>{zh ? '状态 / 前缀' : 'State / prefix'}</b><b>{zh ? '动作 token' : 'Action token'}</b><b>old logp</b><b>ref logp</b><b>value</b><b>{zh ? '损失 mask' : 'loss mask'}</b><b>{zh ? '自举 mask' : 'bootstrap mask'}</b><b>{zh ? 'KL 代价' : 'KL cost'}</b><b>{zh ? '总奖励' : 'Reward'}</b><b>advantage</b><b>return</b></div>
-        {rows.map((row) => <div className="token-trajectory-row" role="row" key={`${row.index}-${row.token}`}><span>{row.index === 0 ? 'prompt' : selected.tokens.slice(0, row.index).join(' ')}</span><strong>{row.token}</strong><span>{number(row.oldLogp)}</span><span>{number(row.refLogp)}</span><span>{number(row.value)}</span><span>{row.lossMask}</span><span>{row.bootstrapMask}</span><span>{number(row.klCost)}</span><span>{number(row.reward)}</span><span>{number(row.advantage)}</span><span>{number(row.returnValue)}</span></div>)}
+        <div className="token-trajectory-head" role="row"><b>{zh ? '状态 / 前缀' : 'State / prefix'}</b><b>{zh ? '动作 token' : 'Action token'}</b><b>{zh ? '旧对数概率' : 'old logp'}</b><b>{zh ? '参考对数概率' : 'ref logp'}</b><b>{zh ? '前缀价值' : 'value'}</b><b>{zh ? '损失掩码' : 'loss mask'}</b><b>{zh ? '自举掩码' : 'bootstrap mask'}</b><b>{zh ? 'KL 代价' : 'KL cost'}</b><b>{zh ? '本步奖励' : 'Reward'}</b><b>{zh ? '优势' : 'advantage'}</b><b>{zh ? '回报' : 'return'}</b></div>
+        {rows.map((row) => <div className={`token-trajectory-row${row.index === tokenIdx ? ' is-selected' : ''}`} role="row" key={`${row.index}-${row.token}`} onClick={() => setSelectedTokenIndex(row.index)}><span>{row.index === 0 ? 'prompt' : selected.tokens.slice(0, row.index).join(' ')}</span><strong>{row.token}</strong><span>{number(row.oldLogp)}</span><span>{number(row.refLogp)}</span><span>{number(row.value)}</span><span>{row.lossMask}</span><span>{row.bootstrapMask}</span><span>{number(row.klCost)}</span><span>{number(row.reward)}</span><span>{number(row.advantage)}</span><span>{number(row.returnValue)}</span></div>)}
       </div>
       <footer><span>{zh ? '轨迹边界契约' : 'Trajectory boundary contract'}</span><strong>{selected.ending}</strong><p>{trajectory.terminated ? (zh ? '策略主动选择 EOS；最后一步自举 mask 为 0，回报不读取终止状态之后的价值。' : 'The policy chose EOS. The final bootstrap mask is 0, so return reads no value beyond termination.') : (zh ? <>长度预算截断了生成，但任务并未真正结束；最后一步自举 mask 为 1，并加入 <MathFormula latex={String.raw`\gamma V(s_T)=${number(trajectory.finalBootstrap)}`} />。</> : <>The length budget stopped generation without true termination. The final bootstrap mask is 1 and adds <MathFormula latex={String.raw`\gamma V(s_T)=${number(trajectory.finalBootstrap)}`} />.</>)}</p></footer>
     </section>

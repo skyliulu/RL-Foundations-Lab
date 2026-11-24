@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { evaluatePpo } from '../engine/ppo'
-import { evaluateDpo, evaluateGrpo } from '../engine/post-training'
 import { buildRlhfBatchContract } from '../engine/rlhf-batch.js'
 import MathFormula from './MathFormula'
 import MathText from './MathText'
@@ -26,17 +25,14 @@ function PipelineNode({ id, label, active, onClick, iconLatex }) {
   )
 }
 
-export default function SystemLab({ lang, text, ppoOnly = false }) {
+export default function SystemLab({ lang, text }) {
   const c = text.common
-  const [method, setMethod] = useState('ppo')
   const [view, setView] = useState('system')
   const [selectedId, setSelectedId] = useState('A')
   const [selectedNode, setSelectedNode] = useState('rollout')
   const [clip, setClip] = useState(0.2)
   const [klBeta, setKlBeta] = useState(0.08)
   const result = useMemo(() => evaluatePpo({ clip, updateStrength: 0.32, klBeta }), [clip, klBeta])
-  const dpo = useMemo(() => evaluateDpo({ beta: Math.max(0.02, klBeta) }), [klBeta])
-  const grpo = useMemo(() => evaluateGrpo({ clip, klBeta }), [clip, klBeta])
   const batch = useMemo(() => buildRlhfBatchContract({ selectedId }), [selectedId])
   const selected = result.samples.find((sample) => sample.id === selectedId) || result.samples[0]
   const detail = nodeDetail[selectedNode]
@@ -44,48 +40,18 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
   return (
     <section className="system-lab">
       <div className="experiment-environment"><span>{lang === 'zh' ? '语言模型 rollout 环境' : 'Language-model rollout environment'}</span><MathFormula latex={String.raw`x\xrightarrow{\pi_\theta}y_{1:T}\xrightarrow{R,\,V}\widehat A_{1:T}`} /><small>{lang === 'zh' ? '同一个 prompt 先产生 token 轨迹，再由奖励、价值与参考策略把轨迹变成可训练信号。' : 'One prompt first produces a token trajectory; reward, value, and reference models then turn it into trainable signals.'}</small></div>
-      {!ppoOnly && <div className="method-switch" role="group" aria-label={lang === 'zh' ? '后训练方法' : 'Post-training method'}>
-        {[['ppo', 'PPO-based RLHF'], ['dpo', 'DPO'], ['grpo', 'GRPO']].map(([id, label]) => <button type="button" key={id} className={method === id ? 'active' : ''} aria-pressed={method === id} onClick={() => setMethod(id)}>{label}</button>)}
-      </div>}
-      {!ppoOnly && <div className="method-contract">
-        {(lang === 'zh' ? {
-          ppo: [['数据', '在线单条 rollout'], ['反馈', 'Reward model / verifier'], ['Baseline', 'Value model'], ['代价', '四类模型与 token 对齐']],
-          dpo: [['数据', '离线 chosen / rejected'], ['反馈', '成对偏好标签'], ['Baseline', 'Reference policy'], ['代价', '无法探索数据外回答']],
-          grpo: [['数据', '在线成组 rollout'], ['反馈', 'Reward model / verifier'], ['Baseline', '组均值与标准差'], ['代价', '每个 prompt 多次生成']],
-        } : {
-          ppo: [['Data', 'online single rollouts'], ['Feedback', 'reward model / verifier'], ['Baseline', 'value model'], ['Cost', 'four roles + token alignment']],
-          dpo: [['Data', 'offline chosen / rejected'], ['Feedback', 'pairwise preference label'], ['Baseline', 'reference policy'], ['Cost', 'no exploration beyond data']],
-          grpo: [['Data', 'online response groups'], ['Feedback', 'reward model / verifier'], ['Baseline', 'group mean and std. dev.'], ['Cost', 'several generations per prompt']],
-        })[method].map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}
-      </div>}
       <div className="system-toolbar">
-        {method === 'ppo' && <div className="view-switch" role="group" aria-label={lang === 'zh' ? '视图切换' : 'View switch'}>
+        <div className="view-switch" role="group" aria-label={lang === 'zh' ? '视图切换' : 'View switch'}>
           <button type="button" className={view === 'algorithm' ? 'active' : ''} aria-pressed={view === 'algorithm'} onClick={() => setView('algorithm')}>{c.algorithm}</button>
           <button type="button" className={view === 'system' ? 'active' : ''} aria-pressed={view === 'system'} onClick={() => setView('system')}>{c.system}</button>
-        </div>}
+        </div>
         <label><span><MathText>{c.clip}</MathText><output>{clip.toFixed(2)}</output></span><input type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
         <label><span><MathText>{c.klBeta}</MathText><output>{klBeta.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={klBeta} onChange={(event) => setKlBeta(Number(event.target.value))} /></label>
       </div>
 
-      <div className="shared-batch-banner"><span>◎</span><div><strong>{method === 'dpo' ? (lang === 'zh' ? '同一组离线偏好对' : 'One offline preference pair') : c.samples}</strong><small>{method === 'ppo' ? c.selectSample : (lang === 'zh' ? '保持任务不变，比较数据与优化信号' : 'Keep the task fixed while comparing data and update signals')}</small></div><b>{method === 'dpo' ? 'pair_017' : `${batch.batchId} · ${batch.promptId}`}</b></div>
+      <div className="shared-batch-banner"><span>◎</span><div><strong>{c.samples}</strong><small>{c.selectSample}</small></div><b>{`${batch.batchId} · ${batch.promptId}`}</b></div>
 
-      {method === 'dpo' ? (
-        <div className="method-algorithm-view">
-          <div className="preference-pair">
-            <article className="chosen"><small>{lang === 'zh' ? '偏好回答 ' : 'Chosen response '}<MathFormula latex={String.raw`y_w`} /></small><p>{lang === 'zh' ? '瑞利散射对较短波长更强，因此天空在人眼中主要呈蓝色。' : 'Rayleigh scattering is stronger for shorter wavelengths, making the sky appear predominantly blue.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=+${dpo.chosenShift.toFixed(2)}`} /></b></article>
-            <span>≻</span>
-            <article><small>{lang === 'zh' ? '被拒回答 ' : 'Rejected response '}<MathFormula latex={String.raw`y_l`} /></small><p>{lang === 'zh' ? '因为太空是蓝色的，所以天空也是蓝色的。' : 'The sky is blue because outer space is blue.'}</p><b><MathFormula latex={String.raw`\Delta\log\pi=${dpo.rejectedShift.toFixed(2)}`} /></b></article>
-          </div>
-          <div className="shared-equation"><MathFormula block latex={String.raw`\mathcal L_{\mathrm{DPO}}=-\log\sigma\!\left(\beta\left[\Delta\log\pi(y_w)-\Delta\log\pi(y_l)\right]\right)`} /><strong><MathFormula latex={String.raw`p(y_w\succ y_l)=${dpo.preferenceProbability.toFixed(3)},\quad \mathrm{loss}=${dpo.loss.toFixed(3)}`} /></strong></div>
-        </div>
-      ) : method === 'grpo' ? (
-        <div className="method-algorithm-view">
-          <div className="group-responses">
-            {grpo.samples.map((sample) => <article key={sample.id} className={sample.advantage > 0 ? 'positive' : 'negative'}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong><MathFormula latex={String.raw`R=${sample.reward.toFixed(2)}`} /></strong><span><MathFormula latex={String.raw`\widehat A=${sample.advantage.toFixed(2)}`} /></span><span><MathFormula latex={String.raw`r=${sample.ratio.toFixed(2)}\rightarrow ${sample.clippedRatio.toFixed(2)}`} /></span><b><MathFormula latex={String.raw`J=${sample.objective.toFixed(3)}`} /></b></article>)}
-          </div>
-          <div className="shared-equation"><MathFormula block latex={String.raw`A_i=\frac{R_i-\mu_R}{\sigma_R+\varepsilon},\qquad J_i=\min(r_iA_i,\operatorname{clip}(r_i)A_i)-\beta D_{\mathrm{KL}}`} /><strong><MathFormula latex={String.raw`\mu_R=${grpo.mean.toFixed(3)},\quad \sigma_R=${grpo.std.toFixed(3)}`} /></strong></div>
-        </div>
-      ) : view === 'algorithm' ? (
+      {view === 'algorithm' ? (
         <div className="algorithm-view">
           <div className="policy-token-strip">
             <span className="prompt-token">{lang === 'zh' ? '问题：为什么天空看起来是蓝色？' : 'Prompt: Why does the sky look blue?'}</span>
@@ -129,7 +95,7 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
         </div>
       )}
 
-      {method === 'ppo' && view === 'system' && <div className="rlhf-batch-audit">
+      {view === 'system' && <div className="rlhf-batch-audit">
         <section className="rlhf-version-flow">
           <header><span>{lang === 'zh' ? '一批回答的来源与模型版本流' : 'Batch provenance and model-version flow'}</span><small>{lang === 'zh' ? '箭头表示数据交接，不表示所有模型一起更新' : 'Arrows show data handoff; not every model updates'}</small></header>
           <div>{batch.lifecycle.map((stage, index) => <article key={stage.stage}>
@@ -165,13 +131,13 @@ export default function SystemLab({ lang, text, ppoOnly = false }) {
         </section>
       </div>}
 
-      {method === 'ppo' && <div className="response-group">
+      <div className="response-group">
         {result.samples.map((sample) => (
           <button type="button" key={sample.id} className={sample.id === selectedId ? 'active' : ''} aria-pressed={sample.id === selectedId} onClick={() => setSelectedId(sample.id)}>
             <b>{sample.id}</b><span>{sample.token}</span><small><MathFormula latex={String.raw`R=${sample.reward.toFixed(1)}`} /></small><small><MathFormula latex={String.raw`\widehat A=${sample.advantage.toFixed(2)}`} /></small><small>{c.adjustedReward} {sample.adjustedReward.toFixed(2)}</small>
           </button>
         ))}
-      </div>}
+      </div>
     </section>
   )
 }

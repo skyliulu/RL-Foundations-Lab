@@ -4,8 +4,6 @@ import MathText from './MathText'
 import { learningLabRunners } from '../engine/learning-labs.js'
 
 const defaults = {
-  montecarlo: { episodes: 24, epsilon: 0.2, seed: 20260719, visit: 'first' },
-  approximation: { alpha: 0.18, decay: true, noise: 1.4, steps: 48, seed: 20260719 },
   td: { gamma: 0.9, alpha: 0.4, n: 2 },
   control: { epsilon: 0.12, alpha: 0.3, seed: 20260719 },
   vfa: { width: 1.2, alpha: 0.35, target: 5, scenario: 'interfere' },
@@ -42,18 +40,6 @@ const scenarioCopy = {
 }
 
 const configs = {
-  montecarlo: {
-    formula: String.raw`Q(s,a)\leftarrow Q(s,a)+\frac{1}{N(s,a)}\left(G-Q(s,a)\right)`,
-    controls: [['episodes', 8, 72, 4], ['epsilon', 0, 0.6, 0.05]],
-    labels: { zh: ['Episode 数', '探索率 ε'], en: ['Episodes', 'Exploration ε'] },
-    metrics: (r, zh) => [[zh ? '价值估计' : 'Value estimate', r.estimate], [zh ? '有效访问' : 'Used visits', r.visits], [zh ? '覆盖率' : 'Coverage', `${(r.coverage * 100).toFixed(0)}%`]],
-  },
-  approximation: {
-    formula: String.raw`w_{k+1}=w_k+\alpha_k\left(X_k-w_k\right)`,
-    controls: [['alpha', 0.03, 0.5, 0.01], ['noise', 0, 3, 0.1]],
-    labels: { zh: ['固定步长 α', '观测噪声'], en: ['Constant step α', 'Observation noise'] },
-    metrics: (r, zh) => [[zh ? '最终估计' : 'Final estimate', r.estimate], [zh ? '真实均值' : 'True mean', r.target], [zh ? '绝对误差' : 'Absolute error', r.error]],
-  },
   td: {
     formula: String.raw`V(S_t)\leftarrow V(S_t)+\alpha\left(R_{t+1}+\gamma V(S_{t+1})-V(S_t)\right)`,
     controls: [['gamma', 0.4, 0.99, 0.01], ['alpha', 0.05, 1, 0.05], ['n', 1, 3, 1]],
@@ -1277,8 +1263,6 @@ export default function LearningLab({ id, lang, content }) {
       {scenario && <div className="experiment-environment"><span>{scenario[0]}</span><MathFormula latex={scenario[1]} /><small>{scenario[2]}</small></div>}
       <div className="learning-lab-controls">
         {config.controls.map(([key, min, max, step], index) => <label key={key}><span><MathText>{config.labels[lang][index]}</MathText><output>{format(params[key])}</output></span><input aria-label={config.labels[lang][index]} type="range" min={min} max={max} step={step} value={params[key]} onChange={(event) => set(key, Number(event.target.value))} /></label>)}
-        {id === 'montecarlo' && <fieldset><legend>{zh ? '访问协议' : 'Visit protocol'}</legend><div>{['first', 'every'].map((value) => <button type="button" key={value} className={params.visit === value ? 'active' : ''} aria-pressed={params.visit === value} onClick={() => set('visit', value)}>{value === 'first' ? (zh ? '首次访问' : 'First visit') : (zh ? '每次访问' : 'Every visit')}</button>)}</div></fieldset>}
-        {id === 'approximation' && <fieldset><legend>{zh ? '步长调度' : 'Step schedule'}</legend><div>{[true, false].map((value) => <button type="button" key={String(value)} className={params.decay === value ? 'active' : ''} aria-pressed={params.decay === value} onClick={() => set('decay', value)}><MathText>{value ? (zh ? '衰减 1/k' : 'Decay 1/k') : (zh ? '固定 α' : 'Constant α')}</MathText></button>)}</div></fieldset>}
       </div>
       <DedicatedLearningStage id={id} params={params} result={result} zh={zh} set={set} setMany={setMany} />
       {id !== 'td' && <aside className="learning-compact-summary">

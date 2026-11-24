@@ -165,7 +165,7 @@ test('Bellman policy paths stay synchronized with the selected state and randomn
 })
 
 test('PPO SVG samples expose equivalent mouse and keyboard selection', async ({ page }) => {
-  await openChapter(page, 'Proximal Policy Optimization')
+  await openChapter(page, '近端策略优化（PPO）')
 
   const samples = page.locator('.sample-plane g[role="button"]')
   await expect(samples).toHaveCount(6)

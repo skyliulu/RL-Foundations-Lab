@@ -111,11 +111,24 @@ test('discount-horizon comparison changes only gamma and uses a shared converged
   assert.ok(result.deltas[indexOf({ row: 4, col: 4 })] < -7.5)
 })
 
-test('PPO clipping bounds ratios and preserves finite metrics', () => {
+test('PPO clipping bounds ratios, enforces four-quadrant min asymmetry, and preserves finite metrics', () => {
   const result = evaluatePpo({ clip: 0.2, updateStrength: 0.5 })
   assert.ok(result.clippedCount > 0)
   result.samples.filter((sample) => sample.clipped).forEach((sample) => {
     assert.ok(sample.clippedRatio >= 0.8 && sample.clippedRatio <= 1.2)
+    assert.equal(sample.gradientActive, false)
   })
+  const asymmetric = evaluatePpo({ clip: 0.15, updateStrength: 0.45 })
+  const sampleA = asymmetric.samples.find((s) => s.id === 'A')
+  const sampleB = asymmetric.samples.find((s) => s.id === 'B')
+  const sampleD = asymmetric.samples.find((s) => s.id === 'D')
+  assert.equal(sampleA.clipped, true)
+  assert.equal(sampleA.gradientActive, false)
+  assert.equal(sampleB.ratioOutsideBand, true)
+  assert.equal(sampleB.clipped, false)
+  assert.equal(sampleB.gradientActive, true)
+  assert.equal(sampleD.ratioOutsideBand, true)
+  assert.equal(sampleD.clipped, false)
+  assert.equal(sampleD.gradientActive, true)
   assert.ok(Number.isFinite(result.meanKl))
 })

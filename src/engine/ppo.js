@@ -14,7 +14,10 @@ export function evaluatePpo({ clip = 0.2, updateStrength = 0.28, klBeta = 0.08 }
     const unclippedObjective = ratio * sample.advantage
     const clippedObjective = clippedRatio * sample.advantage
     const surrogate = Math.min(unclippedObjective, clippedObjective)
-    const clipped = Math.abs(ratio - clippedRatio) > 1e-8
+    const ratioOutsideBand = Math.abs(ratio - clippedRatio) > 1e-8
+    const clipped = clippedObjective < unclippedObjective - 1e-10
+    const gradientActive = !clipped
+    const quadrantRole = clipped ? 'clipped-ceiling' : ratioOutsideBand ? 'outside-active' : 'inside'
     const approxKl = (ratio - 1) - Math.log(ratio)
     return {
       ...sample,
@@ -23,7 +26,10 @@ export function evaluatePpo({ clip = 0.2, updateStrength = 0.28, klBeta = 0.08 }
       unclippedObjective,
       clippedObjective,
       surrogate,
+      ratioOutsideBand,
       clipped,
+      gradientActive,
+      quadrantRole,
       approxKl,
       adjustedReward: sample.reward - klBeta * approxKl * 10,
     }
@@ -31,6 +37,7 @@ export function evaluatePpo({ clip = 0.2, updateStrength = 0.28, klBeta = 0.08 }
   return {
     samples,
     clippedCount: samples.filter((sample) => sample.clipped).length,
+    outsideActiveCount: samples.filter((sample) => sample.quadrantRole === 'outside-active').length,
     meanKl: samples.reduce((sum, sample) => sum + sample.approxKl, 0) / samples.length,
     policyObjective: samples.reduce((sum, sample) => sum + sample.surrogate, 0) / samples.length,
   }

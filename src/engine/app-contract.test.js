@@ -166,7 +166,7 @@ test('all chapter explanations use continuous article sections rather than a car
   const derivation = read('components/ClickableDerivation.jsx')
   const styles = read('styles.css')
   assert.match(app, /chapter-article-sections/)
-  assert.match(app, /<ChapterPrelude content=/)
+  assert.match(app, /<ArticleFlow/)
   assert.match(app, /<ChapterSections content=\{content\} lang=\{lang\} placement="before"/)
   assert.match(app, /function ProseTurn/)
   assert.match(app, /chapter-prose-opening/)
@@ -295,8 +295,7 @@ test('micro-sections are merged into running prose instead of merely demoting th
   const articleFlowBuilder = read('content/article-flow.js')
   const skill = read('../.agents/skills/develop-interactive-rl-chapter/SKILL.md')
 
-  assert.match(app, /const \[opening, \.\.\.continuation\] = content\.prelude/)
-  assert.match(app, /continuation\.map\(\(step\) => <ProseTurn/)
+  assert.match(app, /articleFlowChapterIds\.includes\(active\)/)
   assert.match(app, /sections\.map\(\(section\) => <ProseTurn/)
   assert.doesNotMatch(app, /chapter-prose-lead|chapter-prose-separator/)
   assert.match(mdp, /isMajor \?/)

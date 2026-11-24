@@ -45,7 +45,7 @@ function AlgorithmFamily({ content, lang }) {
   const zh = lang === 'zh'
   return (
     <section className="mc-algorithm-family">
-      <header><span>{zh ? '算法族的三个提交协议' : 'Three commit protocols in one algorithm family'}</span><h2>{zh ? '从整批经验评价到 ε-greedy 逐回合控制' : 'From batch evaluation to ε-greedy episode control'}</h2><p>{zh ? '三种方法都用完整回合估计动作价值，但使用哪些访问、何时改善策略以及怎样保证覆盖并不相同。完整伪代码保留在正文，便于逐行对照执行边界。' : 'All three methods estimate action value from complete episodes, but differ in eligible visits, policy-commit timing, and coverage. Full pseudocode keeps those execution boundaries visible.'}</p></header>
+      <header><span>{zh ? '算法族的三个提交协议' : 'Three commit protocols in one algorithm family'}</span><h2><MathText>{zh ? '从整批经验评价到 $\\epsilon$-greedy 逐回合控制' : 'From batch evaluation to $\\epsilon$-greedy episode control'}</MathText></h2><p>{zh ? '三种方法都用完整回合估计动作价值，但使用哪些访问、何时改善策略以及怎样保证覆盖并不相同。完整伪代码保留在正文，便于逐行对照执行边界。' : 'All three methods estimate action value from complete episodes, but differ in eligible visits, policy-commit timing, and coverage. Full pseudocode keeps those execution boundaries visible.'}</p></header>
       <div className="mc-algorithm-stack">
         {content.algorithms.map((algorithm, index) => (
           <article key={algorithm.id} className={`mc-algorithm-card algorithm-${algorithm.id}`}>

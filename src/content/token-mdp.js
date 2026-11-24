@@ -41,7 +41,7 @@ const zhDeepening = [
     paragraphs: ['每个 token 位置至少要知道 state/prefix、采样 token、旧策略 log-probability、终止标记和奖励。若要做 PPO，还需 value、reference log-probability、mask、advantage 与 return。', '重新对同一文本 tokenize、改变 chat template 或把 prompt token 误纳入 loss，都会破坏“动作—概率—奖励”对应关系。'],
     formulas: [String.raw`\tau=\{(S_t,A_t,\log\pi_{\mathrm{old},t},R_{t+1},D_{t+1})\}_{t=0}^{T-1}`],
     pseudocodeTitle: 'Token-MDP rollout',
-    pseudocode: ['将 prompt 编码为初始状态 S₀', '对 t=0,…,Tmax−1：', '  由真实 behavior policy 计算并采样 token Aₜ', '  保存 Aₜ 的 old log-probability 与当前位置 mask', '  扩展前缀得到 Sₜ₊₁，并计算可用过程奖励', '  若采到 EOS 或达到边界，保存终止原因并结束', '完整 response 结束后补入序列评分，并保持 token 位置对齐'],
+    pseudocode: ['将 prompt 编码为初始状态 $S_0$', '对 $t=0,\\ldots,T_{\\max}-1$：', '  由真实 behavior policy 计算并采样 token $A_t$', '  保存 $A_t$ 的 old log-probability 与当前位置 mask', '  扩展前缀得到 $S_{t+1}$，并计算可用过程奖励', '  若采到 EOS 或达到边界，保存终止原因并结束', '完整 response 结束后补入序列评分，并保持 token 位置对齐'],
     handoff: '第 16 章将在这份 trajectory contract 上加入 reward、reference、value 与 PPO 更新。',
   },
 ]
@@ -66,7 +66,7 @@ const enDeepening = [
     paragraphs: ['Every token position needs prefix state, sampled token, old log probability, termination, and reward. PPO additionally needs value, reference probability, masks, advantage, and return.', 'Retokenizing text, changing chat templates, or including prompt tokens in response loss breaks action–probability–reward alignment.'],
     formulas: [String.raw`\tau=\{(S_t,A_t,\log\pi_{\mathrm{old},t},R_{t+1},D_{t+1})\}_{t=0}^{T-1}`],
     pseudocodeTitle: 'Token-MDP rollout',
-    pseudocode: ['Encode the prompt as initial state S₀', 'For t=0,…,Tmax−1:', '  Compute and sample token Aₜ from the actual behavior policy', '  Store its old log probability and position mask', '  Extend the prefix to Sₜ₊₁ and compute available process reward', '  On EOS or boundary, store termination reason and stop', 'After completion attach sequence score without changing token alignment'],
+    pseudocode: ['Encode the prompt as initial state $S_0$', 'For $t=0,\\ldots,T_{\\max}-1$:', '  Compute and sample token $A_t$ from the actual behavior policy', '  Store its old log probability and position mask', '  Extend the prefix to $S_{t+1}$ and compute available process reward', '  On EOS or boundary, store termination reason and stop', 'After completion attach sequence score without changing token alignment'],
     handoff: 'Chapter 16 adds reward, reference, value, and PPO update to this trajectory contract.',
   },
 ]

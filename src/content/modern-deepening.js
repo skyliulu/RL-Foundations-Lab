@@ -4,9 +4,9 @@ const example = (title, caption, headers, rows) => ({ title, caption, headers, r
 export const ppoDeepeningZh = [
   {
     id: 'ratio-to-clipping-cases', kicker: '逐样本读懂裁剪', title: '裁剪目标必须结合优势符号分四种情况理解',
-    paragraphs: ['概率比 r 衡量新策略对旧动作的相对概率。正 advantage 希望 r 增大，但超过 1+ε 后继续增大不再获益；负 advantage 希望 r 减小，但低于 1−ε 后继续减小不再获益。', '另一侧并不裁剪“坏方向”：正 advantage 的 r 过小、负 advantage 的 r 过大仍会降低目标并产生纠正梯度。PPO 因此不是简单把所有 ratio 截到区间，而是截断过度改进的乐观收益。'],
+    paragraphs: ['概率比 $r_t$ 衡量新策略对旧动作的相对概率。正优势希望 $r_t$ 增大，但超过 $1+\\epsilon$ 后继续增大不再获益；负优势希望 $r_t$ 减小，但低于 $1-\\epsilon$ 后继续减小不再获益。', '另一侧并不裁剪“坏方向”：正优势的 $r_t$ 过小、负优势的 $r_t$ 过大仍会降低目标并产生纠正梯度。PPO 因此不是简单把所有 ratio 截到区间，而是截断过度改进的乐观收益。'],
     formulas: [String.raw`\ell_t(\theta)=\min\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)`, String.raw`\widehat A_t>0:\ r_t>1+\epsilon\ \text{is capped}`, String.raw`\widehat A_t<0:\ r_t<1-\epsilon\ \text{is capped}`],
-    example: example('四个样本的裁剪判断', '令 ε=0.2；先看 advantage 符号，再看对应边界。', ['Advantage', 'Ratio', '结果'], [['+2', '1.35', '在上边界裁剪'], ['+2', '0.70', '不裁剪，保留纠正'], ['−2', '0.70', '在下边界裁剪'], ['−2', '1.35', '不裁剪，保留惩罚']]),
+    example: example('四个样本的裁剪判断', '令 $\\epsilon=0.2$；先看优势符号，再看对应边界。', ['Advantage', 'Ratio', '结果'], [['+2', '1.35', '在上边界裁剪'], ['+2', '0.70', '不裁剪，保留纠正'], ['−2', '0.70', '在下边界裁剪'], ['−2', '1.35', '不裁剪，保留惩罚']]),
     theorem: theorem('Clipped surrogate 是悲观逐样本下界，不是对最终 KL 的硬约束。', '多个样本共享参数，一个样本的梯度会改变其他样本的概率；最终仍可能出现区间外 ratio。', [String.raw`0<\epsilon<1`, String.raw`\widehat A_t\ \text{fixed during optimization}`]),
     handoff: '要安全复用一批旧数据，还必须说明 advantage、old log-probability 和 minibatch epoch 在何时冻结。',
   },
@@ -18,10 +18,10 @@ export const ppoDeepeningZh = [
   },
   {
     id: 'ppo-complete-loop', kicker: '完整训练循环', title: 'PPO 在有限轮优化后丢弃旧批次并重新采样',
-    paragraphs: ['先复制 θ_old，再用它收集固定长度 rollout，保存 observation、action、reward、done、old log-probability 与 old value。反向计算 GAE 和 value target 后，才将样本打乱做 K 轮 minibatch。', '每次梯度步都重算新 log-probability 与 value，却始终使用保存的 old log-probability、advantage 和 target。K 太大时 ratio、KL 与 clip fraction 上升，旧优势不再代表新策略的数据分布。'],
+    paragraphs: ['先复制 $\\theta_{\\mathrm{old}}$，再用它收集固定长度 rollout，保存 observation、action、reward、done、old log-probability 与 old value。反向计算 GAE 和 value target 后，才将样本打乱做 $K$ 轮 minibatch。', '每次梯度步都重算新 log-probability 与 value，却始终使用保存的 old log-probability、advantage 和 target。$K$ 太大时 ratio、KL 与 clip fraction 上升，旧优势不再代表新策略的数据分布。'],
     formulas: [String.raw`\widehat A_t=\delta_t+\gamma\lambda(1-d_{t+1})\widehat A_{t+1}`, String.raw`\widehat R_t=\widehat A_t+V_{\mathrm{old}}(S_t)`],
     pseudocodeTitle: 'PPO with GAE and minibatch epochs',
-    pseudocode: ['复制 θ_old←θ，并用 πθ_old 收集 T 步 rollout', '保存动作、奖励、done、old log-probability 与 old value', '从后向前计算每个位置的 δ、GAE advantage 与 value target', '固定这批 advantage、target 和 old log-probability', '对 K 个 epoch：打乱样本并切成 minibatch', '  重算当前 log-probability/value，计算 clipped policy、value、entropy 三项', '  梯度更新 θ、φ，并监控 KL、clip fraction；随后丢弃 batch 重新采样'],
+    pseudocode: ['复制 $\\theta_{\\mathrm{old}}\\leftarrow\\theta$，并用 $\\pi_{\\theta_{\\mathrm{old}}}$ 收集 $T$ 步 rollout', '保存动作、奖励、done、old log-probability 与 old value', '从后向前计算每个位置的 $\\delta_t$、GAE advantage 与 value target', '固定这批 advantage、target 和 old log-probability', '对 $K$ 个 epoch：打乱样本并切成 minibatch', '  重算当前 log-probability 与 value，计算 clipped policy、value、entropy 三项', '  梯度更新 $\\theta$、$\\phi$，并监控 KL、clip fraction；随后丢弃 batch 重新采样'],
     handoff: '语言模型使用相同循环，但状态变成 token 前缀、动作变成下一个 token。',
   },
 ]
@@ -29,9 +29,9 @@ export const ppoDeepeningZh = [
 export const ppoDeepeningEn = [
   {
     id: 'ratio-to-clipping-cases', kicker: 'Read clipping sample by sample', title: 'PPO min and clip require four cases based on advantage sign',
-    paragraphs: ['Ratio measures the new probability of an old sampled action. Positive advantage wants a larger ratio but gains stop above 1+ε; negative advantage wants a smaller ratio but gains stop below 1−ε.', 'The opposite bad direction is not capped. PPO does not clamp every ratio; it caps optimistic benefit from excessive improvement.'],
+    paragraphs: ['Ratio $r_t$ measures the new probability of an old sampled action. Positive advantage wants a larger ratio but gains stop above $1+\\epsilon$; negative advantage wants a smaller ratio but gains stop below $1-\\epsilon$.', 'The opposite bad direction is not capped. PPO does not clamp every ratio; it caps optimistic benefit from excessive improvement.'],
     formulas: [String.raw`\ell_t(\theta)=\min\left(r_t\widehat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\widehat A_t\right)`, String.raw`\widehat A_t>0:\ r_t>1+\epsilon\ \text{is capped}`, String.raw`\widehat A_t<0:\ r_t<1-\epsilon\ \text{is capped}`],
-    example: example('Four clipping decisions', 'Let ε=0.2; read advantage sign before the boundary.', ['Advantage', 'Ratio', 'Result'], [['+2', '1.35', 'Capped at upper side'], ['+2', '0.70', 'Not capped; corrective loss remains'], ['−2', '0.70', 'Capped at lower side'], ['−2', '1.35', 'Not capped; penalty remains']]),
+    example: example('Four clipping decisions', 'Let $\\epsilon=0.2$; read advantage sign before the boundary.', ['Advantage', 'Ratio', 'Result'], [['+2', '1.35', 'Capped at upper side'], ['+2', '0.70', 'Not capped; corrective loss remains'], ['−2', '0.70', 'Capped at lower side'], ['−2', '1.35', 'Not capped; penalty remains']]),
     theorem: theorem('The clipped surrogate is a pessimistic per-sample bound, not a hard final-KL constraint.', 'Samples share parameters, so one gradient changes other probabilities and final ratios may remain outside the interval.', [String.raw`0<\epsilon<1`, String.raw`\widehat A_t\ \text{fixed during optimization}`]),
     handoff: 'Safe reuse also requires clear freezing of advantages, old log probabilities, and minibatch epochs.',
   },
@@ -43,10 +43,10 @@ export const ppoDeepeningEn = [
   },
   {
     id: 'ppo-complete-loop', kicker: 'Complete training loop', title: 'PPO refreshes the rollout batch after a finite number of epochs',
-    paragraphs: ['Copy θ_old, collect T steps, and store observations, actions, rewards, done flags, old log probabilities, and old values. Compute GAE and value targets backward before shuffling K minibatch epochs.', 'Every gradient step recomputes current probabilities and values but retains saved old probabilities, advantages, and targets. Too many epochs raise ratio drift, KL, and clip fraction until the old advantage no longer describes the new policy distribution.'],
+    paragraphs: ['Copy $\\theta_{\\mathrm{old}}$, collect $T$ steps, and store observations, actions, rewards, done flags, old log probabilities, and old values. Compute GAE and value targets backward before shuffling $K$ minibatch epochs.', 'Every gradient step recomputes current probabilities and values but retains saved old probabilities, advantages, and targets. Too many epochs raise ratio drift, KL, and clip fraction until the old advantage no longer describes the new policy distribution.'],
     formulas: [String.raw`\widehat A_t=\delta_t+\gamma\lambda(1-d_{t+1})\widehat A_{t+1}`, String.raw`\widehat R_t=\widehat A_t+V_{\mathrm{old}}(S_t)`],
     pseudocodeTitle: 'PPO with GAE and minibatch epochs',
-    pseudocode: ['Copy θ_old←θ and collect T rollout steps under πθ_old', 'Store actions, rewards, done, old log probabilities, and old values', 'Compute δ, GAE advantages, and value targets backward', 'Freeze advantages, targets, and old log probabilities for this batch', 'For K epochs, shuffle data into minibatches', '  Recompute current log probabilities/value and all three loss terms', '  Update θ and φ, monitor KL and clip fraction, then discard the batch'],
+    pseudocode: ['Copy $\\theta_{\\mathrm{old}}\\leftarrow\\theta$ and collect $T$ rollout steps under $\\pi_{\\theta_{\\mathrm{old}}}$', 'Store actions, rewards, done, old log probabilities, and old values', 'Compute $\\delta_t$, GAE advantages, and value targets backward', 'Freeze advantages, targets, and old log probabilities for this batch', 'For $K$ epochs, shuffle data into minibatches', '  Recompute current log probabilities and value and all three loss terms', '  Update $\\theta$ and $\\phi$, monitor KL and clip fraction, then discard the batch'],
     handoff: 'Language models use the same loop with token prefixes as states and next tokens as actions.',
   },
 ]

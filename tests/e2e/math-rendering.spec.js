@@ -166,8 +166,23 @@ test('interactive non-default states and GRPO controls render math cleanly witho
     }))
     expect(acOverflow.scrollWidth).toBeLessThanOrEqual(acOverflow.clientWidth + 2)
 
-    // Chapter 15: Token MDP truncated state renders γV(s_T) via MathFormula
+    // Chapter 14: PPO presets, asymmetric boundary state, and 1D surrogate slice render cleanly without overflow
+    await navigation.nth(14).click()
+    await expect(page.locator('.ppo-surrogate-svg')).toBeVisible()
+    await page.locator('.ppo-presets > button').nth(2).click()
+    await expect(page.locator('.ppo-inspector')).toContainText(language === 'zh' ? '样本 B' : 'Sample B')
+    expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
+    await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
+    const ppoOverflow = await page.locator('.ppo-lab').evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }))
+    expect(ppoOverflow.scrollWidth).toBeLessThanOrEqual(ppoOverflow.clientWidth + 2)
+
+    // Chapter 15: Token MDP microscope and truncated state render γV(s_T) via MathFormula
     await navigation.nth(15).click()
+    await page.locator('.token-step-strip > button').nth(2).click()
+    await expect(page.locator('.token-microscope-cards')).toBeVisible()
     await page.locator('.token-mdp-lab').getByRole('button', { name: language === 'zh' ? '长度截断' : 'Length truncation', exact: true }).click()
     await expect(page.locator('.token-mdp-lab footer .math-formula')).toBeVisible()
     expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
@@ -180,11 +195,19 @@ test('interactive non-default states and GRPO controls render math cleanly witho
     expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
     await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
 
-    // Chapter 17: DPO preference relation and summary render via MathFormula
+    // Chapter 17: DPO presets, likelihood displacement alert, and margin curve render cleanly without overflow
     await navigation.nth(17).click()
+    await expect(page.locator('.dpo-curve-svg')).toBeVisible()
+    await page.locator('.dpo-presets > button').nth(1).click()
+    await expect(page.locator('.dpo-displacement-alert')).toBeVisible()
     await expect(page.locator('.dpo-update-ledger')).toBeVisible()
     expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
     await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
+    const dpoOverflow = await page.locator('.modern-extension-lab').evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }))
+    expect(dpoOverflow.scrollWidth).toBeLessThanOrEqual(dpoOverflow.clientWidth + 2)
 
     // Chapter 18: GRPO group size and dynamic sampling filter controls work without overflow
     await navigation.nth(18).click()
@@ -202,6 +225,42 @@ test('interactive non-default states and GRPO controls render math cleanly witho
       clientWidth: el.clientWidth,
     }))
     expect(grpoOverflow.scrollWidth).toBeLessThanOrEqual(grpoOverflow.clientWidth + 2)
+
+    // Chapter 19: Coding RL clickable repair tape and hidden-test gap render cleanly without overflow
+    await navigation.nth(19).click()
+    await page.locator('.coding-repair-tape > button').nth(1).click()
+    await page.locator('.modern-extension-lab').getByRole('button', { name: language === 'zh' ? '显示隐藏测试' : 'Reveal hidden tests', exact: true }).click()
+    expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
+    await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
+    const codingOverflow = await page.locator('.modern-extension-lab').evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }))
+    expect(codingOverflow.scrollWidth).toBeLessThanOrEqual(codingOverflow.clientWidth + 2)
+
+    // Chapter 20: Agent MDP clickable branch tree and boundary inspector work without overflow
+    await navigation.nth(20).click()
+    await expect(page.locator('.agent-node-inspector')).toBeVisible()
+    await page.locator('.agent-tree-node.is-alternative').first().click()
+    expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
+    await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
+    const agentOverflow = await page.locator('.modern-extension-lab').evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }))
+    expect(agentOverflow.scrollWidth).toBeLessThanOrEqual(agentOverflow.clientWidth + 2)
+
+    // Chapter 21: Credit assignment clickable bars and five-scheme comparison work without overflow
+    await navigation.nth(21).click()
+    await page.locator('.credit-bar-step').nth(2).click()
+    await expect(page.locator('.credit-compare-grid > div')).toHaveCount(5)
+    expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
+    await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
+    const creditOverflow = await page.locator('.modern-extension-lab').evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }))
+    expect(creditOverflow.scrollWidth).toBeLessThanOrEqual(creditOverflow.clientWidth + 2)
   }
 
   expect(runtimeErrors).toEqual([])
