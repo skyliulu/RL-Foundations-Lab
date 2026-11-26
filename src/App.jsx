@@ -1,32 +1,38 @@
-import { useEffect, useMemo, useState } from 'react'
-import BellmanLab from './components/BellmanLab'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import ChapterShell from './components/ChapterShell'
 import ChapterDeepening from './components/ChapterDeepening'
-import CourseWorldExplorer from './components/CourseWorldExplorer'
 import MathFormula from './components/MathFormula'
 import MathText from './components/MathText'
 import MdpNarrative from './components/MdpNarrative'
-import ReturnObservatory from './components/ReturnObservatory'
-import OptimalitySwitch from './components/OptimalitySwitch'
-import PlanningLab from './components/PlanningLab'
-import PpoLab from './components/PpoLab'
-import SystemLab from './components/SystemLab'
-import LearningLab from './components/LearningLab'
-import MonteCarloChapter from './components/MonteCarloChapter'
-import TokenMdpLab from './components/TokenMdpLab'
 import GitHubRepoBadge from './components/GitHubRepoBadge'
 import HomePage from './components/HomePage'
-import ModernExtensionLab from './components/ModernExtensionLab'
 import ArticleFlow from './components/ArticleFlow'
-import StochasticApproximationLab from './components/StochasticApproximationLab'
 import RichContent from './components/RichContent'
 import { copy } from './content'
 import { articleFlowChapterIds } from './content/article-flow.js'
+import { chapterRailGuides } from './content/chapter-rails.js'
 import { chapterTransitions, coursePhases, getChapterPhase } from './content/storyline.js'
 import { detectBrowserLanguage, pageMetadata } from './i18n'
 
+const CourseWorldExplorer = lazy(() => import('./components/CourseWorldExplorer'))
+const ReturnObservatory = lazy(() => import('./components/ReturnObservatory'))
+const BellmanLab = lazy(() => import('./components/BellmanLab'))
+const OptimalitySwitch = lazy(() => import('./components/OptimalitySwitch'))
+const PlanningLab = lazy(() => import('./components/PlanningLab'))
+const MonteCarloChapter = lazy(() => import('./components/MonteCarloChapter'))
+const StochasticApproximationLab = lazy(() => import('./components/StochasticApproximationLab'))
+const LearningLab = lazy(() => import('./components/LearningLab'))
+const PpoLab = lazy(() => import('./components/PpoLab'))
+const TokenMdpLab = lazy(() => import('./components/TokenMdpLab'))
+const SystemLab = lazy(() => import('./components/SystemLab'))
+const ModernExtensionLab = lazy(() => import('./components/ModernExtensionLab'))
+
 const part23Ids = ['td', 'control', 'vfa', 'dqn', 'policygradient', 'actorcritic']
 const modernExtensionIds = ['dpo', 'grpo', 'codingrl', 'agentmdp', 'credit']
+
+function LabFallback({ lang }) {
+  return <div className="lab-loading" role="status">{lang === 'zh' ? '正在载入交互实验室…' : 'Loading interactive lab…'}</div>
+}
 
 function ChapterArticleExperiment({ id, lang, content, text }) {
   let experiment = null
@@ -42,7 +48,7 @@ function ChapterArticleExperiment({ id, lang, content, text }) {
   return (
     <>
       <p className="article-copy chapter-transition"><MathText>{content.experimentIntro || content.bridge}</MathText></p>
-      {experiment}
+      <Suspense fallback={<LabFallback lang={lang} />}>{experiment}</Suspense>
       {content.interpretation && <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>}
     </>
   )
@@ -197,11 +203,27 @@ function FormulaContextRail({ context, lang }) {
   )
 }
 
-function ChapterGuideRail({ content, lang }) {
+function ChapterGuideRail({ active, content, lang }) {
+  const guide = chapterRailGuides[active]?.[lang]
+  if (guide) {
+    return (
+      <>
+        <section className="rail-section">
+          <span className="rail-kicker">{guide.kicker}</span>
+          <h2><MathText>{guide.title}</MathText></h2>
+          {guide.formulas.map((latex) => <MathFormula block className="rail-formula compact" latex={latex} key={latex} />)}
+        </section>
+        <section className="rail-section observation-rail">
+          <span className="rail-kicker">{lang === 'zh' ? '三步观察引导' : 'Three-step observation guide'}</span>
+          <ol>{guide.observations.map((step) => <li key={step}><MathText>{step}</MathText></li>)}</ol>
+        </section>
+      </>
+    )
+  }
   return (
     <section className="rail-section">
       <span className="rail-kicker">{lang === 'zh' ? '本章主问题' : 'Chapter question'}</span>
-      <h2>{content.question}</h2>
+      <h2><MathText>{content.question}</MathText></h2>
       <p><MathText>{content.bridge}</MathText></p>
       <span className="rail-kicker">{lang === 'zh' ? '完成后应能解释' : 'After this chapter'}</span>
       <ul className="term-list">{content.summary.slice(0, 3).map((item) => <li key={item}><i className="dot future-dot" /><MathText>{item}</MathText></li>)}</ul>
@@ -216,7 +238,7 @@ function RightRail({ active, lang, open, onToggle, context, content }) {
       {open && (
         <div className="right-rail-panel" id="right-rail-panel">
           <header><span>{lang === 'zh' ? '随当前对象变化' : 'Follows the current object'}</span><button type="button" onClick={onToggle}>{lang === 'zh' ? '收起' : 'Close'}</button></header>
-          {context ? <FormulaContextRail context={context} lang={lang} /> : ({ mdp: <MdpRail lang={lang} />, returns: <ReturnRail lang={lang} />, bellman: <BellmanRail lang={lang} />, optimality: <OptimalityRail lang={lang} />, planning: <PlanningRail lang={lang} />, ppo: <PpoRail lang={lang} />, rlhf: <RlhfRail lang={lang} /> }[active] || <ChapterGuideRail content={content} lang={lang} />)}
+          {context ? <FormulaContextRail context={context} lang={lang} /> : ({ mdp: <MdpRail lang={lang} />, returns: <ReturnRail lang={lang} />, bellman: <BellmanRail lang={lang} />, optimality: <OptimalityRail lang={lang} />, planning: <PlanningRail lang={lang} />, ppo: <PpoRail lang={lang} />, rlhf: <RlhfRail lang={lang} /> }[active] || <ChapterGuideRail active={active} content={content} lang={lang} />)}
         </div>
       )}
     </aside>
@@ -336,7 +358,7 @@ export default function App() {
               <MdpNarrative sections={text.mdp.learningPath} overview={text.mdp.overview} lang={lang} />
               <ChapterDeepening sections={text.mdp.deepening} lang={lang} />
               <p className="article-copy chapter-transition"><MathText>{text.mdp.experimentIntro}</MathText></p>
-              <CourseWorldExplorer lang={lang} content={text.mdp} />
+              <Suspense fallback={<LabFallback lang={lang} />}><CourseWorldExplorer lang={lang} content={text.mdp} /></Suspense>
               <p className="article-copy chapter-interpretation"><MathText>{text.mdp.interpretation}</MathText></p>
               <ChapterSummary content={text.mdp} lang={lang} />
               <ChapterSources sources={text.mdp.sources} lang={lang} />
@@ -344,12 +366,14 @@ export default function App() {
           )}
           {active === 'montecarlo' && (
             <>
-              <MonteCarloChapter
-                content={content}
-                lang={lang}
-                onSelect={handleDerivationSelect}
-                beforeExperiment={<ChapterSections content={content} lang={lang} placement="before" />}
-              />
+              <Suspense fallback={<LabFallback lang={lang} />}>
+                <MonteCarloChapter
+                  content={content}
+                  lang={lang}
+                  onSelect={handleDerivationSelect}
+                  beforeExperiment={<ChapterSections content={content} lang={lang} placement="before" />}
+                />
+              </Suspense>
               <p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p>
               <ChapterSections content={content} lang={lang} placement="after" />
               <ChapterSummary content={content} lang={lang} />
@@ -362,7 +386,7 @@ export default function App() {
                 blocks={content.articleFlow}
                 lang={lang}
                 onSelect={handleDerivationSelect}
-                renderExperiment={() => <><StochasticApproximationLab lang={lang} content={content} /><p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p></>}
+                renderExperiment={() => <><Suspense fallback={<LabFallback lang={lang} />}><StochasticApproximationLab lang={lang} content={content} /></Suspense><p className="article-copy chapter-interpretation"><MathText>{content.interpretation}</MathText></p></>}
               />
               <ChapterSummary content={content} lang={lang} />
               <ChapterSources sources={content.sources} lang={lang} />

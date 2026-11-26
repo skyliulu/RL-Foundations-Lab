@@ -907,3 +907,23 @@ test('chapter 8 bridges chapters 6 and 7 while chapter 18 exposes group-size, dy
   assert.match(learning, /s_\{11\}\\leftrightarrow s_\{12\}\\leftrightarrow s_\{13\}\\leftrightarrow s_\{14\}\\leftrightarrow s_\{15\}/)
   assert.match(learning, /s_\{\$\{index \+ 11\}\}/)
 })
+
+test('all 21 chapters expose dedicated bilingual right-rail guidance and lazy-loaded labs', async () => {
+  const { copy } = await import('../content.js')
+  const { chapterRailGuides } = await import('../content/chapter-rails.js')
+  const app = read('App.jsx')
+  const customRails = new Set(['mdp', 'returns', 'bellman', 'optimality', 'planning', 'ppo', 'rlhf'])
+
+  for (const { id } of copy.zh.chapters) {
+    if (customRails.has(id)) continue
+    assert.ok(chapterRailGuides[id], `${id} must define dedicated right-rail guidance`)
+    for (const lang of ['zh', 'en']) {
+      const guide = chapterRailGuides[id][lang]
+      assert.ok(guide?.kicker && guide?.title, `${id}.${lang} right-rail heading`)
+      assert.ok(guide.formulas?.length >= 1, `${id}.${lang} right-rail formulas`)
+      assert.equal(guide.observations?.length, 3, `${id}.${lang} three-step observation guide`)
+    }
+  }
+  assert.match(app, /lazy\(\(\) => import\('\.\/components\/LearningLab'\)\)/)
+  assert.match(app, /lazy\(\(\) => import\('\.\/components\/ModernExtensionLab'\)\)/)
+})
