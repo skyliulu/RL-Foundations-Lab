@@ -74,8 +74,8 @@ const configs = {
   },
   policygradient: {
     formula: String.raw`\theta\leftarrow\theta+\alpha\,\nabla_\theta\log\pi_\theta(A\mid S)\,(G-b)`,
-    controls: [['theta', -2.5, 2.5, 0.1], ['alpha', 0.02, 0.5, 0.02], ['baseline', -2, 2, 0.1]],
-    labels: { zh: ['所选动作 logit $\\theta$', '步长 $\\alpha$', '状态基线 $b$'], en: ['Action logit $\\theta$', 'Step size $\\alpha$', 'State baseline $b$'] },
+    controls: [['alpha', 0.02, 0.5, 0.02], ['baseline', -2, 2, 0.1]],
+    labels: { zh: ['步长 $\\alpha$', '状态基线 $b$'], en: ['Step size $\\alpha$', 'State baseline $b$'] },
     metrics: (r, zh) => [[zh ? '所选动作：更新前' : 'Selected: before', r.probability], [zh ? '所选动作：更新后' : 'Selected: after', r.nextProbability], [zh ? '基线后梯度方差' : 'Variance with baseline', r.varianceWithBaseline]],
   },
   actorcritic: {
@@ -91,6 +91,15 @@ function format(value) {
   if (typeof value === 'string') return value
   if (Number.isInteger(value)) return value
   return Math.abs(value) >= 10 ? value.toFixed(1) : value.toFixed(3)
+}
+
+function seekIndexFromSvgClick(event, width, padLeft, plotW, count) {
+  if (count <= 1) return 0
+  const rect = event.currentTarget.getBoundingClientRect()
+  if (!rect.width) return 0
+  const svgX = ((event.clientX - rect.left) / rect.width) * width
+  const ratio = Math.max(0, Math.min(1, (svgX - padLeft) / plotW))
+  return Math.round(ratio * (count - 1))
 }
 
 const tdTrajectoryColors = ['#176f68', '#315f9b', '#a55f24']
@@ -318,7 +327,7 @@ function ControlCourseGrid({ trace, frame, grid, color, id, label, zh }) {
   )
 }
 
-function ControlEvidenceStage({ params, result, zh }) {
+function ControlEvidenceStage({ params, result, zh, setMany }) {
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
   const traces = result.traces || {}
@@ -350,7 +359,7 @@ function ControlEvidenceStage({ params, result, zh }) {
 
   const sarsaFrame = traces.sarsa.frames[Math.min(step, last)]
   const qFrame = traces.qLearning.frames[Math.min(step, last)]
-  const activeTraces = [
+  const currentTraces = [
     { trace: traces.sarsa, frame: sarsaFrame, color: 'sarsa', id: 'sarsa-live', label: 'Sarsa' },
     { trace: traces.qLearning, frame: qFrame, color: 'q', id: 'q-live', label: 'Q-learning' },
   ]
@@ -359,6 +368,24 @@ function ControlEvidenceStage({ params, result, zh }) {
     setPlaying(false)
     setStep(Math.max(0, Math.min(last, next)))
   }
+
+  const jumpToNextFork = () => {
+    const sarsaFrames = traces.sarsa.frames
+    const qFrames = traces.qLearning.frames
+    const isFork = (idx) => Boolean(sarsaFrames[idx]?.behaviorNextExplored || qFrames[idx]?.behaviorNextExplored)
+    const after = sarsaFrames.findIndex((_, idx) => idx > step && isFork(idx))
+    if (after >= 0) {
+      move(after)
+      return
+    }
+    const first = sarsaFrames.findIndex((_, idx) => isFork(idx))
+    if (first >= 0) move(first)
+  }
+
+  const controlPresets = [
+    { id: 'low-eps', epsilon: 0.04, alpha: 0.3, zh: '① 低探索（$\\epsilon=0.04$）：Sarsa 与 Q-learning 路径接近', en: '① Low exploration ($\\epsilon=0.04$): similar paths' },
+    { id: 'high-eps', epsilon: 0.30, alpha: 0.3, zh: '② 高探索（$\\epsilon=0.30$）：Sarsa 主动远离禁区边缘', en: '② High exploration ($\\epsilon=0.30$): Sarsa avoids forbidden edge' },
+  ]
 
   const renderInspector = ({ frame, color, label }) => {
     const selectedIndex = frame.targetActionIndex
@@ -394,12 +421,29 @@ function ControlEvidenceStage({ params, result, zh }) {
 
   return (
     <div className="control-evidence-stage">
+      <div className="control-presets" role="group" aria-label={zh ? '控制探索率对照预设' : 'Control exploration presets'}>
+        {controlPresets.map((preset) => {
+          const selected = Math.abs(params.epsilon - preset.epsilon) < 0.015
+          return (
+            <button
+              type="button"
+              key={preset.id}
+              className={selected ? 'active' : ''}
+              aria-pressed={selected}
+              onClick={() => setMany({ epsilon: preset.epsilon, alpha: preset.alpha })}
+            >
+              <MathText>{zh ? preset.zh : preset.en}</MathText>
+            </button>
+          )
+        })}
+      </div>
       <div className="control-playback-toolbar">
-        <div><span>{zh ? `训练写回 ${step + 1}/${frameCount}` : `Training commit ${step + 1}/${frameCount}`}</span><strong>{zh ? '每一帧都会更新 Q 表、动作箭头和当前轨迹' : 'Every frame updates the Q table, policy arrows, and current trajectory'}</strong></div>
+        <div><span>{zh ? `训练写回 ${step + 1}/${frameCount}` : `Training commit ${step + 1}/${frameCount}`}</span><strong>{sarsaFrame.behaviorNextExplored || qFrame.behaviorNextExplored ? (zh ? '探索分歧帧：行为策略下一步发生探索，对比 Sarsa 与 Q-learning 的 target！' : 'Exploration fork frame: behavior explores next—compare Sarsa vs Q-learning targets!') : (zh ? '每一帧都会更新 Q 表、动作箭头和当前轨迹' : 'Every frame updates the Q table, policy arrows, and current trajectory')}</strong></div>
         <div className="control-playback-actions">
           <button type="button" disabled={step === 0} onClick={() => move(step - 1)}>{zh ? '上一步' : 'Previous'}</button>
           <button type="button" className="is-primary" aria-pressed={playing} onClick={() => { if (step === last) setStep(0); setPlaying((value) => !value) }}>{playing ? (zh ? '暂停' : 'Pause') : (zh ? '自动播放' : 'Auto play')}</button>
           <button type="button" disabled={step === last} onClick={() => move(step + 1)}>{zh ? '下一步' : 'Next'}</button>
+          <button type="button" onClick={jumpToNextFork}>{zh ? '跳到探索分歧帧' : 'Next fork'}</button>
           <button type="button" onClick={() => move(0)}>{zh ? '重置播放' : 'Reset playback'}</button>
         </div>
         <label><span>{zh ? '播放位置' : 'Playback position'}</span><input aria-label={zh ? '控制算法播放位置' : 'Control playback position'} type="range" min="0" max={last} step="1" value={step} onChange={(event) => move(Number(event.target.value))} /></label>
@@ -408,7 +452,7 @@ function ControlEvidenceStage({ params, result, zh }) {
       <section className="control-playback-grid-panel">
         <header><span>{zh ? '两种目标规则在同一共享网格中独立学习' : 'Both target rules learn independently in the shared grid'}</span><small>{zh ? '橙色为禁区，青色为目标区；中央箭头来自各自的动作价值表' : 'Orange marks forbidden states, cyan marks the target, and center arrows come from each action-value table'}</small></header>
         <div className="control-live-maps">
-          {activeTraces.map((item) => <ControlCourseGrid {...item} grid={result.grid} zh={zh} key={item.id} />)}
+          {currentTraces.map((item) => <ControlCourseGrid {...item} grid={result.grid} zh={zh} key={item.id} />)}
         </div>
         <div className="control-grid-legend">
           <span><i className="is-current" />{zh ? '本次更新状态' : 'updated state'}</span>
@@ -422,7 +466,7 @@ function ControlEvidenceStage({ params, result, zh }) {
 
       <section className="control-update-inspector">
         <header><span>{zh ? '同一步数下的目标读取与写回' : 'Target readout and commit at the same training index'}</span><small>{zh ? '两种算法独立行动；分歧出现后，轨迹不再被强行固定' : 'The algorithms act independently; their trajectories are not frozen after they diverge'}</small></header>
-        <div className="control-live-inspectors">{activeTraces.map(renderInspector)}</div>
+        <div className="control-live-inspectors">{currentTraces.map(renderInspector)}</div>
       </section>
 
       <section className="control-training-summary">
@@ -611,7 +655,7 @@ function VfaEvidenceStage({ params, result, zh, set }) {
   )
 }
 
-function DqnCurveChart({ frames, naiveSeries, currentIndex, targetPeriod, zh }) {
+function DqnCurveChart({ frames, naiveSeries, currentIndex, targetPeriod, onSelectIndex, zh }) {
   const width = 680
   const height = 210
   const pad = { left: 46, right: 18, top: 18, bottom: 28 }
@@ -641,7 +685,13 @@ function DqnCurveChart({ frames, naiveSeries, currentIndex, targetPeriod, zh }) 
   const active = frames[currentIndex]
 
   return (
-    <svg className="dqn-curve-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={zh ? '在线网络、冻结目标网络与朴素基线的动作价值演化曲线' : 'Action-value trajectories for online network, frozen target network, and naive baseline'}>
+    <svg
+      className="dqn-curve-svg is-seekable"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={zh ? '在线网络、冻结目标网络与朴素基线的动作价值演化曲线（点击曲线跳转步数）' : 'Action-value trajectories for online network, frozen target network, and naive baseline (click to seek)'}
+      onClick={(event) => onSelectIndex?.(seekIndexFromSvgClick(event, width, pad.left, plotW, frames.length))}
+    >
       <line className="dqn-axis" x1={pad.left} x2={width - pad.right} y1={height - pad.bottom} y2={height - pad.bottom} />
       <line className="dqn-axis" x1={pad.left} x2={pad.left} y1={pad.top} y2={height - pad.bottom} />
       {targetPeriod > 1 && syncIndices.map((idx) => (
@@ -762,7 +812,7 @@ function DqnEvidenceStage({ params, result, zh, setMany }) {
             <span><i className="is-naive" />{zh ? '朴素对照（无冻结/顺序）' : 'Naive counterfactual'}</span>
           </div>
         </header>
-        <DqnCurveChart frames={frames} naiveSeries={result.naiveSeries} currentIndex={frameIndex} targetPeriod={params.targetPeriod} zh={zh} />
+        <DqnCurveChart frames={frames} naiveSeries={result.naiveSeries} currentIndex={frameIndex} targetPeriod={params.targetPeriod} onSelectIndex={move} zh={zh} />
         <div className="dqn-chart-readout">
           <span>{zh ? '在线预测 ' : 'Online '}<MathFormula latex={String.raw`Q_{\theta}=${update.probeOnlineQ.toFixed(3)}`} /></span>
           <span>{zh ? '冻结目标 ' : 'Target '}<MathFormula latex={String.raw`Q_{\bar\theta}=${update.probeTargetQ.toFixed(3)}`} /></span>
@@ -810,7 +860,7 @@ function DqnEvidenceStage({ params, result, zh, setMany }) {
   )
 }
 
-function PgEvolutionChart({ frames, currentIndex, zh }) {
+function PgEvolutionChart({ frames, currentIndex, onSelectIndex, zh }) {
   const width = 680
   const height = 195
   const pad = { left: 46, right: 18, top: 18, bottom: 28 }
@@ -822,7 +872,13 @@ function PgEvolutionChart({ frames, currentIndex, zh }) {
   const current = frames[currentIndex]
 
   return (
-    <svg className="pg-evolution-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={zh ? '12 回合策略演化对比：使用基线与不使用基线的最优动作概率曲线' : '12-episode policy evolution comparing optimal-action probability with vs without baseline'}>
+    <svg
+      className="pg-evolution-svg is-seekable"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={zh ? '12 回合策略演化对比：使用基线与不使用基线的最优动作概率曲线（点击曲线跳转回合）' : '12-episode policy evolution comparing optimal-action probability with vs without baseline (click to seek)'}
+      onClick={(event) => onSelectIndex?.(seekIndexFromSvgClick(event, width, pad.left, plotW, frames.length))}
+    >
       {[0, 0.25, 0.5, 0.75, 1].map((tick) => (
         <line className="pg-grid-line" key={tick} x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)} />
       ))}
@@ -935,7 +991,7 @@ function PolicyGradientEvidenceStage({ params, result, zh, set }) {
               <span><i className="is-raw" />{zh ? '无基线对照 ' : 'No-baseline control '}<MathFormula latex={String.raw`b=0`} /></span>
             </div>
           </header>
-          <PgEvolutionChart frames={frames} currentIndex={epIndex} zh={zh} />
+          <PgEvolutionChart frames={frames} currentIndex={epIndex} onSelectIndex={moveEp} zh={zh} />
           <div className="pg-evolution-readout">
             <span>{zh ? '带基线最优概率 ' : 'With baseline '}<MathFormula latex={String.raw`\pi(\text{Right})=${epFrame.withBaseline.optimalProb.toFixed(3)}`} /></span>
             <span>{zh ? '无基线最优概率 ' : 'No baseline '}<MathFormula latex={String.raw`\pi_0(\text{Right})=${epFrame.withoutBaseline.optimalProb.toFixed(3)}`} /></span>
@@ -966,6 +1022,10 @@ function PolicyGradientEvidenceStage({ params, result, zh, set }) {
         </section>
         <aside className="pg-gradient-ledger">
           <span>{zh ? '状态 ' : 'State '}<MathFormula latex={String.raw`s_{${result.stateIds[result.selectedStep]}}`} />{zh ? '：Softmax 得分与概率单纯形守恒' : ': softmax score vector and simplex conservation'}</span>
+          <label className="pg-local-theta">
+            <span><MathText>{zh ? '当前状态所选动作 logit $\\theta$' : 'Selected-action logit $\\theta$ at this state'}</MathText><output>{params.theta.toFixed(1)}</output></span>
+            <input aria-label={zh ? '当前状态所选动作 logit θ' : 'Selected-action logit θ'} type="range" min="-2.5" max="2.5" step="0.1" value={params.theta} onChange={(event) => set('theta', Number(event.target.value))} />
+          </label>
           <MathFormula block latex={String.raw`\nabla_\theta\log\pi_\theta(A_t\mid S_t)(G_t-b)`} />
           <div className="pg-probability-ledger">
             {result.probabilities.map((probability, index) => (
@@ -1005,7 +1065,7 @@ function PolicyGradientEvidenceStage({ params, result, zh, set }) {
   )
 }
 
-function AcDualCurveChart({ frames, currentIndex, zh }) {
+function AcDualCurveChart({ frames, currentIndex, onSelectIndex, zh }) {
   const width = 680
   const height = 250
   const pad = { left: 48, right: 18, top: 18, bottom: 26 }
@@ -1028,7 +1088,13 @@ function AcDualCurveChart({ frames, currentIndex, zh }) {
   const current = frames[currentIndex]
 
   return (
-    <svg className="ac-curve-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={zh ? 'Actor-Critic 16 步耦合曲线：上方为 Critic 估计与真实价值，下方为 Actor 最优动作概率' : 'Actor-Critic 16-step coupled chart: top shows critic vs true value, bottom shows actor optimal-action probability'}>
+    <svg
+      className="ac-curve-svg is-seekable"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={zh ? 'Actor-Critic 16 步耦合曲线：上方为 Critic 估计与真实价值，下方为 Actor 最优动作概率（点击曲线跳转步数）' : 'Actor-Critic 16-step coupled chart: top shows critic vs true value, bottom shows actor optimal-action probability (click to seek)'}
+      onClick={(event) => onSelectIndex?.(seekIndexFromSvgClick(event, width, pad.left, plotW, frames.length))}
+    >
       {/* Top track: Critic V_phi vs True V^pi */}
       <line className="ac-axis" x1={pad.left} x2={width - pad.right} y1={pad.top + topH} y2={pad.top + topH} />
       <line className="ac-axis" x1={pad.left} x2={pad.left} y1={pad.top} y2={pad.top + topH} />
@@ -1166,7 +1232,7 @@ function ActorCriticEvidenceStage({ params, result, zh, set, setMany }) {
               <span><i className="is-actor" />{zh ? '最优动作概率 ' : 'Optimal prob '}<MathFormula latex={String.raw`\pi_\theta(\text{Right}\mid S)`} /></span>
             </div>
           </header>
-          <AcDualCurveChart frames={frames} currentIndex={frameIndex} zh={zh} />
+          <AcDualCurveChart frames={frames} currentIndex={frameIndex} onSelectIndex={move} zh={zh} />
           <p className="ac-chart-note">
             {params.criticAlpha < params.actorAlpha * 0.5
               ? (zh
@@ -1239,7 +1305,7 @@ function ActorCriticEvidenceStage({ params, result, zh, set, setMany }) {
 
 function DedicatedLearningStage({ id, params, result, zh, set, setMany }) {
   if (id === 'td') return <TdEvidenceStage params={params} result={result} zh={zh} />
-  if (id === 'control') return <ControlEvidenceStage key={`${params.epsilon}-${params.alpha}-${params.seed}`} params={params} result={result} zh={zh} />
+  if (id === 'control') return <ControlEvidenceStage key={`${params.epsilon}-${params.alpha}-${params.seed}`} params={params} result={result} zh={zh} setMany={setMany} />
   if (id === 'vfa') return <VfaEvidenceStage params={params} result={result} zh={zh} set={set} />
   if (id === 'dqn') return <DqnEvidenceStage params={params} result={result} zh={zh} setMany={setMany} />
   if (id === 'policygradient') return <PolicyGradientEvidenceStage params={params} result={result} zh={zh} set={set} />

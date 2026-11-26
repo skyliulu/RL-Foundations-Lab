@@ -19,4 +19,16 @@ test('RLHF batch contract keeps provenance, shapes, masks, and model versions al
   assert.equal(truncatedRow.bootstrap, 1)
   assert.equal(truncatedRow.loss, 1)
   assert.equal(truncated.rows.filter((row) => row.token === 'PAD').every((row) => row.attention === 0 && row.loss === 0), true)
+
+  const lag = buildRlhfBatchContract({ selectedId: 'A', fault: 'workerLag' })
+  assert.ok(lag.ratioFactor > 1)
+  assert.equal(lag.tensors.find((t) => t.name === 'old_logp').faulted, true)
+
+  const drift = buildRlhfBatchContract({ selectedId: 'A', fault: 'refDrift' })
+  assert.ok(drift.klFactor < 0.5)
+  assert.equal(drift.versions.find((v) => v.role === 'reference').faulted, true)
+
+  const maskBug = buildRlhfBatchContract({ selectedId: 'A', fault: 'maskBug' })
+  assert.equal(maskBug.rows.some((r) => r.padLeak && r.loss === 1), true)
+  assert.equal(maskBug.rows.find((r) => r.terminal).bootstrap, 1)
 })

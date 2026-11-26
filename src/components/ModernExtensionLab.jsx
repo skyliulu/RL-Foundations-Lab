@@ -131,6 +131,7 @@ function DpoLab({ lang }) {
 }
 
 function GrpoLab({ lang }) {
+  const zh = lang === 'zh'
   const scenarios = {
     mixed: [0.2, 0.9, 0.55, -0.05, 0.78, 0.12, 0.84, 0.32],
     allRight: [1, 1, 1, 1, 1, 1, 1, 1],
@@ -141,36 +142,82 @@ function GrpoLab({ lang }) {
   const [scenario, setScenario] = useState('mixed')
   const [groupSize, setGroupSize] = useState(4)
   const [clip, setClip] = useState(0.2)
+  const [clipHigher, setClipHigher] = useState(false)
   const [dynamicSampling, setDynamicSampling] = useState(false)
   const rewards = scenarios[scenario].slice(0, groupSize)
+  const effectiveClipHigh = clipHigher ? Math.min(0.45, Number((clip + 0.14).toFixed(2))) : clip
   const result = useMemo(
-    () => evaluateGrpo({ rewards, clip, dynamicSampling }),
-    [scenario, groupSize, clip, dynamicSampling],
+    () => evaluateGrpo({ rewards, clip, clipHigh: effectiveClipHigh, dynamicSampling }),
+    [scenario, groupSize, clip, effectiveClipHigh, dynamicSampling],
   )
+  const maxAbsAdv = Math.max(1.5, ...result.samples.map((s) => Math.abs(s.advantage)))
+
   return <div className="modern-lab-body">
     <div className="modern-controls grpo-controls">
       <div className="grpo-control-group">
-        <span className="grpo-control-label">{lang === 'zh' ? '奖励分布' : 'Reward distribution'}</span>
-        <div className="modern-segmented">{Object.keys(scenarios).map((id) => <button type="button" className={scenario === id ? 'active' : ''} aria-pressed={scenario === id} key={id} onClick={() => setScenario(id)}>{({ mixed: lang === 'zh' ? '有区分' : 'Mixed', allRight: lang === 'zh' ? '全对' : 'All right', allWrong: lang === 'zh' ? '全错' : 'All wrong', close: lang === 'zh' ? '近似同分' : 'Low variance' })[id]}</button>)}</div>
+        <span className="grpo-control-label">{zh ? '奖励分布' : 'Reward distribution'}</span>
+        <div className="modern-segmented">{Object.keys(scenarios).map((id) => <button type="button" className={scenario === id ? 'active' : ''} aria-pressed={scenario === id} key={id} onClick={() => setScenario(id)}>{({ mixed: zh ? '有区分' : 'Mixed', allRight: zh ? '全对' : 'All right', allWrong: zh ? '全错' : 'All wrong', close: zh ? '近似同分' : 'Low variance' })[id]}</button>)}</div>
       </div>
       <div className="grpo-control-group">
-        <span className="grpo-control-label">{lang === 'zh' ? '回答组大小' : 'Group size'} <MathFormula latex={String.raw`G`} /></span>
+        <span className="grpo-control-label">{zh ? '回答组大小' : 'Group size'} <MathFormula latex={String.raw`G`} /></span>
         <div className="modern-segmented grpo-size-segmented">{groupSizes.map((size) => <button type="button" className={groupSize === size ? 'active' : ''} aria-pressed={groupSize === size} key={size} onClick={() => setGroupSize(size)}><MathFormula latex={String.raw`G=${size}`} /></button>)}</div>
       </div>
-      <label><span>{lang === 'zh' ? '裁剪范围' : 'Clip'} <MathFormula latex={String.raw`\epsilon`} /> <output>{clip.toFixed(2)}</output></span><input aria-label="GRPO clip range" type="range" min="0.05" max="0.4" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} /></label>
+      <label>
+        <span>{zh ? '裁剪下界' : 'Lower clip'} <MathFormula latex={String.raw`\epsilon_{\mathrm{low}}`} /> <output>{clip.toFixed(2)}</output></span>
+        <input aria-label="GRPO clip range" type="range" min="0.05" max="0.35" step="0.01" value={clip} onChange={(event) => setClip(Number(event.target.value))} />
+      </label>
       <div className="grpo-control-group">
-        <span className="grpo-control-label">{lang === 'zh' ? '有信息组筛选' : 'Informative-group filter'}</span>
+        <span className="grpo-control-label">{zh ? '非对称裁剪（DAPO Clip-Higher）' : 'Asymmetric clip (DAPO Clip-Higher)'}</span>
+        <div className="modern-segmented grpo-clip-higher-toggle">
+          <button type="button" className={clipHigher ? 'active' : ''} aria-pressed={clipHigher} onClick={() => setClipHigher((v) => !v)}>
+            {clipHigher
+              ? <>{zh ? '已开启：' : 'On: '}<MathFormula latex={String.raw`\epsilon_{\mathrm{high}}=${effectiveClipHigh.toFixed(2)}`} /></>
+              : <>{zh ? '对称边界：' : 'Symmetric: '}<MathFormula latex={String.raw`\epsilon_{\mathrm{high}}=${clip.toFixed(2)}`} /></>}
+          </button>
+        </div>
+      </div>
+      <div className="grpo-control-group grpo-filter-group">
+        <span className="grpo-control-label">{zh ? '有信息组筛选' : 'Informative-group filter'}</span>
         <div className="modern-segmented grpo-filter-toggle">
           <button type="button" className={dynamicSampling ? 'active' : ''} aria-pressed={dynamicSampling} onClick={() => setDynamicSampling((value) => !value)}>
             {dynamicSampling
-              ? (lang === 'zh' ? '动态采样：已开启（过滤低方差组）' : 'Dynamic sampling: On (filter flat groups)')
-              : (lang === 'zh' ? '动态采样：关闭（保留全部组）' : 'Dynamic sampling: Off (keep all groups)')}
+              ? (zh ? '动态采样：已开启（过滤低方差组）' : 'Dynamic sampling: On (filter flat groups)')
+              : (zh ? '动态采样：关闭（保留全部组）' : 'Dynamic sampling: Off (keep all groups)')}
           </button>
         </div>
       </div>
     </div>
-    <div className={`group-responses grpo-group-responses${result.filteredOut ? ' is-filtered' : ''}`}>{result.samples.map((sample) => <article key={sample.id} className={`${sample.advantage > 0.01 ? 'positive' : sample.advantage < -0.01 ? 'negative' : ''}${result.filteredOut ? ' is-skipped' : ''}`}><small>{lang === 'zh' ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong><MathFormula latex={String.raw`R=${sample.reward.toFixed(2)}`} /></strong><span><MathFormula latex={String.raw`A=${sample.advantage.toFixed(2)}`} /></span><span><MathFormula latex={String.raw`r:${sample.ratio.toFixed(2)}\rightarrow${sample.clippedRatio.toFixed(2)}`} /></span><b><MathFormula latex={String.raw`J=${sample.effectiveObjective.toFixed(3)}`} /></b>{result.filteredOut && <em className="grpo-skip-tag">{lang === 'zh' ? '已过滤 · 不进入更新' : 'Filtered · skipped'}</em>}</article>)}</div>
-    <div className={`variance-banner ${!result.informative ? 'warn' : ''}`}><b><MathFormula latex={String.raw`\mu=${result.mean.toFixed(3)}\;\cdot\;\sigma=${result.std.toFixed(3)}`} /> · {lang === 'zh' ? `进入更新 ${result.activeCount}/${result.groupSize}` : `In update ${result.activeCount}/${result.groupSize}`}</b><span>{!result.informative ? (result.filteredOut ? (lang === 'zh' ? '动态采样已过滤该无信息组：这批样本不产生梯度，需重新采样或调整题目难度。' : 'Dynamic sampling filtered this flat group: zero samples enter the update, freeing budget for informative prompts.') : (lang === 'zh' ? '组内没有可靠排序信号，但当前未开启筛选；开启“动态采样”可将该组移出更新批次。' : 'The group has no reliable ranking signal, yet remains in the batch. Enable dynamic sampling to drop it before updating.')) : (lang === 'zh' ? '组内奖励存在有效差异，全部候选均可提供相对优势并进入本轮更新。' : 'Within-group rewards separate candidates, so all responses provide relative advantage for this update.')}</span></div>
+
+    <section className="grpo-adv-chart" aria-label={zh ? '以组均值为零轴的相对优势柱图' : 'Group-mean centered relative advantage bar chart'}>
+      <header>
+        <span>{zh ? '以组均值 ' : 'Centered at group mean '}<MathFormula latex={String.raw`\mu_R=${result.mean.toFixed(2)}`} />{zh ? ' 为零轴的双向相对优势' : ' (diverging relative advantages)'}</span>
+        <small>{result.unlockedCount > 0
+          ? (zh ? `Clip-Higher 释放了 ${result.unlockedCount} 条高优势回答的上升空间` : `Clip-Higher unlocked ${result.unlockedCount} positive-advantage response(s)`)
+          : (zh ? '向右为正优势（鼓励），向左为负优势（压低）' : 'Right = positive advantage, left = negative advantage')}</small>
+      </header>
+      <div className="grpo-adv-rows">
+        {result.samples.map((sample) => {
+          const pct = Math.min(50, (Math.abs(sample.advantage) / maxAbsAdv) * 48)
+          const pos = sample.advantage >= 0
+          return (
+            <div className={`grpo-adv-row${result.filteredOut ? ' is-skipped' : ''}${sample.clipHigherUnlocked ? ' is-unlocked' : ''}`} key={sample.id}>
+              <b>{zh ? `回答 ${sample.id}` : `Resp ${sample.id}`}</b>
+              <div className="grpo-adv-track" aria-hidden="true">
+                <i className="grpo-adv-zero" />
+                <em
+                  className={pos ? 'is-pos' : 'is-neg'}
+                  style={pos ? { left: '50%', width: `${Math.max(1.5, pct)}%` } : { right: '50%', width: `${Math.max(1.5, pct)}%` }}
+                />
+              </div>
+              <MathFormula latex={String.raw`A=${sample.advantage.toFixed(2)}`} />
+            </div>
+          )
+        })}
+      </div>
+    </section>
+
+    <div className={`group-responses grpo-group-responses${result.filteredOut ? ' is-filtered' : ''}`}>{result.samples.map((sample) => <article key={sample.id} className={`${sample.advantage > 0.01 ? 'positive' : sample.advantage < -0.01 ? 'negative' : ''}${result.filteredOut ? ' is-skipped' : ''}${sample.clipHigherUnlocked ? ' is-unlocked' : ''}`}><small>{zh ? `回答 ${sample.id}` : `Response ${sample.id}`}</small><strong><MathFormula latex={String.raw`R=${sample.reward.toFixed(2)}`} /></strong><span><MathFormula latex={String.raw`A=${sample.advantage.toFixed(2)}`} /></span><span><MathFormula latex={String.raw`r:${sample.ratio.toFixed(2)}\rightarrow${sample.clippedRatio.toFixed(2)}`} /></span><b><MathFormula latex={String.raw`J=${sample.effectiveObjective.toFixed(3)}`} /></b>{sample.clipHigherUnlocked && !result.filteredOut && <em className="grpo-unlock-tag">{zh ? 'Clip-Higher 解锁上升' : 'Clip-Higher unlocked'}</em>}{result.filteredOut && <em className="grpo-skip-tag">{zh ? '已过滤 · 不进入更新' : 'Filtered · skipped'}</em>}</article>)}</div>
+    <div className={`variance-banner ${!result.informative ? 'warn' : ''}`}><b><MathFormula latex={String.raw`\mu=${result.mean.toFixed(3)}\;\cdot\;\sigma=${result.std.toFixed(3)}`} /> · {zh ? `进入更新 ${result.activeCount}/${result.groupSize}` : `In update ${result.activeCount}/${result.groupSize}`}</b><span>{!result.informative ? (result.filteredOut ? (zh ? '动态采样已过滤该无信息组：这批样本不产生梯度，需重新采样或调整题目难度。' : 'Dynamic sampling filtered this flat group: zero samples enter the update, freeing budget for informative prompts.') : (zh ? '组内没有可靠排序信号，但当前未开启筛选；开启“动态采样”可将该组移出更新批次。' : 'The group has no reliable ranking signal, yet remains in the batch. Enable dynamic sampling to drop it before updating.')) : (zh ? '组内奖励存在有效差异，全部候选均可提供相对优势并进入本轮更新。' : 'Within-group rewards separate candidates, so all responses provide relative advantage for this update.')}</span></div>
   </div>
 }
 

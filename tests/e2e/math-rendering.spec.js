@@ -82,7 +82,7 @@ test('chapters 1–5 render every formula-like text run through MathFormula in b
 })
 
 test('interactive non-default states and GRPO controls render math cleanly without overflow', async ({ page }) => {
-  test.setTimeout(90_000)
+  test.setTimeout(120_000)
   const runtimeErrors = []
   page.on('console', (message) => {
     if (message.type() === 'error') runtimeErrors.push(`console: ${message.text()}`)
@@ -103,6 +103,14 @@ test('interactive non-default states and GRPO controls render math cleanly witho
       await page.getByRole('button', { name: 'EN', exact: true }).click()
       await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     }
+
+    // Chapter 9: Sarsa vs Q-learning exploration presets and fork-jump button work without overflow
+    await navigation.nth(9).click()
+    await expect(page.locator('.control-presets > button')).toHaveCount(2)
+    await page.locator('.control-presets > button').nth(1).click()
+    await page.locator('.control-playback-actions').getByRole('button', { name: language === 'zh' ? '跳到探索分歧帧' : 'Next fork', exact: true }).click()
+    expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
+    await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
 
     // Chapter 10: VFA shared 5x5 grid, playback, weight ledger, and scenario switch work without overflow
     await navigation.nth(10).click()
@@ -188,8 +196,11 @@ test('interactive non-default states and GRPO controls render math cleanly witho
     expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
     await expect(page.locator('.chapter-shell .katex-error')).toHaveCount(0)
 
-    // Chapter 16: RLHF algorithm view renders r_t and A_t via MathFormula
+    // Chapter 16: RLHF fault injection and algorithm view render r_t and A_t via MathFormula
     await navigation.nth(16).click()
+    await expect(page.locator('.rlhf-fault-presets > button')).toHaveCount(4)
+    await page.locator('.rlhf-fault-presets > button').nth(1).click()
+    await expect(page.locator('.rlhf-fault-banner.is-alert')).toBeVisible()
     await page.locator('.system-lab').getByRole('button', { name: language === 'zh' ? '算法视图' : 'Algorithm view', exact: true }).click()
     await expect(page.locator('.algorithm-columns')).toBeVisible()
     expect(await formulaLikeTextOutsideMathFormula(page)).toEqual([])
@@ -209,9 +220,12 @@ test('interactive non-default states and GRPO controls render math cleanly witho
     }))
     expect(dpoOverflow.scrollWidth).toBeLessThanOrEqual(dpoOverflow.clientWidth + 2)
 
-    // Chapter 18: GRPO group size and dynamic sampling filter controls work without overflow
+    // Chapter 18: GRPO group size, Clip-Higher, advantage bars, and dynamic sampling filter controls work without overflow
     await navigation.nth(18).click()
+    await expect(page.locator('.grpo-adv-row')).toHaveCount(4)
     await expect(page.locator('.grpo-group-responses > article')).toHaveCount(4)
+    await page.locator('.grpo-clip-higher-toggle button').click()
+    await expect(page.locator('.grpo-unlock-tag').first()).toBeVisible()
     await page.locator('.grpo-size-segmented button').nth(3).click()
     await expect(page.locator('.grpo-group-responses > article')).toHaveCount(8)
     await page.locator('.modern-extension-lab').getByRole('button', { name: language === 'zh' ? '全对' : 'All right', exact: true }).click()

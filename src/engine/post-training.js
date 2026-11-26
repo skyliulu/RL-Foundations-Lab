@@ -40,12 +40,14 @@ export function evaluateDpo({ beta = 0.1, contrast = 0.54, chosenShift = contras
 export function evaluateGrpo({
   rewards = [0.2, 0.9, 0.55, -0.05],
   clip = 0.2,
+  clipHigh = clip,
   klBeta = 0.08,
   dynamicSampling = false,
   varianceThreshold = 0.02,
 } = {}) {
   const ratios = [0.88, 1.24, 1.08, 0.76, 1.15, 0.94, 1.31, 0.82]
   const kls = [0.018, 0.041, 0.024, 0.052, 0.031, 0.019, 0.047, 0.027]
+  const upperClip = Math.max(clip, clipHigh)
   const mean = rewards.reduce((sum, value) => sum + value, 0) / rewards.length
   const variance = rewards.reduce((sum, value) => sum + (value - mean) ** 2, 0) / rewards.length
   const std = Math.sqrt(variance)
@@ -55,9 +57,12 @@ export function evaluateGrpo({
     const ratio = ratios[index % ratios.length]
     const kl = kls[index % kls.length]
     const advantage = (reward - mean) / (std + 1e-8)
-    const clippedRatio = Math.min(1 + clip, Math.max(1 - clip, ratio))
+    const symClippedRatio = Math.min(1 + clip, Math.max(1 - clip, ratio))
+    const clippedRatio = Math.min(1 + upperClip, Math.max(1 - clip, ratio))
     const surrogate = Math.min(ratio * advantage, clippedRatio * advantage)
+    const symSurrogate = Math.min(ratio * advantage, symClippedRatio * advantage)
     const objective = surrogate - klBeta * kl
+    const clipHigherUnlocked = clippedRatio > symClippedRatio + 1e-8 && advantage > 0.01
     return {
       id: String.fromCharCode(65 + index),
       reward,
@@ -66,6 +71,8 @@ export function evaluateGrpo({
       clippedRatio,
       kl,
       objective,
+      clipHigherUnlocked,
+      objectiveGainFromClipHigh: surrogate - symSurrogate,
       usedInUpdate: !filteredOut,
       effectiveObjective: filteredOut ? 0 : objective,
     }
@@ -73,9 +80,12 @@ export function evaluateGrpo({
   return {
     mean,
     std,
+    clipLow: clip,
+    clipHigh: upperClip,
     informative,
     filteredOut,
     activeCount: filteredOut ? 0 : samples.length,
+    unlockedCount: samples.filter((sample) => sample.clipHigherUnlocked).length,
     groupSize: samples.length,
     samples,
   }

@@ -92,6 +92,37 @@ export default function CourseWorldExplorer({ lang, content }) {
     setAction(fixedPolicyAction(branch.state))
   }
 
+  function stepPolicyOnce() {
+    const nextAction = fixedPolicyAction(current)
+    const nextBranches = transitionsFor(current, nextAction, noise).sort((left, right) => right.probability - left.probability)
+    let chosen = nextBranches[0]
+    if (noise > 0 && nextBranches.length > 1) {
+      let draw = Math.random()
+      for (const candidate of nextBranches) {
+        draw -= candidate.probability
+        if (draw <= 0) {
+          chosen = candidate
+          break
+        }
+      }
+    }
+    setTrajectory((steps) => [...steps, {
+      id: `${steps.length}-${keyOf(current)}-${nextAction}-${keyOf(chosen.state)}`,
+      from: current,
+      action: nextAction,
+      reward: chosen.reward,
+      probability: chosen.probability,
+      to: chosen.state,
+    }])
+    setCurrent(chosen.state)
+    setAction(fixedPolicyAction(chosen.state))
+  }
+
+  function applyWorldPreset(nextNoise) {
+    setNoise(nextNoise)
+    restartAt(START)
+  }
+
   return (
     <section className="world-explorer" aria-label={content.figure}>
       <header className="world-explorer-heading">
@@ -154,6 +185,13 @@ export default function CourseWorldExplorer({ lang, content }) {
                 <b>{ACTIONS[name].arrow}</b><span>{actionCopy[lang][name]}</span>
               </button>
             ))}
+          </div>
+          <button type="button" className="policy-action-button is-quick-step" onClick={stepPolicyOnce}>
+            <span>{lang === 'zh' ? '按当前策略直接走一步' : 'Step once along policy'}</span><strong>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]} →</strong>
+          </button>
+          <div className="world-quick-presets" role="group" aria-label={lang === 'zh' ? '环境确定性与随机性预设' : 'Deterministic vs stochastic presets'}>
+            <button type="button" className={noise === 0 ? 'active' : ''} aria-pressed={noise === 0} onClick={() => applyWorldPreset(0)}>{lang === 'zh' ? '确定性环境（噪声 0）' : 'Deterministic (noise 0)'}</button>
+            <button type="button" className={Math.abs(noise - 0.3) < 0.01 ? 'active' : ''} aria-pressed={Math.abs(noise - 0.3) < 0.01} onClick={() => applyWorldPreset(0.3)}>{lang === 'zh' ? '随机滑移（噪声 0.3）' : 'Stochastic slip (0.3)'}</button>
           </div>
           <button type="button" className="policy-action-button" onClick={() => setAction(policyAction)}>
             <span><MathText>{text.followPolicy}</MathText></span><strong>{ACTIONS[policyAction].arrow} {actionCopy[lang][policyAction]}</strong>

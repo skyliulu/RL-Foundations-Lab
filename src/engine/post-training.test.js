@@ -39,5 +39,11 @@ describe('post-training method calculations', () => {
     assert.equal(flatFiltered.filteredOut, true)
     assert.equal(flatFiltered.activeCount, 0)
     assert.ok(flatFiltered.samples.every((sample) => !sample.usedInUpdate && sample.effectiveObjective === 0))
+
+    const clipHigher = evaluateGrpo({ clip: 0.2, clipHigh: 0.34 })
+    assert.ok(clipHigher.unlockedCount > 0)
+    const sampleB = clipHigher.samples.find((s) => s.id === 'B')
+    assert.equal(sampleB.clipHigherUnlocked, true)
+    assert.equal(sampleB.clippedRatio, sampleB.ratio)
   })
 })
